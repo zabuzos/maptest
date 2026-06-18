@@ -303,126 +303,84 @@
 
         function resetActiveButtons() { btnArmy.classList.remove('active'); btnTank.classList.remove('active'); btnCiv.classList.remove('active'); btnMil.classList.remove('active'); }
 
-        fetch('map.svg')
-            .then(response => response.text())
-            .then(svgData => {
-                const parser = new DOMParser();
-                const svgDoc = parser.parseFromString(svgData, 'image/svg+xml');
-                const importedSvg = svgDoc.querySelector('svg');
-                container.insertBefore(importedSvg, arrowsLayer);
+      fetch('map.svg')
+    .then(response => response.text())
+    .then(svgData => {
+        const parser = new DOMParser();
+        const svgDoc = parser.parseFromString(svgData, 'image/svg+xml');
+        const importedSvg = svgDoc.querySelector('svg');
+        container.insertBefore(importedSvg, arrowsLayer);
 
-                const mapLayer = document.getElementById('Layer_x0020_1') || importedSvg;
+        const mapLayer = document.getElementById('Layer_x0020_1')  importedSvg;
 
-                if (mapLayer) {
-                    setupArrowMarker();
-                    const allElements = mapLayer.querySelectorAll('path, polygon, polyline, rect, ellipse');
-                    
-                    let index = 0;
-                    // Список доступних нових кодів країн, щоб автоматично наповнити нейтральні території
-                    const extraCountries = ['GB', 'IT', 'CS', 'RO'];
+        if (mapLayer) {
+            setupArrowMarker();
+            const allElements = mapLayer.querySelectorAll('path, polygon, polyline, rect, ellipse');
+            
+            let index = 0;
 
-                    allElements.forEach(element => {
-                        if (!element.id) element.id = 'prov_' + Math.random().toString(36).substr(2, 5);
-                        const id = element.id;
-                        let detectedCountry = 'NEUTRAL';
+            allElements.forEach(element => {
+                if (!element.id) element.id = 'prov_' + Math.random().toString(36).substr(2, 5);
+                const id = element.id.toUpperCase(); // Переводимо в верхній регістр для точного порівняння
+                let detectedCountry = 'NEUTRAL';
 
-                        for (const code in countryColors) {
-                            if (id.endsWith('_' + code) || id.endsWith(code)) { detectedCountry = code; break; }
-                        }
+                // 1. ПЕРЕВІРКА НАЯВНОСТІ ОФІЦІЙНОГО ID КРАЇНИ В SVG
+                for (const code in countryColors) {
+                    if (id.endsWith('_' + code)  id.endsWith(code)) { 
+                        detectedCountry = code; 
+                        break; 
+                    }
+                }
 
-                        // Динамічно міняємо частину нейтральних провінцій на нові країни
-                        if (detectedCountry === 'NEUTRAL') {
-                            detectedCountry = extraCountries[index % extraCountries.length];
-                        }
+                // 2. ІНТЕЛЕКТУАЛЬНИЙ ГЕОГРАФІЧНИЙ РОЗПОДІЛ ДЛЯ "НЕЙТРАЛЬНИХ" ПРОВІНЦІЙ
+                // Якщо в SVG немає чіткого ID, ми дивимось на назву провінції та відносимо її до найближчого історичного сусіда, щоб уникнути хаосу
+                if (detectedCountry === 'NEUTRAL') {
+                    if (id.includes('UKR')  id.includes('KYIV')  id.includes('CRIMEA')  id.includes('DON')) {
+                        detectedCountry = 'UA';
+                    } else if (id.includes('POL')  id.includes('WARSAW')  id.includes('GDANSK')) {
+                        detectedCountry = 'PL';
+                    } else if (id.includes('GER')  id.includes('BERLIN')  id.includes('MUNICH')  id.includes('PRUSSIA')) {
+                        detectedCountry = 'DE';
+                    } else if (id.includes('FRA')  id.includes('PARIS')  id.includes('LYON')) {
+                        detectedCountry = 'FR';
+                    } else if (id.includes('ENG')  id.includes('BRIT')  id.includes('LON')  id.includes('SCOT')  id.includes('IRE')) {
+                        detectedCountry = 'GB';
+                    } else if (id.includes('ITA')  id.includes('ROME')  id.includes('MILAN')  id.includes('SICILY')) {
+                        detectedCountry = 'IT';
+                    } else if (id.includes('CZECH')  id.includes('SLOVAK')  id.includes('PRAGUE')) {
+                        detectedCountry = 'CS';
+                    } else if (id.includes('ROM')  id.includes('BUCH') || id.includes('TRANSYL')) {
+                        detectedCountry = 'RO';
+                    } else {
+                        // Якщо назва взагалі нейтральна, приєднуємо до найближчого блоку за індексом, 
+                        // але не хаотично по одному, а великими регіональними "кластерами" (по 40 провінцій поспіль)
+                        const cluster = Math.floor(index / 40);
+                        const extraCountries = ['GB', 'IT', 'CS', 'RO', 'DE', 'FR', 'UA', 'PL'];
+                        detectedCountry = extraCountries[cluster % extraCountries.length];
+                    }
+                }
 
-                        index++;
-                        let hasOilDeposit = (index % 6 === 0); 
+                index++;
+                // Нафтові родовища тепер з'являються рідше (кожне 8-ме), щоб мапа не була перенасичена значками
+                let hasOilDeposit = (index % 8 === 0); 
 
-                        provinceData[id] = {
-                            country: detectedCountry, civFactories: 0, milFactories: 0, oilWells: 0,
-                            hasOilDeposit: hasOilDeposit, hasDivision: false, isMoving: false, 
-                            divisionHp: 0, divisionOwner: null, divisionType: null, 
-                            elementRef: element, domDivisionRef: null
-                        };
-                        element.style.fill = countryColors[detectedCountry];
-
-                        if (hasOilDeposit) {
-                            createOilVisualMark(element, id);
-                        }
-                    });
-
-                    updateEconomyDisplay();
-
-                    mapLayer.addEventListener('click', function(event) {
-                        // Якщо перетягували карту, клік не повинен спрацьовувати як наказ
-                        if (isDragging) return;
-
-                        const validTags = ['path', 'polygon', 'polyline', 'rect', 'ellipse'];
-                        const target = event.target;
-                        if (!validTags.includes(target.tagName.toLowerCase())) return;
-                        
-                        const provinceId = target.id;
-                        const province = provinceData[provinceId];
-                        if (!province || province.isMoving) return;
-
-                        // Будівництво
-                        if (currentMode === 'build_civ' || currentMode === 'build_mil') {
-                            if (province.country !== playerCountry) return;
-                            if ((province.civFactories + province.milFactories + province.oilWells) >= 3) return;
-
-                            if (currentMode === 'build_civ') {
-                                province.civFactories++; createFactoryVisual(target, provinceId, 'civ');
-                            } else {
-                                if (province.hasOilDeposit) {
-                                    province.oilWells++; createFactoryVisual(target, provinceId, 'oil');
-                                } else {
-                                    province.milFactories++; createFactoryVisual(target, provinceId, 'mil');
-                                }
-                            }
-                            updateEconomyDisplay();
-                        } 
-                        // Армія
-                        else if (currentMode === 'army' || currentMode === 'tank') {
-                            dipPopup.style.display = 'none';
-
-                            if (province.country === playerCountry) {
-                                if (province.hasDivision && province.divisionOwner === playerCountry) {
-                                    cancelSelection();
-                                    selectedProvinceId = provinceId;
-                                    province.domDivisionRef.classList.add('selected');
-                                } else if (!province.hasDivision) {
-                                    if (selectedProvinceId && selectedProvinceId !== provinceId) {
-                                        tryMoveOrAttack(selectedProvinceId, provinceId, playerCountry);
-                                    } else {
-                                        if (currentMode === 'army' && coins >= 50) {
-                                            coins -= 50; coinsDisplay.textContent = coins;
-                                            spawnDivisionVisual(provinceId, playerCountry, 'infantry');
-                                            updateEconomyDisplay();
-                                        } else if (currentMode === 'tank' && coins >= 120) {
-                                            coins -= 120; coinsDisplay.textContent = coins;
-                                            spawnDivisionVisual(provinceId, playerCountry, 'tank');
-                                            updateEconomyDisplay();
-                                        }
-                                    }
-                                }
-                            } else {
-                                if (selectedProvinceId) {
-                                    const enemyCountry = province.country;
-                                    if (!warStatus[playerCountry][enemyCountry]) {
-                                        const center = getProvinceCenter(provinceId);
-                                        dipPopup.style.left = `${center.x}px`; dipPopup.style.top = `${center.y}px`;
-                                        dipPopup.style.display = 'block';
-                                        targetDiplomacyCountry = enemyCountry;
-                                        window.selectedTargetProvId = provinceId;
-                                    } else {
-                                        tryMoveOrAttack(selectedProvinceId, provinceId, playerCountry);
-                                    }
-                                }
-                            }
-                        }
-                    });
+                provinceData[element.id] = {
+                    country: detectedCountry, civFactories: 0, milFactories: 0, oilWells: 0,
+                    hasOilDeposit: hasOilDeposit, hasDivision: false, isMoving: false, 
+                    divisionHp: 0, divisionOwner: null, divisionType: null, 
+                    elementRef: element, domDivisionRef: null
+                };
+                
+                // Фарбуємо провінцію в колір її держави
+                element.style.fill = countryColors[detectedCountry];
+if (hasOilDeposit) {
+                    createOilVisualMark(element, element.id);
                 }
             });
+
+            updateEconomyDisplay();
+
+            // [Тут залишається ваш старий код обробника подій кліку мапи mapLayer.addEventListener('click', ...)]
 
         btnJustify.addEventListener('click', function() {
             dipPopup.style.display = 'none';

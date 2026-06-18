@@ -291,7 +291,7 @@
             <div class="panel-section" id="diplomacy-panel" style="display: none; background: #221f28; border-color: #a855f7;">
                 <label style="color: #c084fc;">Дипломатія: <span id="dip-country-name">--</span></label>
                 <div style="font-size: 11px; margin-bottom: 5px;">
-                    Відносини: <span id="dip-relations-val" style="font-weight:bold;">0</span> | Статус: <span id="dip-status-val" style="font-weight:bold;">Мир</span>
+                    Відносини: <span id="dip-relations-val" style="font-weight:bold;">0</span> | Status: <span id="dip-status-val" style="font-weight:bold;">Мир</span>
                 </div>
                 <div class="actions-grid">
                     <button id="dip-btn-justify" class="dip-btn" style="background:#7f1d1d; border-color:#ef4444;">⚔️ Фабрикувати Casus Belli</button>
@@ -409,7 +409,7 @@
             'GB': '🇬🇧 Велика Британія', 'IT': '🇮🇹 Італія', 'SOV': '🇷🇺 СРСР', 'ES': '🇪🇸 Іспанія', 
             'RO': '🇷🇴 Румунія', 'TR': '🇹🇷 Туреччина', 'US': '🇺🇸 США', 'JP': '🇯🇵 Японія', 
             'FI': '🇫🇮 Фінляндія', 'SE': '🇸🇪 Швеція', 'NO': '🇳🇴 Норвегія', 'DK': '🇩𝕜 Данія', 
-            'NL': '🇳🇱 Нідерланди', 'BE': '🇧🇪 Бельгія', 'CH': '🇨🇭 Швейцарія', 'AT': '🇦🇹 Австрія', 
+            'NL': '🇳🇱 Нідерланди', 'BE': '🇧🇪 Бельгія', 'CH': '🇨🇭 Швейцарія', 'AT': '🇦тів Австрія', 
             'CZ': '🇨🇿 Чехословаччина', 'HU': '🇭🇺 Угорщина', 'BG': '🇧🇬 Болгарія', 'YU': '🪕 Югославія', 
             'GR': '🇬🇷 Греція', 'PT': '🇵🇹 Португалія', 'IE': '🇮🇪 Ірландія',
             'BY': '🇧🇾 Білорусь', 'LT': '🇱🇹 Литва', 'LV': '🇱🇻 Латвія', 'EE': '🇪🇪 Естонія',
@@ -650,7 +650,7 @@
                 });
                 alert("🏰 Росія підписала унію та повністю анексувала Білорусь!");
             }
-            else if (focusKey === 'sov_ultimatum') {
+            else if (focusKey === 'sov_altimatum' || focusKey === 'sov_ultimatum') {
                 triggerUltimatumEvent({
                     title: "🚨 Ультиматум Кремля",
                     desc: "Російська Федерація висуває категоричну вимогу здати Крим та Донбас. Мирна передача або війна?",
@@ -712,14 +712,12 @@
         // СИСТЕМА ДИПЛОМАТИЧНИХ ІВЕНТІВ / УЛЬТИМАТУМІВ ДЛЯ ГРАВЦЯ ТА ШІ
         function triggerUltimatumEvent(cfg) {
             if (cfg.targetCountry === playerCountry) {
-                // Гравець робить вибір
                 eventModal.style.display = 'flex';
                 eventTitle.textContent = cfg.title; eventDesc.textContent = cfg.desc;
                 
                 eventBtnYes.onclick = () => { eventModal.style.display = 'none'; cfg.onYes(); };
                 eventBtnNo.onclick = () => { eventModal.style.display = 'none'; cfg.onNo(); };
             } else {
-                // ШІ автоматично вирішує на основі відносин
                 let rel = diplomaticRelations[playerCountry][cfg.targetCountry] || 0;
                 if (rel >= 40 && Math.random() > 0.4) cfg.onYes(); else cfg.onNo();
             }
@@ -833,7 +831,7 @@
                                     } else if (currentMode === 'tank' && coins >= 120) {
                                         coins -= 120; 
                                         let tType = 'tank';
-                                        if (playerTechs['modern_tank'].status === 'done'] === 'done') tType = 'modern_tank';
+                                        if (playerTechs['modern_tank'].status === 'done') tType = 'modern_tank';
                                         else if (playerTechs['heavy_tank'].status === 'done') tType = 'heavy_tank';
                                         else if (playerTechs['medium_tank'].status === 'done') tType = 'medium_tank';
                                         spawnDivisionVisual(provinceId, playerCountry, tType); updateEconomyDisplay();
@@ -1020,7 +1018,6 @@
                 if (['tank', 'medium_tank', 'motorized'].includes(attType)) bAtt = 35; if (['heavy_tank', 'mechanized'].includes(attType)) bAtt = 50; if (attType === 'modern_tank') bAtt = 70; if (attType === 'assault') bAtt = 28;
                 if (['tank', 'medium_tank', 'motorized'].includes(defType)) bDef = 35; if (['heavy_tank', 'mechanized'].includes(defType)) bDef = 50; if (defType === 'modern_tank') bDef = 70; if (defType === 'assault') bDef = 28;
 
-                // Застосування бонусу ЗСУ (+15% атаки піхоти)
                 if (attackerCountry === 'UA' && completedFocusesGlobal['UA']['ua_zsu'] && !attType.includes('tank')) bAtt *= infantryAttackBonus;
                 if (defenderCountry === 'UA' && completedFocusesGlobal['UA']['ua_zsu'] && !defType.includes('tank')) bDef *= infantryAttackBonus;
 
@@ -1146,7 +1143,6 @@
 
                 let botCash = countryBudgets[bot];
 
-                // Автоматичне просування ШІ по фокусах
                 if (!aiCurrentFocus[bot]) {
                     let treeKey = focusTrees[bot] ? bot : 'GENERIC';
                     let available = Object.keys(focusTrees[treeKey]).filter(k => {
@@ -1161,14 +1157,13 @@
                         aiCurrentFocus[bot] = { key: chosen, timer: 0, max: focusTrees[treeKey][chosen].time };
                     }
                 } else {
-                    aiCurrentFocus[bot].timer += 4; // оскільки інтервал ШІ 4 секунди
+                    aiCurrentFocus[bot].timer += 4; 
                     if (aiCurrentFocus[bot].timer >= aiCurrentFocus[bot].max) {
                         completeNationalFocus(bot, aiCurrentFocus[bot].key);
                         delete aiCurrentFocus[bot];
                     }
                 }
 
-                // Економічні дії ШІ
                 if (botCash >= 30 && Math.random() > 0.6) {
                     const rProvId = sample(botProvinces); const prov = provinceData[rProvId];
                     if ((prov.civFactories + prov.milFactories + prov.oilWells + prov.bunkers) < 4) {
@@ -1184,7 +1179,6 @@
                     }
                 }
 
-                // Спавн дивізій ШІ
                 if (botCash >= 120 && Math.random() > 0.75) {
                     const rp = sample(botProvinces);
                     if (!provinceData[rp].hasDivision && !provinceData[rp].isMoving) { spawnDivisionVisual(rp, bot, 'tank'); countryBudgets[bot] -= 120; }
@@ -1193,7 +1187,6 @@
                     if (!provinceData[rp].hasDivision && !provinceData[rp].isMoving) { spawnDivisionVisual(rp, bot, 'infantry'); countryBudgets[bot] -= 50; }
                 }
 
-                // Напади ШІ
                 if (Math.random() < 0.35) {
                     const armed = botProvinces.filter(pId => provinceData[pId].hasDivision && provinceData[pId].divisionOwner === bot && !provinceData[pId].isMoving);
                     if (armed.length > 0) {

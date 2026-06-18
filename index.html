@@ -256,7 +256,7 @@
             </div>
 
             <div class="panel-section" style="border-color: #eab308; background: #1c1912;">
-                <label style="color: #facc15;">🎯 Поточний національний фокус</label>
+                <label style="color: #facc15;">🎯 Поточний національний focus</label>
                 <div id="sidebar-focus-name" style="font-size:12px; font-weight:bold; color:white;">Не вибрано</div>
                 <div class="tech-progress-bar" style="margin-top:3px; background:#222;"><div class="tech-progress-fill" id="sidebar-focus-bar" style="background:#eab308; width:0%;"></div></div>
                 <button id="open-focus-tree-btn" style="background:#a855f7; border:none; color:white; font-size:11px; padding:5px; margin-top:5px; border-radius:4px; font-weight:bold; cursor:pointer;">🎯 Відкрити дерево фокусів</button>
@@ -408,8 +408,8 @@
         const countryNames = {
             'UA': '🇺🇦 Україна', 'PL': '🇵🇱 Польща', 'DE': '🇩🇪 Німеччина', 'FR': '🇫🇷 Франція',
             'GB': '🇬🇧 Велика Британія', 'IT': '🇮🇹 Італія', 'SOV': '🇷🇺 СРСР', 'ES': '🇪🇸 Іспанія', 
-            'RO': '🇷🇴 Румунія', 'TR': '🇹РУ Туреччина', 'US': '🇺🇸 США', 'JP': '🇯🇵 Японія', 
-            'FI': '🇫🇮 Фінляндія', 'SE': '🇸🇪 Швеція', 'NO': '🇳🇴 Норвегія', 'DK': '🇩🇰 Данія', 
+            'RO': '🇷🇴 Румунія', 'TR': '🇹🇷 Туреччина', 'US': '🇺🇸 США', 'JP': '🇯🇵 Японія', 
+            'FI': '🇫🇮 Фінляндія', 'SE': '🇸🇪 Швеція', 'NO': '🇳🇴 Норвегія', 'DK': '🇩𝕜 Данія', 
             'NL': '🇳🇱 Нідерланди', 'BE': '🇧🇪 Бельгія', 'CH': '🇨🇭 Швейцарія', 'AT': '🇦🇹 Австрія', 
             'CZ': '🇨🇿 Чехословаччина', 'HU': '🇭🇺 Угорщина', 'BG': '🇧🇬 Болгарія', 'YU': '🪕 Югославія', 
             'GR': '🇬🇷 Греція', 'PT': '🇵🇹 Португалія', 'IE': '🇮🇪 Ірландія',
@@ -465,19 +465,19 @@
         // --- БАЗА ДАНИХ НАЦІОНАЛЬНИХ ФОКУСІВ ---
         const focusTrees = {
             'UA': {
-                'ua_zsu': { name: '🪖 Створити ЗСУ', time: 15, req: null, excl: null, desc: '+15% до атаки піхоти назавжди, створює 2 моторизовані піхоти на сході (Луганськ/Донецьк).' },
+                'ua_zsu': { name: '🪖 Створити ЗСУ', time: 15, req: null, excl: null, desc: '+15% до атаки піхоти назавжди, створює 2 моторизовані піхоти на сході.' },
                 'ua_eu': { name: '🇪🇺 Союз із ЄС', time: 25, req: 'ua_zsu', excl: 'ua_cis', desc: 'Підвищує відносини з країнами ЄС на +20. Відкриває претензії на Кубань.' },
                 'ua_cis': { name: '🤝 Союз із СНД', time: 25, req: 'ua_zsu', excl: 'ua_eu', desc: 'Підвищує відносини з країнами СНД на +20. Миттєво виділяє грант +300 монет.' },
                 'ua_kuban': { name: '🌾 Атака на Кубань', time: 35, req: 'ua_eu', excl: null, desc: 'Надсилає Росії ультиматум з вимогою передати Кубань. Відмова означає війну!' }
             },
             'SOV': {
                 'sov_alliance_by': { name: '🇧🇾 Союз із Білоруссю', time: 20, req: null, excl: null, desc: 'Покращує дипломатичні відносини з Білоруссю.' },
-                'sov_union_by': { name: '🏰 Унія з Білоруссю', time: 30, req: 'sov_alliance_by', excl: null, desc: 'Пове мирне поглинання та анексія Білорусі.' },
+                'sov_union_by': { name: '🏰 Унія з Білоруссю', time: 30, req: 'sov_alliance_by', excl: null, desc: 'Повного поглинання та анексія Білорусі.' },
                 'sov_ultimatum': { name: '🚨 Ультиматум Україні', time: 40, req: 'sov_union_by', excl: null, desc: 'Вимога передати Крим та Донбас. Якщо Україна відмовляється — почнеться війна.' }
             },
             'RO': {
                 'ro_sov_md': { name: '🇲🇩 Союз з Молдовою', time: 20, req: null, excl: null, desc: 'Покращує дипломатичні відносини з Молдовою.' },
-                'ro_annex_md': { name: '🍇 Приєднання Молдови', time: 30, req: 'ro_sov_md', excl: null, desc: 'Мирне злиття та включення територій Молдови до Румунії.' },
+                'ro_annex_md': { name: '🍇 Приєднання Молдови', time: 30, req: 'ro_sov_md', excl: null, desc: 'Мирне включення територій Молдови до Румунії.' },
                 'ro_join_eu': { name: '🇪🇺 Вступ до ЄС', time: 25, req: null, excl: null, desc: 'Підвищує дипломатичні відносини з усіма країнами ЄС на +25.' }
             },
             'GENERIC': {
@@ -492,7 +492,7 @@
             'standardization': { name: '🏗️ Стандартизація', cat: 'ind', status: 'avail', req: null, desc: 'Заводи та форти коштують 20💰 замість 30.' },
             'oil_extraction': { name: '🛢️ Екстракція нафти', cat: 'ind', status: 'avail', req: null, desc: 'Нафтові вишки дають +2 нафти/с замість +1.' },
             'medium_tank': { name: '🚜 Середній Танк', cat: 'tech', status: 'avail', req: null, desc: 'Нові танки мають 220 HP та сильнішу атаку.' },
-            'heavy_tank': { name: '🛡️ Важкий Танк', cat: 'tech', status: 'locked', req: 'medium_tank', desc: 'Танки мають 350 HP, але без нафти дуже повільні.' },
+            'heavy_tank': { name: '🛡️ Важкий Танк', cat: 'tech', status: 'locked', req: 'medium_tank', desc: 'Танки мають 350 HP, але без нафти повільні.' },
             'modern_tank': { name: '⚡ Сучасний Танк', cat: 'tech', status: 'locked', req: 'heavy_tank', desc: 'Супер-танк: 500 HP та шалена швидкість.' },
             'assault': { name: '🪖 Штурмовики', cat: 'inf', status: 'avail', req: null, desc: 'Нова піхота отримує 130 HP та більше шкоди.' },
             'motorized': { name: '🚚 Моторизована піхота', cat: 'inf', status: 'locked', req: 'assault', desc: 'Швидка піхота (165 HP). Використовує нафту!' },
@@ -710,7 +710,6 @@
             updateEconomyDisplay();
         }
 
-        // СИСТЕМА ДИПЛОМАТИЧНИХ ІВЕНТІВ / УЛЬТИМАТУМІВ ДЛЯ ГРАВЦЯ ТА ШІ
         function triggerUltimatumEvent(cfg) {
             if (cfg.targetCountry === playerCountry) {
                 eventModal.style.display = 'flex';
@@ -772,15 +771,14 @@
                     let index = 0;
                     allElements.forEach(element => {
                         if (!element.id) element.id = 'prov_' + Math.random().toString(36).substr(2, 5);
-                        const id = element.id.toUpperCase();
+                        
+                        // Покращений парсинг назви країни з ID (враховуючи підкреслення та спецсимволи)
+                        const idUpper = element.id.toUpperCase();
                         let detectedCountry = 'NEUTRAL';
 
-                        // Надійний пошук тегів у будь-якій частині ID провінції
-                        for (const tag in tagToCountry) {
-                            if (id.includes(tag)) {
-                                detectedCountry = tagToCountry[tag];
-                                break;
-                            }
+                        const idParts = idUpper.split(/[^A-Z]/).filter(Boolean);
+                        for (const part of idParts) {
+                            if (tagToCountry[part]) { detectedCountry = tagToCountry[part]; break; }
                         }
 
                         index++;
@@ -791,7 +789,7 @@
                             hasOilDeposit: hasOilDeposit, hasDivision: false, isMoving: false, 
                             divisionHp: 0, divisionOwner: null, divisionType: null, elementRef: element, domDivisionRef: null
                         };
-                        element.style.fill = countryColors[detectedCountry];
+                        element.style.fill = countryColors[detectedCountry] || '#2e2e35';
                         if (hasOilDeposit) createOilVisualMark(element, element.id);
                     });
 
@@ -1045,7 +1043,7 @@
                     else {
                         if (prov.domDivisionRef) prov.domDivisionRef.remove();
                         prov.country = attackerCountry; prov.elementRef.style.fill = countryColors[attackerCountry];
-                        prov.hasDivision = true; prov.divisionHp = attHp; prov.divisionOwner = attackerCountry; prov.domDivisionRef = attackerDivEl; prov.divisionType = attType;
+                        prov.hasDivision = true; provinceData[provId].divisionHp = attHp; prov.divisionOwner = attackerCountry; prov.domDivisionRef = attackerDivEl; prov.divisionType = attType;
                         if (attackerCountry === playerCountry) attackerDivEl.classList.remove('ai-unit'); else attackerDivEl.classList.add('ai-unit');
                         redrawProvinceBuildings(provId);
                     }
@@ -1123,48 +1121,34 @@
             coinsDisplay.textContent = coins; oilDisplay.textContent = playerOil;
         }
 
-        // --- ІНТЕРФЕЙС ТА ЛОГІКА НАУКИ ---
-        function renderScienceTree() {
+        // --- СИСТЕМА НАУКОВИХ ДОСЛІДЖЕНЬ (РЕНДЕР ТА ОНОВЛЕННЯ) ---
+        function updateTechListUI() {
             techListContainer.innerHTML = '';
             for (const key in playerTechs) {
                 const t = playerTechs[key];
                 const card = document.createElement('div');
                 card.className = `tech-card ${t.status}`;
                 
-                let statusBadge = '🔬';
-                if (t.status === 'done') statusBadge = '✅';
-                if (t.status === 'locked') statusBadge = '🔒';
+                let badge = '🔬';
+                if (t.status === 'done') badge = '✅';
+                else if (t.status === 'locked') badge = '🔒';
+                
+                let isBeingResearched = scienceSlots.some(s => s.activeTech === key);
+                if (isBeingResearched) card.className = 'tech-card active-research';
 
-                card.innerHTML = `
-                    <div>
-                        <strong>${t.name}</strong>
-                        <div style="font-size:9px; color:#a1a1aa;">${t.desc}</div>
-                    </div>
-                    <div>${statusBadge}</div>
-                `;
-
-                if (t.status === 'avail') {
+                card.innerHTML = `<div>${badge} <b>${t.name}</b><br><span style="font-size:9px;color:#a1a1aa;">${t.desc}</span></div>`;
+                
+                if (t.status === 'avail' && !isBeingResearched) {
                     card.addEventListener('click', () => {
-                        startResearch(key);
+                        let freeSlot = scienceSlots.find(s => s.activeTech === null);
+                        if (!freeSlot) return alert("Всі наукові лабораторії зайняті!");
+                        freeSlot.activeTech = key; freeSlot.timer = 0;
+                        document.getElementById(`slot-${freeSlot.id}-ui`).firstElementChild.textContent = `Слот ${freeSlot.id}: ${t.name}`;
+                        updateTechListUI();
                     });
                 }
                 techListContainer.appendChild(card);
             }
-        }
-
-        function startResearch(techKey) {
-            let freeSlot = scienceSlots.find(s => s.activeTech === null);
-            if (!freeSlot) return alert("Усі наукові слоти зайняті! Зачекайте завершення поточних досліджень.");
-            
-            let isAlreadyResearching = scienceSlots.some(s => s.activeTech === techKey);
-            if (isAlreadyResearching) return alert("Ця технологія вже розробляється в іншій лабораторії!");
-
-            freeSlot.activeTech = techKey;
-            freeSlot.timer = 0;
-            playerTechs[techKey].status = 'researching';
-            
-            document.getElementById(`slot-${freeSlot.id}-ui`).firstElementChild.textContent = `Слот ${freeSlot.id}: ${playerTechs[techKey].name}`;
-            renderScienceTree();
         }
 
         function updateScienceTick() {
@@ -1186,7 +1170,7 @@
             slot.activeTech = null; slot.timer = 0;
             document.getElementById(`slot-${slot.id}-ui`).firstElementChild.textContent = `Слот ${slot.id}: Вільний`;
             document.getElementById(`slot-${slot.id}-bar`).style.width = '0%';
-            renderScienceTree();
+            updateTechListUI();
             updateEconomyDisplay();
         }
 
@@ -1201,7 +1185,7 @@
             updateFocusTick();
         }, 1000);
 
-        // КІНЕТИЧНИЙ ШІ + ШІ АВТО-ФОКУСИ (З СИСТЕМОЮ ЗМЕНШЕНОЇ АГРЕСИВНОСТІ В СТИЛІ AoH3)
+        // КІНЕТИЧНИЙ ШІ + ШІ АВТО-ФОКУСИ (НАЛАШТОВАНО ПІД СТИЛЬ АоН3)
         const activeAiJustifications = {};
         const aiCurrentFocus = {};
 
@@ -1236,8 +1220,8 @@
                     }
                 }
 
-                // Економічні рішення бота
-                if (botCash >= 30 && Math.random() > 0.6) {
+                // Економічний розвиток ШІ (будує частіше, ніж воює)
+                if (botCash >= 30 && Math.random() > 0.4) {
                     const rProvId = sample(botProvinces); const prov = provinceData[rProvId];
                     if ((prov.civFactories + prov.milFactories + prov.oilWells + prov.bunkers) < 4) {
                         countryBudgets[bot] -= 30;
@@ -1253,16 +1237,17 @@
                 }
 
                 // Військове будівництво
-                if (botCash >= 120 && Math.random() > 0.75) {
+                if (botCash >= 120 && Math.random() > 0.7) {
                     const rp = sample(botProvinces);
                     if (!provinceData[rp].hasDivision && !provinceData[rp].isMoving) { spawnDivisionVisual(rp, bot, 'tank'); countryBudgets[bot] -= 120; }
-                } else if (botCash >= 50 && Math.random() > 0.65) {
+                } else if (botCash >= 50 && Math.random() > 0.6) {
                     const rp = sample(botProvinces);
                     if (!provinceData[rp].hasDivision && !provinceData[rp].isMoving) { spawnDivisionVisual(rp, bot, 'infantry'); countryBudgets[bot] -= 50; }
                 }
 
-                // ЗНИЖЕНА АГРЕСИВНІСТЬ ШІ (Стиль AoH3: Війни переважно через фокуси)
-                if (Math.random() < 0.02) { // Було 0.35, стало 0.02 (набагато спокійніший світ)
+                // 🕊️ ЗНИЖЕНА АГРЕСИВНІСТЬ (AoH3 стиль: війни переважно через фокуси)
+                // Випадкова атака або фабрикація тепер трапляється вкрай рідко (шанс знижено з 0.35 до 0.02)
+                if (Math.random() < 0.02) {
                     const armed = botProvinces.filter(pId => provinceData[pId].hasDivision && provinceData[pId].divisionOwner === bot && !provinceData[pId].isMoving);
                     if (armed.length > 0) {
                         const fromP = sample(armed);
@@ -1274,23 +1259,21 @@
 
                         if (targets.length > 0) {
                             const toP = sample(targets); const enemy = provinceData[toP].country;
-                            if (allianceStatus[bot][enemy]) return;
+                            if (allianceStatus[bot][enemy] || enemy === 'NEUTRAL') return;
 
-                            // Захоплення нейтралів або ведення поточної війни
-                            if (enemy === 'NEUTRAL' || warStatus[bot][enemy]) { 
+                            if (warStatus[bot][enemy]) { 
                                 tryMoveOrAttack(fromP, toP, bot); 
-                            } 
-                            // Фабрикація претензій вручну відбувається лише при поганих стосунках
-                            else if (diplomaticRelations[bot][enemy] < -30) {
+                            } else {
+                                // Повільна та виважена фабрикація претензій (45 секунд замість 10)
                                 const jKey = `${bot}_vs_${enemy}`;
                                 if (!activeAiJustifications[jKey]) {
                                     activeAiJustifications[jKey] = true;
                                     let wBox = null;
                                     if (enemy === playerCountry) {
                                         wBox = document.createElement('div'); wBox.className = 'war-warning';
-                                        wBox.innerHTML = `⚠️ ${countryNames[bot]} обґрунтовує привід для війни проти вас! (10с)`; alertContainer.appendChild(wBox);
+                                        wBox.innerHTML = `⚠️ ${countryNames[bot]} обґрунтовує привід для війни проти вас! (45с)`; alertContainer.appendChild(wBox);
                                     }
-                                    let aiTime = 10;
+                                    let aiTime = 45;
                                     const aiInterval = setInterval(() => {
                                         if (!isGameStarted) return; aiTime--;
                                         if (wBox) wBox.innerHTML = `⚠️ ${countryNames[bot]} обґрунтовує привід для війни! (${aiTime}с)`;
@@ -1312,9 +1295,7 @@
                 playerBadge.textContent = countryNames[playerCountry];
                 playerBadge.style.backgroundColor = countryColors[playerCountry];
                 startScreen.style.display = 'none'; isGameStarted = true;
-                
-                // Рендеримо дерево технологій одразу після вибору країни
-                renderScienceTree();
+                updateTechListUI();
                 updateEconomyDisplay();
             }
         };

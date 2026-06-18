@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2D HOI4 Mini Strategy - Велика Карта</title>
+    <title>2D HOI4 Mini Strategy - Глобальна Мапа</title>
     <style>
         html, body {
             margin: 0; padding: 0; width: 100%; height: 100vh; overflow: hidden;
@@ -290,7 +290,7 @@
         let isDragging = false;
         let startX, startY, hasMovedMouse = false;
 
-        // Повністю розширений список кольорів для 26 націй
+        // Палітра кольорів з новими країнами (Балкани, Балтія, Білорусь, Молдова)
         const countryColors = { 
             'UA': '#1d4ed8', 'PL': '#b91c1c', 'DE': '#374151', 'FR': '#0284c7', 
             'GB': '#7c3aed', 'IT': '#15803d', 'SOV': '#991b1b', 'RU': '#991b1b',
@@ -299,10 +299,12 @@
             'DK': '#be123c', 'NL': '#ea580c', 'BE': '#854d0e', 'CH': '#ef4444',
             'AT': '#f43f5e', 'CZ': '#0369a1', 'HU': '#16a34a', 'BG': '#047857',
             'YU': '#4338ca', 'GR': '#06b6d4', 'PT': '#15803d', 'IE': '#166534',
+            'BY': '#4e7a43', 'LT': '#c29b00', 'LV': '#7a2b2d', 'EE': '#467599',
+            'AL': '#901a1e', 'MD': '#9a7b56',
             'NEUTRAL': '#2e2e35' 
         };
 
-        // Локалізація націй для UI
+        // Локалізація націй для UI (Додано нові прапори)
         const countryNames = {
             'UA': '🇺🇦 Україна', 'PL': '🇵🇱 Польща', 'DE': '🇩🇪 Німеччина', 'FR': '🇫🇷 Франція',
             'GB': '🇬🇧 Велика Британія', 'IT': '🇮🇹 Італія', 'SOV': '🇷🇺 СРСР', 'ES': '🇪🇸 Іспанія', 
@@ -310,7 +312,9 @@
             'FI': '🇫🇮 Фінляндія', 'SE': '🇸🇪 Швеція', 'NO': '🇳🇴 Норвегія', 'DK': '🇩🇰 Данія', 
             'NL': '🇳🇱 Нідерланди', 'BE': '🇧🇪 Бельгія', 'CH': '🇨🇭 Швейцарія', 'AT': '🇦🇹 Австрія', 
             'CZ': '🇨🇿 Чехословаччина', 'HU': '🇭🇺 Угорщина', 'BG': '🇧🇬 Болгарія', 'YU': '🪕 Югославія', 
-            'GR': '🇬🇷 Греція', 'PT': '🇵🇹 Португалія', 'IE': '🇮🇪 Ірландія'
+            'GR': '🇬🇷 Греція', 'PT': '🇵🇹 Португалія', 'IE': '🇮🇪 Ірландія',
+            'BY': '🇧🇾 Білорусь', 'LT': '🇱🇹 Литва', 'LV': '🇱🇻 Латвія', 'EE': '🇪🇪 Естонія',
+            'AL': '🇦🇱 Албанія', 'MD': '🇲🇩 Молдова'
         };
         
         const countryBudgets = {};
@@ -334,7 +338,7 @@
             });
         });
 
-        // Генеруємо кнопки країн на старті
+        // Створення кнопок вибору країн
         allCountries.forEach(code => {
             const btn = document.createElement('button');
             btn.className = 'country-select-btn';
@@ -433,7 +437,7 @@
             renderTechTree(); updateEconomyDisplay();
         }
 
-        // Клік вибору країни
+        // Вибір країни
         document.querySelectorAll('.country-select-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 playerCountry = this.getAttribute('data-code');
@@ -490,7 +494,7 @@
                     setupArrowMarker();
                     const allElements = mapLayer.querySelectorAll('path, polygon, polyline, rect, ellipse');
                     
-                    // Відсортовані коди країн від найдовших до найкоротших, щоб уникнути помилок префіксів в ID
+                    // Валідація префіксів за спаданням довжини коду нації
                     const sortedCodes = Object.keys(countryColors).sort((a,b) => b.length - a.length);
 
                     let index = 0;
@@ -846,7 +850,7 @@
             updateScienceTick();
         }, 1000);
 
-        // КІНЕТИЧНИЙ ШІ ДЛЯ 25 БОТІВ
+        // КІНЕТИЧНИЙ ШІ ДЛЯ ВСІХ БОТІВ
         const activeAiJustifications = {};
         setInterval(function() {
             if (!isGameStarted) return;

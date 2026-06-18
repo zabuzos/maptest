@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2D HOI4 Mini - Нафтова логістика та Танки</title>
+    <title>2D HOI4 Mini - Zoom & Масштабної Війни</title>
     <style>
         html, body {
             margin: 0; padding: 0; width: 100%; height: 100vh; overflow: hidden;
             background-color: #0c0c0e; color: #ffffff; font-family: 'Segoe UI', sans-serif;
+            user-select: none;
         }
 
         .game-layout { display: flex; width: 100%; height: 100vh; }
@@ -51,9 +52,24 @@
         .mode-btn.civ-mode.active { background-color: #f97316; border-color: #fb923c; }
         .mode-btn.mil-mode.active { background-color: #64748b; border-color: #94a3b8; }
 
-        .map-area { flex-grow: 1; position: relative; background-color: #000000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
-        .map-container { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-        .map-container svg { width: 100%; height: 100%; max-width: 100%; max-height: 100%; object-fit: contain; }
+        /* Мапа з підтримкою перетягування */
+        .map-area { flex-grow: 1; position: relative; background-color: #050507; overflow: hidden; cursor: grab; }
+        .map-area:active { cursor: grabbing; }
+        
+        .map-viewport { width: 100%; height: 100%; position: relative; }
+        .map-container { position: absolute; top: 0; left: 0; transform-origin: 0 0; pointer-events: auto; }
+        .map-container svg { width: 2500px; height: 1800px; display: block; }
+
+        /* Контроли зуму */
+        .zoom-controls {
+            position: absolute; top: 20px; right: 20px; display: flex; flex-direction: column; gap: 5px; z-index: 50;
+        }
+        .zoom-btn {
+            background: #1e1e24; color: white; border: 1px solid #3d3d45; width: 36px; height: 36px;
+            font-size: 18px; font-weight: bold; cursor: pointer; border-radius: 4px; display: flex;
+            align-items: center; justify-content: center; transition: background 0.2s;
+        }
+        .zoom-btn:hover { background: #2d2d35; }
 
         svg path, svg polygon, svg polyline, svg rect, svg ellipse {
             cursor: pointer; stroke: #111113; stroke-width: 0.6px; transition: opacity 0.15s ease, stroke 0.15s ease;
@@ -66,15 +82,14 @@
         .factory-indicator.mil { background-color: #64748b; box-shadow: 0 0 6px #64748b; border-radius: 2px; }
         .factory-indicator.oil { background-color: #38bdf8; box-shadow: 0 0 6px #38bdf8; border-radius: 0; width: 6px; height: 10px; }
 
-        /* Значок нафтового родовища на мапі (до побудови свердловини) */
-        .oil-deposit-mark { position: absolute; font-size: 10px; pointer-events: none; transform: translate(-50%, -50%); color: #38bdf8; font-weight: bold; }
+        .oil-deposit-mark { position: absolute; font-size: 11px; pointer-events: none; transform: translate(-50%, -50%); color: #38bdf8; font-weight: bold; }
 
         /* Дивізії */
         .division-indicator { position: absolute; width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-bottom: 14px solid #10b981; filter: drop-shadow(0 0 4px #10b981); pointer-events: none; transform: translate(-50%, -50%); z-index: 5; }
         .division-indicator.selected { border-bottom-color: #ffff00; filter: drop-shadow(0 0 6px #ffff00); }
         .division-indicator.ai-unit { border-bottom-color: #ef4444; filter: drop-shadow(0 0 4px #ef4444); }
         
-        /* Легкі танки (виглядають як ромби/прямокутники) */
+        /* Легкі танки */
         .division-indicator.tank { width: 12px; height: 12px; background-color: #10b981; border: 1px solid #fff; border-radius: 2px; transform: translate(-50%, -50%) rotate(45deg); border-left:none; border-right:none; border-bottom:none; }
         .division-indicator.tank.selected { background-color: #ffff00; filter: drop-shadow(0 0 6px #ffff00); }
         .division-indicator.tank.ai-unit { background-color: #ef4444; filter: drop-shadow(0 0 4px #ef4444); }
@@ -98,7 +113,7 @@
         <div class="sidebar">
             <div>
                 <h1>2D HOI4 Mini</h1>
-                <p>Логістика: Нафта керує швидкістю танків.</p>
+                <p>Керування: Скрол — зум, затиснути мишку — перетягування мапи.</p>
             </div>
 
             <div class="panel-section">
@@ -108,6 +123,10 @@
                     <option value="PL">Польща (PL)</option>
                     <option value="DE">Німеччина (DE)</option>
                     <option value="FR">Франція (FR)</option>
+                    <option value="GB">Великобританія (GB)</option>
+                    <option value="IT">Італія (IT)</option>
+                    <option value="CS">Чехословаччина (CS)</option>
+                    <option value="RO">Румунія (RO)</option>
                 </select>
             </div>
 
@@ -128,17 +147,24 @@
                     <button id="btn-army" class="mode-btn active">⚔️ Режим: Стрільці (50💰)</button>
                     <button id="btn-tank" class="mode-btn tank-mode">🚜 Режим: Легкі Танки (120💰)</button>
                     <button id="btn-civ" class="mode-btn civ-mode">🏗️ Будувати: Цивільну ф-ку</button>
-                    <button id="btn-mil" class="mode-btn mil-mode">🏭 Будувати: Військову ф-ку/Свердловину</button>
+                    <button id="btn-mil" class="mode-btn mil-mode">🏭 Будувати: Свердловину / Військ. ф-ку</button>
                 </div>
             </div>
 
             <div class="alerts-wrapper" id="alert-container"></div>
         </div>
 
-        <div class="map-area">
-            <div id="map-container" class="map-container">
-                <div id="diplomacy-popup"><button id="btn-justify">Обґрунтувати Casus Belli (10с)</button></div>
-                <svg id="arrows-layer" class="arrows-layer"></svg>
+        <div class="map-area" id="map-area">
+            <div class="zoom-controls">
+                <button class="zoom-btn" id="zoom-in">+</button>
+                <button class="zoom-btn" id="zoom-out">-</button>
+                <button class="zoom-btn" id="zoom-reset" style="font-size:11px;">Ск.</button>
+            </div>
+            <div class="map-viewport">
+                <div id="map-container" class="map-container">
+                    <div id="diplomacy-popup"><button id="btn-justify">Обґрунтувати Casus Belli (10с)</button></div>
+                    <svg id="arrows-layer" class="arrows-layer"></svg>
+                </div>
             </div>
         </div>
 
@@ -146,6 +172,7 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        const mapArea = document.getElementById('map-area');
         const container = document.getElementById('map-container');
         const arrowsLayer = document.getElementById('arrows-layer');
         const coinsDisplay = document.getElementById('coins-display');
@@ -166,28 +193,102 @@
 
         let coins = 150;
         let playerOil = 10;
-        let currentMode = 'army'; // 'army', 'tank', 'build_civ', 'build_mil'
+        let currentMode = 'army'; 
         let playerCountry = countrySelect.value;
         let selectedProvinceId = null;
         let targetDiplomacyCountry = null;
 
+        // Логістика швидкості танків
         const MS_PER_PIXEL_INFANTRY = 100; 
-        const MS_PER_PIXEL_TANK_FUEL = 40;   // Танк з нафтою дуже швидкий
-        const MS_PER_PIXEL_TANK_NO_FUEL = 250; // Танк без нафти повзе (в 4 рази повільніше за звичайну швидкість)
-        const MAX_NEIGHBOR_DISTANCE = 180; 
+        const MS_PER_PIXEL_TANK_FUEL = 40;   
+        const MS_PER_PIXEL_TANK_NO_FUEL = 250; 
+        const MAX_NEIGHBOR_DISTANCE = 250; // Збільшено радіус з огляду на масштаб
 
-        const countryColors = { 'UA': '#1d4ed8', 'PL': '#b91c1c', 'DE': '#374151', 'FR': '#0284c7', 'NEUTRAL': '#2e2e35' };
-        const countryBudgets = { 'UA': 150, 'PL': 150, 'DE': 150, 'FR': 150 };
-        const countryOilReserves = { 'UA': 10, 'PL': 10, 'DE': 10, 'FR': 10 };
-        
-        const warStatus = {
-            'UA': { 'PL': false, 'DE': false, 'FR': false },
-            'PL': { 'UA': false, 'DE': false, 'FR': false },
-            'DE': { 'UA': false, 'PL': false, 'FR': false },
-            'FR': { 'UA': false, 'PL': false, 'DE': false }
+        // Масштабування (Zoom & Pan) змінні
+        let zoomScale = 0.5;
+        let panX = 0;
+        let panY = 0;
+        let isDragging = false;
+        let startX, startY;
+
+        // Розширений список країн
+        const countryColors = { 
+            'UA': '#1d4ed8', 'PL': '#b91c1c', 'DE': '#374151', 'FR': '#0284c7', 
+            'GB': '#7c3aed', 'IT': '#15803d', 'CS': '#78350f', 'RO': '#b45309',
+            'NEUTRAL': '#2e2e35' 
         };
+        
+        const countryBudgets = {};
+        const countryOilReserves = {};
+        const warStatus = {};
+
+        // Ініціалізація логіки відносин країн
+        const allCountryCodes = Object.keys(countryColors).filter(c => c !== 'NEUTRAL');
+        allCountryCodes.forEach(c => {
+            countryBudgets[c] = 150;
+            countryOilReserves[c] = 10;
+            warStatus[c] = {};
+            allCountryCodes.forEach(target => {
+                warStatus[c][target] = false;
+            });
+        });
 
         const provinceData = {}; 
+
+        // Оновлення трансформації мапи (масштаб + перетягування)
+        function updateMapTransform() {
+            container.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomScale})`;
+        }
+        updateMapTransform();
+
+        // Події миші для перетягування
+        mapArea.addEventListener('mousedown', function(e) {
+            if (e.target.closest('.zoom-controls') || e.target.closest('#diplomacy-popup')) return;
+            isDragging = true;
+            startX = e.clientX - panX;
+            startY = e.clientY - panY;
+        });
+
+        window.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            panX = e.clientX - startX;
+            panY = e.clientY - startY;
+            updateMapTransform();
+        });
+
+        window.addEventListener('mouseup', function() {
+            isDragging = false;
+        });
+
+        // Zoom через коліщатко
+        mapArea.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            const zoomFactor = 1.1;
+            const rect = mapArea.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            // Координати до зміни зуму
+            const mapX = (mouseX - panX) / zoomScale;
+            const mapY = (mouseY - panY) / zoomScale;
+
+            if (e.deltaY < 0) {
+                zoomScale = Math.min(zoomScale * zoomFactor, 3);
+            } else {
+                zoomScale = Math.max(zoomScale / zoomFactor, 0.2);
+            }
+
+            // Корегуємо pan, щоб фокус залишався на мишці
+            panX = mouseX - mapX * zoomScale;
+            panY = mouseY - mapY * zoomScale;
+
+            updateMapTransform();
+        }, { passive: false });
+
+        // Інтерфейсні кнопки для зуму
+        document.getElementById('zoom-in').addEventListener('click', () => { zoomScale = Math.min(zoomScale * 1.2, 3); updateMapTransform(); });
+        document.getElementById('zoom-out').addEventListener('click', () => { zoomScale = Math.max(zoomScale / 1.2, 0.2); updateMapTransform(); });
+        document.getElementById('zoom-reset').addEventListener('click', () => { zoomScale = 0.5; panX = 0; panY = 0; updateMapTransform(); });
 
         countrySelect.addEventListener('change', function() {
             playerCountry = this.value;
@@ -214,11 +315,11 @@
 
                 if (mapLayer) {
                     setupArrowMarker();
-
                     const allElements = mapLayer.querySelectorAll('path, polygon, polyline, rect, ellipse');
                     
-                    // Визначаємо випадкові нафтові провінції для тесту логістики (кожна 5-та провінція матиме нафту)
                     let index = 0;
+                    // Список доступних нових кодів країн, щоб автоматично наповнити нейтральні території
+                    const extraCountries = ['GB', 'IT', 'CS', 'RO'];
 
                     allElements.forEach(element => {
                         if (!element.id) element.id = 'prov_' + Math.random().toString(36).substr(2, 5);
@@ -229,18 +330,22 @@
                             if (id.endsWith('_' + code) || id.endsWith(code)) { detectedCountry = code; break; }
                         }
 
+                        // Динамічно міняємо частину нейтральних провінцій на нові країни
+                        if (detectedCountry === 'NEUTRAL') {
+                            detectedCountry = extraCountries[index % extraCountries.length];
+                        }
+
                         index++;
-                        let hasOilDeposit = (index % 5 === 0); // Кожне п'яте місто має нафту
+                        let hasOilDeposit = (index % 6 === 0); 
 
                         provinceData[id] = {
                             country: detectedCountry, civFactories: 0, milFactories: 0, oilWells: 0,
                             hasOilDeposit: hasOilDeposit, hasDivision: false, isMoving: false, 
-                            divisionHp: 0, divisionOwner: null, divisionType: null, // 'infantry' або 'tank'
+                            divisionHp: 0, divisionOwner: null, divisionType: null, 
                             elementRef: element, domDivisionRef: null
                         };
                         element.style.fill = countryColors[detectedCountry];
 
-                        // Якщо є нафта — малюємо значок нафти на мапі заздалегідь
                         if (hasOilDeposit) {
                             createOilVisualMark(element, id);
                         }
@@ -249,6 +354,9 @@
                     updateEconomyDisplay();
 
                     mapLayer.addEventListener('click', function(event) {
+                        // Якщо перетягували карту, клік не повинен спрацьовувати як наказ
+                        if (isDragging) return;
+
                         const validTags = ['path', 'polygon', 'polyline', 'rect', 'ellipse'];
                         const target = event.target;
                         if (!validTags.includes(target.tagName.toLowerCase())) return;
@@ -257,15 +365,14 @@
                         const province = provinceData[provinceId];
                         if (!province || province.isMoving) return;
 
-                        // БУДІВНИЦТВО
+                        // Будівництво
                         if (currentMode === 'build_civ' || currentMode === 'build_mil') {
-                            if (province.country !== playerCountry) return alert("Тільки на своїй території!");
-                            if ((province.civFactories + province.milFactories + province.oilWells) >= 3) return alert("Немає вільних слотів!");
+                            if (province.country !== playerCountry) return;
+                            if ((province.civFactories + province.milFactories + province.oilWells) >= 3) return;
 
                             if (currentMode === 'build_civ') {
                                 province.civFactories++; createFactoryVisual(target, provinceId, 'civ');
                             } else {
-                                // Якщо нафтове родовище — будується нафтова свердловина, інакше військ. фабрика
                                 if (province.hasOilDeposit) {
                                     province.oilWells++; createFactoryVisual(target, provinceId, 'oil');
                                 } else {
@@ -274,7 +381,7 @@
                             }
                             updateEconomyDisplay();
                         } 
-                        // РЕЖИМ КЕРУВАННЯ ВІЙСЬКАМИ (Стрільці або Танки)
+                        // Армія
                         else if (currentMode === 'army' || currentMode === 'tank') {
                             dipPopup.style.display = 'none';
 
@@ -287,7 +394,6 @@
                                     if (selectedProvinceId && selectedProvinceId !== provinceId) {
                                         tryMoveOrAttack(selectedProvinceId, provinceId, playerCountry);
                                     } else {
-                                        // Найм нового юніту залежно від режиму кнопки
                                         if (currentMode === 'army' && coins >= 50) {
                                             coins -= 50; coinsDisplay.textContent = coins;
                                             spawnDivisionVisual(provinceId, playerCountry, 'infantry');
@@ -302,7 +408,7 @@
                             } else {
                                 if (selectedProvinceId) {
                                     const enemyCountry = province.country;
-                                    if (enemyCountry !== 'NEUTRAL' && !warStatus[playerCountry][enemyCountry]) {
+                                    if (!warStatus[playerCountry][enemyCountry]) {
                                         const center = getProvinceCenter(provinceId);
                                         dipPopup.style.left = `${center.x}px`; dipPopup.style.top = `${center.y}px`;
                                         dipPopup.style.display = 'block';
@@ -356,9 +462,10 @@
         function getProvinceCenter(id) {
             const rect = provinceData[id].elementRef.getBoundingClientRect();
             const containerRect = container.getBoundingClientRect();
+            // Повертає локальні координати всередині контейнера мапи незалежно від поточного зуму
             return {
-                x: rect.left - containerRect.left + (rect.width / 2),
-                y: rect.top - containerRect.top + (rect.height / 2)
+                x: (rect.left - containerRect.left) / zoomScale,
+                y: (rect.top - containerRect.top) / zoomScale
             };
         }
 
@@ -368,29 +475,26 @@
             const distance = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
 
             if (distance > MAX_NEIGHBOR_DISTANCE) {
-                if (countryCode === playerCountry) alert("Рухатися можна тільки в сусідні провінції.");
                 cancelSelection(); return;
             }
 
             const targetProv = provinceData[toId];
-            if (targetProv.country !== 'NEUTRAL' && targetProv.country !== countryCode) {
+            if (targetProv.country !== countryCode) {
                 if (!warStatus[countryCode][targetProv.country]) { cancelSelection(); return; }
             }
             if (targetProv.hasDivision && targetProv.divisionOwner === countryCode) { cancelSelection(); return; }
 
-            // Розрахунок швидкості з урахуванням палива для легких танків
             const divType = provinceData[fromId].divisionType;
             let currentMsPerPixel = MS_PER_PIXEL_INFANTRY;
 
             if (divType === 'tank') {
                 let currentFuel = (countryCode === playerCountry) ? playerOil : countryOilReserves[countryCode];
                 if (currentFuel > 0) {
-                    currentMsPerPixel = MS_PER_PIXEL_TANK_FUEL; // Швидкісний рух
-                    // Знімаємо 1 барель за наказ руху на танку
+                    currentMsPerPixel = MS_PER_PIXEL_TANK_FUEL; 
                     if (countryCode === playerCountry) { playerOil = Math.max(0, playerOil - 1); } 
                     else { countryOilReserves[countryCode] = Math.max(0, countryOilReserves[countryCode] - 1); }
                 } else {
-                    currentMsPerPixel = MS_PER_PIXEL_TANK_NO_FUEL; // Повільний рух без нафти
+                    currentMsPerPixel = MS_PER_PIXEL_TANK_NO_FUEL; 
                 }
             }
 
@@ -460,15 +564,13 @@
 
             let attHp = attackerHp;
             const battleInterval = setInterval(() => {
-                // Базова атака: Танк = 35, Піхота = 20
                 let baseAttDmg = (attType === 'tank') ? 35 : 20;
                 let baseDefDmg = (defType === 'tank') ? 35 : 20;
 
-                // Перевірка штрафу за дефіцит нафти під час бою
                 let attFuel = (attackerCountry === playerCountry) ? playerOil : countryOilReserves[attackerCountry];
                 let defFuel = (defenderCountry === playerCountry) ? playerOil : countryOilReserves[defenderCountry];
 
-                if (attType === 'tank' && attFuel <= 0) baseAttDmg = 10; // Штраф силі танка без палива
+                if (attType === 'tank' && attFuel <= 0) baseAttDmg = 10; 
                 if (defType === 'tank' && defFuel <= 0) baseDefDmg = 10;
 
                 const dmgToDef = Math.floor(Math.random() * 15) + baseAttDmg - 5;
@@ -477,7 +579,7 @@
                 prov.divisionHp -= dmgToDef; attHp -= dmgToAtt;
 
                 battleHtml.style.left = `${center.x}px`; battleHtml.style.top = `${center.y}px`;
-                battleHtml.textContent = `${attackerCountry}(${attType === 'tank'?'Танк':'Піх'}): ${Math.max(0, attHp)} VS ${defenderCountry}: ${Math.max(0, prov.divisionHp)}`;
+                battleHtml.textContent = `${attackerCountry}: ${Math.max(0, attHp)} VS ${defenderCountry}: ${Math.max(0, prov.divisionHp)}`;
 
                 if (prov.divisionHp <= 0 || attHp <= 0) {
                     clearInterval(battleInterval); battleHtml.remove();
@@ -501,48 +603,36 @@
             const center = getProvinceCenter(id);
             const divEl = document.createElement('div');
             
-            // Якщо танк — додаємо клас tank (ромб), інакше звичайний трикутник
-            if (type === 'tank') {
-                divEl.className = 'division-indicator tank';
-            } else {
-                divEl.className = 'division-indicator';
-            }
+            if (type === 'tank') { divEl.className = 'division-indicator tank'; } 
+            else { divEl.className = 'division-indicator'; }
 
             if (countryCode !== playerCountry) divEl.classList.add('ai-unit');
             divEl.style.left = `${center.x}px`; divEl.style.top = `${center.y}px`;
             container.appendChild(divEl);
             
             provinceData[id].hasDivision = true; 
-            provinceData[id].divisionHp = (type === 'tank') ? 150 : 100; // Танки мають 150 ОЗ
+            provinceData[id].divisionHp = (type === 'tank') ? 150 : 100; 
             provinceData[id].divisionOwner = countryCode;
             provinceData[id].divisionType = type;
             provinceData[id].domDivisionRef = divEl;
         }
 
         function createFactoryVisual(svgElement, id, type) {
-            const rect = svgElement.getBoundingClientRect();
-            const containerRect = container.getBoundingClientRect();
-            const centerX = rect.left - containerRect.left + (rect.width / 2);
-            const centerY = rect.top - containerRect.top + (rect.height / 2);
-
+            const center = getProvinceCenter(id);
             const factory = document.createElement('div');
             factory.className = `factory-indicator ${type}`;
             const totalBuilt = provinceData[id].civFactories + provinceData[id].milFactories + provinceData[id].oilWells;
             const offsetX = (totalBuilt - 2) * 11; 
-            factory.style.left = `${centerX + offsetX}px`; factory.style.top = `${centerY + 14}px`; 
+            factory.style.left = `${center.x + offsetX}px`; factory.style.top = `${center.y + 14}px`; 
             container.appendChild(factory);
         }
 
         function createOilVisualMark(svgElement, id) {
-            const rect = svgElement.getBoundingClientRect();
-            const containerRect = container.getBoundingClientRect();
-            const centerX = rect.left - containerRect.left + (rect.width / 2);
-            const centerY = rect.top - containerRect.top + (rect.height / 2);
-
+            const center = getProvinceCenter(id);
             const mark = document.createElement('div');
             mark.className = 'oil-deposit-mark';
             mark.textContent = '💧';
-            mark.style.left = `${centerX}px`; mark.style.top = `${centerY - 10}px`;
+            mark.style.left = `${center.x}px`; mark.style.top = `${center.y - 12}px`;
             container.appendChild(mark);
         }
 
@@ -551,9 +641,8 @@
             document.querySelectorAll('.division-indicator').forEach(el => el.classList.remove('selected'));
         }
 
-        // Розрахунок економіки та виробництва ресурсів
         function updateEconomyDisplay() {
-            // Оновлення балансів нафти та монет для ШІ ботів пасивно
+            // Економіка ШІ
             for (const code in countryBudgets) {
                 let civs = 0; let wells = 0;
                 for (const pId in provinceData) {
@@ -563,10 +652,10 @@
                     }
                 }
                 countryBudgets[code] += civs * 5; 
-                countryOilReserves[code] += wells * 1; // +1 нафта за свердловину ШІ
+                countryOilReserves[code] += wells * 1;
             }
 
-            // Розрахунок для гравця
+            // Економіка гравця
             let totalCiv = 0; let totalMil = 0; let totalWells = 0; let totalDivisions = 0;
             for (const id in provinceData) {
                 if (provinceData[id].country === playerCountry) {
@@ -593,7 +682,6 @@
             oilDisplay.textContent = playerOil;
         }
 
-        // Таймер ресурсів кожну секунду
         setInterval(function() {
             if (typeof window.currentCalculatedIncome !== 'undefined') {
                 coins += window.currentCalculatedIncome; if (coins < 0) coins = 0;
@@ -603,11 +691,10 @@
             }
         }, 1000);
 
-        // Штучний Інтелект (Кожні 5 секунд)
+        // Покращений Багатосторонній ШІ
         const activeAiJustifications = {};
         setInterval(function() {
-            const countries = ['UA', 'PL', 'DE', 'FR'];
-            countries.forEach(bot => {
+            allCountryCodes.forEach(bot => {
                 if (bot === playerCountry) return;
 
                 const botProvinces = [];
@@ -615,8 +702,7 @@
                 if (botProvinces.length === 0) return;
 
                 let botCash = countryBudgets[bot];
-                if (botCash >= 120 && Math.random() > 0.5) {
-                    // Купівля танка ботом, якщо є гроші
+                if (botCash >= 120 && Math.random() > 0.6) {
                     const randProvId = botProvinces[Math.floor(Math.random() * botProvinces.length)];
                     const prov = provinceData[randProvId];
                     if (!prov.hasDivision && !prov.isMoving) {
@@ -634,7 +720,6 @@
                             if (Math.random() > 0.5) { prov.civFactories++; createFactoryVisual(prov.elementRef, randProvId, 'civ'); } 
                             else { prov.milFactories++; createFactoryVisual(prov.elementRef, randProvId, 'mil'); }
                         }
-                        updateEconomyDisplay();
                     }
                 }
 
@@ -654,7 +739,7 @@
                             const attackTo = targets[Math.floor(Math.random() * targets.length)];
                             const enemyCountry = provinceData[attackTo].country;
 
-                            if (enemyCountry === 'NEUTRAL' || warStatus[bot][enemyCountry]) {
+                            if (warStatus[bot][enemyCountry]) {
                                 tryMoveOrAttack(attackFrom, attackTo, bot);
                             } else {
                                 const justificationKey = `${bot}_vs_${enemyCountry}`;
@@ -664,14 +749,14 @@
                                     let warningBox = null;
                                     if (enemyCountry === playerCountry) {
                                         warningBox = document.createElement('div'); warningBox.className = 'war-warning';
-                                        warningBox.innerHTML = `⚠️ ${bot} обґрунтовує привід для війни проти вас! (10с)`;
+                                        warningBox.innerHTML = `⚠️ ${bot} готує війну проти вас! (10с)`;
                                         alertContainer.appendChild(warningBox);
                                     }
 
                                     let aiCbTime = 10;
                                     const aiCbInterval = setInterval(() => {
                                         aiCbTime--;
-                                        if (warningBox) warningBox.innerHTML = `⚠️ ${bot} обґрунтовує привід для війни проти вас! (${aiCbTime}с)`;
+                                        if (warningBox) warningBox.innerHTML = `⚠️ ${bot} готує війну проти вас! (${aiCbTime}с)`;
                                         if (aiCbTime <= 0) {
                                             clearInterval(aiCbInterval); if (warningBox) warningBox.remove();
                                             warStatus[bot][enemyCountry] = true; warStatus[enemyCountry][bot] = true;
@@ -685,7 +770,7 @@
                     }
                 }
             });
-        }, 5000);
+        }, 4000);
     });
 </script>
 </body>

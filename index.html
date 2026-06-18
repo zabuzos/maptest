@@ -24,6 +24,7 @@
         /* Ігрова панель управління */
         .control-panel {
             display: flex;
+            flex-wrap: wrap;
             gap: 20px;
             align-items: center;
             background: #16161a;
@@ -33,10 +34,33 @@
             border: 1px solid #2a2a30;
         }
 
+        .panel-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         .stats {
             font-size: 16px;
             font-weight: bold;
             color: #ffd700;
+        }
+
+        label {
+            font-size: 14px;
+            color: #8a8a93;
+            font-weight: 600;
+        }
+
+        select {
+            background-color: #222227;
+            color: white;
+            border: 1px solid #444;
+            padding: 6px 12px;
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+            font-weight: 600;
         }
 
         .mode-btn {
@@ -63,7 +87,7 @@
         }
 
         .map-container {
-            position: relative; /* Потрібно для абсолютного позиціонування заводів */
+            position: relative;
             width: 90vw;
             max-width: 1200px;
             border: 2px solid #2a2a30;
@@ -73,16 +97,16 @@
             padding: 10px;
         }
 
-        /* Стилі для провінцій */
+        /* Налаштування векторних елементів */
         svg path, svg polygon, svg polyline, svg rect, svg ellipse {
             cursor: pointer;
-            stroke: #222222;
-            stroke-width: 0.5px;
+            stroke: #111113;
+            stroke-width: 0.6px;
             transition: opacity 0.15s ease, stroke 0.15s ease;
         }
 
         svg path:hover, svg polygon:hover, svg rect:hover {
-            opacity: 0.75;
+            opacity: 0.85;
             stroke: #ffffff;
         }
 
@@ -91,12 +115,12 @@
             position: absolute;
             width: 8px;
             height: 8px;
-            background-color: #f97316;
+            background-color: #f59e0b;
             border: 1px solid #ffffff;
             border-radius: 50%;
-            pointer-events: none; /* Щоб заводи не перекривали кліки по карті */
+            pointer-events: none;
             transform: translate(-50%, -50%);
-            box-shadow: 0 0 6px #f97316;
+            box-shadow: 0 0 6px #f59e0b;
             transition: all 0.3s ease;
         }
     </style>
@@ -104,16 +128,27 @@
 <body>
 
     <h1>Глобальна Стратегія</h1>
-    <p>Керуйте державою, розширюйте території та будуйте індустрію.</p>
+    <p>Оберіть свою країну, розширюйте кордони та розбудовуйте власну промисловість.</p>
 
     <!-- Ігрова панель -->
     <div class="control-panel">
-        <div class="stats">
+        <div class="panel-section">
+            <label for="country-select">Ваша країна:</label>
+            <select id="country-select">
+                <option value="UA">Україна (UA)</option>
+                <option value="PL">Польща (PL)</option>
+                <option value="DE">Німеччина (DE)</option>
+                <option value="FR">Франція (FR)</option>
+            </select>
+        </div>
+
+        <div class="panel-section stats">
             Монети: <span id="coins-display">0</span> (<span id="income-display">+0</span>/с)
         </div>
-        <div>
-            <button id="btn-capture" class="mode-btn active">Режим: Захоплення</button>
-            <button id="btn-build" class="mode-btn build-mode">Режим: Будівництво заводів</button>
+
+        <div class="panel-section">
+            <button id="btn-capture" class="mode-btn active">Режим: Експансія</button>
+            <button id="btn-build" class="mode-btn build-mode">Режим: Промисловість</button>
         </div>
     </div>
 
@@ -126,14 +161,31 @@
         const incomeDisplay = document.getElementById('income-display');
         const btnCapture = document.getElementById('btn-capture');
         const btnBuild = document.getElementById('btn-build');
+        const countrySelect = document.getElementById('country-select');
 
-        // Ігрові змінні
-        let coins = 0;
-        let currentMode = 'capture'; // 'capture' або 'build'
-        const targetColor = "#555555"; // Колір захопленої провінції
+        // Ігрові налаштування
+        let coins = 100; // Початковий капітал
+        let currentMode = 'capture'; 
+        let playerCountry = countrySelect.value; // Поточна країна гравця
+
+        // Палітра кольорів для різних країн
+        const countryColors = {
+            'UA': '#1d4ed8', // Синій
+            'PL': '#b91c1c', // Червоний
+            'DE': '#374151', // Сіро-чорний
+            'FR': '#0284c7', // Блакитний
+            'NEUTRAL': '#2e2e35' // Колір для інших/нейтральних провінцій
+        };
         
-        // База даних провінцій (тут зберігатиметься к-сть заводів)
+        // Головна база даних провінцій
         const provinceData = {}; 
+
+        // Слідкуємо за зміною обраної країни гравцем
+        countrySelect.addEventListener('change', function() {
+            playerCountry = this.value;
+            console.log("Ви змінили країну на: " + playerCountry);
+            updateIncomeDisplay(); // Перераховуємо дохід саме нашої країни
+        });
 
         // Перемикання режимів
         btnCapture.addEventListener('click', () => {
@@ -148,88 +200,115 @@
             btnCapture.classList.remove('active');
         });
 
-        // 1. Завантажуємо зовнішній файл карти map.svg
+        // 1. Завантаження мапи SVG
         fetch('map.svg')
             .then(response => response.text())
             .then(svgData => {
                 container.innerHTML = svgData;
-
-                // Знаходимо головний шар CorelDRAW або сам SVG
                 const mapLayer = document.getElementById('Layer_x0020_1') || container.querySelector('svg');
 
                 if (mapLayer) {
+                    // Автоматично скануємо та фарбуємо початкову карту
+                    const allElements = mapLayer.querySelectorAll('path, polygon, polyline, rect, ellipse');
+                    
+                    allElements.forEach(element => {
+                        // Якщо ID немає — створюємо випадковий
+                        if (!element.id) {
+                            element.id = 'province_' + Math.random().toString(36).substr(2, 5) + '_UNKNOWN';
+                        }
+
+                        const id = element.id;
+                        let detectedCountry = 'NEUTRAL';
+
+                        // Визначаємо країну за закінченням ID (наприклад, lviv_UA -> UA)
+                        for (const code in countryColors) {
+                            if (id.endsWith('_' + code) || id.endsWith(code)) {
+                                detectedCountry = code;
+                                break;
+                            }
+                        }
+
+                        // Записуємо провінцію в ігрову базу даних
+                        provinceData[id] = {
+                            country: detectedCountry,
+                            factories: 0
+                        };
+
+                        // Фарбуємо у відповідний колір
+                        element.style.fill = countryColors[detectedCountry];
+                    });
+
+                    updateIncomeDisplay();
+
+                    // 2. Обробник кліків по карті
                     mapLayer.addEventListener('click', function(event) {
                         const validTags = ['path', 'polygon', 'polyline', 'rect', 'ellipse'];
                         const target = event.target;
                         
                         if (validTags.includes(target.tagName.toLowerCase())) {
-                            // Генеруємо унікальний ID, якщо його немає у фігури
-                            if (!target.id) {
-                                target.id = 'prov_' + Math.random().toString(36).substr(2, 9);
-                            }
-                            
                             const provinceId = target.id;
+                            const province = provinceData[provinceId];
 
-                            // Ініціалізуємо дані провінції в пам'яті, якщо їх ще немає
-                            if (!provinceData[provinceId]) {
-                                provinceData[provinceId] = { captured: false, factories: 0 };
-                            }
+                            if (!province) return;
 
-                            // --- ЛОГІКА РЕЖИМІВ ---
+                            // --- РЕЖИМ ЕКСПАНСІЇ (ЗАХОПЛЕННЯ) ---
                             if (currentMode === 'capture') {
-                                // Режим ЗАХОПЛЕННЯ
-                                target.style.fill = targetColor;
-                                provinceData[provinceId].captured = true;
-                                console.log("Захоплено провінцію: " + provinceId);
-
-                            } else if (currentMode === 'build') {
-                                // Режим БУДІВНИЦТВА
-                                // Будувати можна лише у захоплених провінціях (можна прибрати цю умову, якщо дозволено всюди)
-                                if (!provinceData[provinceId].captured) {
-                                    alert("Спочатку захопіть цю провінцію в режимі 'Захоплення'!");
+                                if (province.country === playerCountry) {
+                                    console.log("Ця провінція вже ваша!");
                                     return;
                                 }
 
-                                // Обмеження: макс. 3 заводи на провінцію (щоб не захаращувати карту)
-                                if (provinceData[provinceId].factories < 3) {
-                                    provinceData[provinceId].factories++;
-                                    
-                                    // Створюємо заводик на карті
-                                    createFactoryVisual(target);
-                                    
-                                    console.log(`У провінції ${provinceId} побудовано завод. Всього: ${provinceData[provinceId].factories}`);
+                                // Захоплюємо провінцію: міняємо власника та колір
+                                province.country = playerCountry;
+                                target.style.fill = countryColors[playerCountry];
+                                
+                                console.log(`Провінцію ${provinceId} інтегровано до складу ${playerCountry}`);
+                                updateIncomeDisplay();
+                            } 
+                            
+                            // --- РЕЖИМ ПРОМИСЛОВОСТІ (БУДІВНИЦТВО) ---
+                            else if (currentMode === 'build') {
+                                // Перевірка: чи належить провінція країні, за яку ми граємо
+                                if (province.country !== playerCountry) {
+                                    alert(`Ви не можете будувати тут! Ця територія належить: ${province.country}. Оберіть провінцію своєї країни.`);
+                                    return;
+                                }
+
+                                // Вартість будівництва (за бажанням, зараз безкоштовно, або можна додати умову з монетами)
+                                if (province.factories < 3) {
+                                    province.factories++;
+                                    createFactoryVisual(target, provinceId);
+                                    console.log(`Будівництво завершено в ${provinceId}. Заводів: ${province.factories}`);
                                     updateIncomeDisplay();
                                 } else {
-                                    console.log("Досягнуто ліміт заводів у цій провінції!");
+                                    alert("У цій провінції більше немає місця для фабрик (максимум 3)!");
                                 }
                             }
                         }
                     });
                 } else {
-                    console.error("Помилка: Не вдалося знайти векторний шар всередині SVG.");
+                    console.error("Помилка обробки шарів мапи.");
                 }
             })
             .catch(error => {
-                console.error("Помилка завантаження файлу карти:", error);
-                container.innerHTML = "<p style='color:red;'>Не вдалося завантажити карту map.svg. Перевірте, чи лежить файл у тій же папці.</p>";
+                console.error("Помилка файлу карти:", error);
+                container.innerHTML = "<p style='color:red;'>Файл map.svg не знайдено або заблоковано CORS.</p>";
             });
 
-        // Функція для додавання помаранчевої цятки (заводу) по центру провінції
-        function createFactoryVisual(svgElement) {
+        // Функція для створення візуальних точок-заводів
+        function createFactoryVisual(svgElement, id) {
             const rect = svgElement.getBoundingClientRect();
             const containerRect = container.getBoundingClientRect();
 
-            // Знаходимо центр провінції відносно контейнера карти
             const centerX = rect.left - containerRect.left + (rect.width / 2);
             const centerY = rect.top - containerRect.top + (rect.height / 2);
 
-            // Створюємо HTML елемент заводу
             const factory = document.createElement('div');
             factory.className = 'factory-indicator';
             
-            // Невеликий випадковий зсув (хаос), якщо заводів декілька, щоб вони не зливалися в одну точку
-            const factoryCount = provinceData[svgElement.id].factories;
-            const offsetX = (factoryCount - 2) * 10; // Розставляє їх в ряд
+            // Зсув для кількох заводів в одній локації
+            const factoryCount = provinceData[id].factories;
+            const offsetX = (factoryCount - 2) * 11; 
 
             factory.style.left = `${centerX + offsetX}px`;
             factory.style.top = `${centerY}px`;
@@ -237,23 +316,24 @@
             container.appendChild(factory);
         }
 
-        // Підрахунок загального прибутку за секунду
-        function calculateTotalIncome() {
+        // Рахуємо дохід ЛИШЕ для тієї країни, за яку зараз грає гравець
+        function calculatePlayerIncome() {
             let totalFactories = 0;
             for (const id in provinceData) {
-                totalFactories += provinceData[id].factories;
+                if (provinceData[id].country === playerCountry) {
+                    totalFactories += provinceData[id].factories;
+                }
             }
-            return totalFactories * 5; // Кожен завод дає 5 монет
+            return totalFactories * 5; 
         }
 
-        // Оновлення тексту прибутку (+Х/с)
         function updateIncomeDisplay() {
-            incomeDisplay.textContent = `+${calculateTotalIncome()}`;
+            incomeDisplay.textContent = `+${calculatePlayerIncome()}`;
         }
 
-        // Ігровий таймер: виконується раз на секунду (1000 мс)
+        // Щомиті додаємо золото в бюджет гравця
         setInterval(function() {
-            const income = calculateTotalIncome();
+            const income = calculatePlayerIncome();
             coins += income;
             coinsDisplay.textContent = coins;
         }, 1000);

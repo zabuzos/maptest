@@ -290,10 +290,10 @@
         let isDragging = false;
         let startX, startY, hasMovedMouse = false;
 
-        // Палітра кольорів з новими країнами (Балкани, Балтія, Білорусь, Молдова)
+        // Палітра кольорів
         const countryColors = { 
             'UA': '#1d4ed8', 'PL': '#b91c1c', 'DE': '#374151', 'FR': '#0284c7', 
-            'GB': '#7c3aed', 'IT': '#15803d', 'SOV': '#991b1b', 'RU': '#991b1b',
+            'GB': '#7c3aed', 'IT': '#15803d', 'SOV': '#991b1b',
             'ES': '#b45309', 'RO': '#eab308', 'TR': '#0d9488', 'US': '#1e3a8a',
             'JP': '#9a3412', 'FI': '#67e8f9', 'SE': '#eab308', 'NO': '#0f766e',
             'DK': '#be123c', 'NL': '#ea580c', 'BE': '#854d0e', 'CH': '#ef4444',
@@ -304,7 +304,7 @@
             'NEUTRAL': '#2e2e35' 
         };
 
-        // Локалізація націй для UI (Додано нові прапори)
+        // Локалізація націй для UI
         const countryNames = {
             'UA': '🇺🇦 Україна', 'PL': '🇵🇱 Польща', 'DE': '🇩🇪 Німеччина', 'FR': '🇫🇷 Франція',
             'GB': '🇬🇧 Велика Британія', 'IT': '🇮🇹 Італія', 'SOV': '🇷🇺 СРСР', 'ES': '🇪🇸 Іспанія', 
@@ -315,6 +315,18 @@
             'GR': '🇬🇷 Греція', 'PT': '🇵🇹 Португалія', 'IE': '🇮🇪 Ірландія',
             'BY': '🇧🇾 Білорусь', 'LT': '🇱🇹 Литва', 'LV': '🇱🇻 Латвія', 'EE': '🇪🇪 Естонія',
             'AL': '🇦🇱 Албанія', 'MD': '🇲🇩 Молдова'
+        };
+
+        // СЛОВНИК АЛІАСІВ: для підтримки 3-літерних кодів HOI4 та альтернативних назв з інтернету
+        const countryAliases = {
+            'UK': 'GB', 'ENG': 'GB', 'GBR': 'GB', // Велика Британія
+            'YUG': 'YU',                          // Югославія
+            'CZE': 'CZ', 'SK': 'CZ', 'SLO': 'CZ', // Чехія + Словаччина = Чехословаччина
+            'HUN': 'HU',                          // Угорщина
+            'RU': 'SOV', 'RUS': 'SOV',            // СРСР / Росія
+            'UKR': 'UA', 'POL': 'PL', 'GER': 'DE', 'FRA': 'FR', 'ITA': 'IT',
+            'ROM': 'RO', 'BUL': 'BG', 'GRE': 'GR', 'ALB': 'AL', 'BLR': 'BY',
+            'EST': 'EE', 'LAT': 'LV', 'LTU': 'LT', 'MDA': 'MD'
         };
         
         const countryBudgets = {};
@@ -480,7 +492,7 @@
         btnBunker.addEventListener('click', () => { currentMode = 'build_bunker'; resetActiveButtons(); btnBunker.classList.add('active'); cancelSelection(); });
         function resetActiveButtons() { btnArmy.classList.remove('active'); btnTank.classList.remove('active'); btnCiv.classList.remove('active'); btnMil.classList.remove('active'); btnBunker.classList.remove('active'); }
 
-        // ЗАВАНТАЖЕННЯ SVG ТА ПЕРЕВІРКА КОРДОНІВ
+        // ЗАВАНТАЖЕННЯ SVG ТА КОРЕКТНИЙ ПАРСИНГ З УРАХУВАННЯМ АЛІАСІВ
         fetch('map.svg')
             .then(response => response.text())
             .then(svgData => {
@@ -494,7 +506,6 @@
                     setupArrowMarker();
                     const allElements = mapLayer.querySelectorAll('path, polygon, polyline, rect, ellipse');
                     
-                    // Валідація префіксів за спаданням довжини коду нації
                     const sortedCodes = Object.keys(countryColors).sort((a,b) => b.length - a.length);
 
                     let index = 0;
@@ -503,8 +514,19 @@
                         const id = element.id.toUpperCase();
                         let detectedCountry = 'NEUTRAL';
 
+                        // 1. Спроба прямого збігу
                         for (const code of sortedCodes) {
                             if (id.endsWith('_' + code) || id.endsWith(code)) { detectedCountry = code; break; }
+                        }
+
+                        // 2. Спроба розпізнавання через аліаси (HOI4 теги, альтернативні коди)
+                        if (detectedCountry === 'NEUTRAL') {
+                            for (const alias in countryAliases) {
+                                if (id.endsWith('_' + alias) || id.endsWith(alias)) {
+                                    detectedCountry = countryAliases[alias];
+                                    break;
+                                }
+                            }
                         }
 
                         index++;
@@ -850,7 +872,7 @@
             updateScienceTick();
         }, 1000);
 
-        // КІНЕТИЧНИЙ ШІ ДЛЯ ВСІХ БОТІВ
+        // КІНЕТИЧНИЙ ШІ
         const activeAiJustifications = {};
         setInterval(function() {
             if (!isGameStarted) return;

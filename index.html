@@ -52,41 +52,43 @@
 
     <div id="map-container" class="map-container"></div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const container = document.getElementById('map-container');
-            const targetColor = "#555555"; // Колір зафарбовування (сірий)
+   <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const container = document.getElementById('map-container');
+        const targetColor = "#555555"; // Колір захопленої провінції (сірий)
 
-            // 1. Завантажуємо зовнішній файл карти
-            fetch('map.svg')
-                .then(response => response.text())
-                .then(svgData => {
-                    // Вставляємо вміст SVG прямо в наш контейнер
-                    container.innerHTML = svgData;
+        // 1. Завантажуємо зовнішній файл карти map.svg
+        fetch('map.svg')
+            .then(response => response.text())
+            .then(svgData => {
+                // Вставляємо вміст SVG прямо в наш HTML-контейнер
+                container.innerHTML = svgData;
 
-                    // 2. Коли карта вставилась, шукаємо її головний шар від CorelDRAW
-                    const mapLayer = document.getElementById('Layer_x0020_1');
+                // 2. Шукаємо головний шар, який створив CorelDRAW
+                const mapLayer = document.getElementById('Layer_x0020_1');
 
-                    if (mapLayer) {
-                        // 3. Вішаємо кліки на провінції
-                        mapLayer.addEventListener('click', function(event) {
-                            if (event.target.tagName === 'path') {
-                                // Фарбуємо в сірий
-                                event.target.style.fill = targetColor;
-                                
-                                // Виводимо ID провінції в консоль браузера
-                                console.log("Захоплено: " + event.target.id);
-                            }
-                        });
-                    } else {
-                        console.error("Не вдалося знайти шар карти Layer_x0020_1 всередині SVG.");
-                    }
-                })
-                .catch(error => {
-                    console.error("Помилка завантаження карти:", error);
-                    container.innerHTML = "<p style='color:red;'>Не вдалося завантажити карту map.svg</p>";
-                });
-        });
-    </script>
+                if (mapLayer) {
+                    // 3. Слухаємо кліки на ВСІ можливі типи векторних фігур
+                    mapLayer.addEventListener('click', function(event) {
+                        const validTags = ['path', 'polygon', 'polyline', 'rect', 'ellipse'];
+                        
+                        if (validTags.includes(event.target.tagName.toLowerCase())) {
+                            // Фарбуємо фігуру, на яку клікнули
+                            event.target.style.fill = targetColor;
+                            
+                            // Виводимо її ID в консоль браузера (F12 -> Console)
+                            console.log("Захоплено об'єкт з ID: " + event.target.id);
+                        }
+                    });
+                } else {
+                    console.error("Помилка: Не вдалося знайти шар карти 'Layer_x0020_1' всередині вашого SVG.");
+                }
+            })
+            .catch(error => {
+                console.error("Помилка завантаження файлу карти:", error);
+                container.innerHTML = "<p style='color:red;'>Не вдалося завантажити карту map.svg. Перевірте, чи лежить файл у тій же папці.</p>";
+            });
+    });
+</script>
 </body>
 </html>

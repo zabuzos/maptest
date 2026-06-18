@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Стратегічна Карта Європи</title>
+    <title>Стратегічна Карта Європи - Битви та ШІ</title>
     <style>
         body {
             margin: 0;
@@ -46,18 +46,10 @@
             color: #ffd700;
         }
 
-        .mil-stats {
-            color: #94a3b8;
-        }
+        .mil-stats { color: #94a3b8; }
+        .warning-stats { color: #ef4444 !important; animation: blink 1s infinite alternate; }
 
-        .warning-stats {
-            color: #ef4444 !important;
-            animation: blink 1s infinite alternate;
-        }
-
-        @keyframes blink {
-            from { opacity: 1; } to { opacity: 0.5; }
-        }
+        @keyframes blink { from { opacity: 1; } to { opacity: 0.5; } }
 
         select {
             background-color: #222227;
@@ -87,17 +79,8 @@
             box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
         }
 
-        .mode-btn.civ-mode.active {
-            background-color: #f97316;
-            border-color: #fb923c;
-            box-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
-        }
-
-        .mode-btn.mil-mode.active {
-            background-color: #64748b;
-            border-color: #94a3b8;
-            box-shadow: 0 0 10px rgba(100, 116, 139, 0.5);
-        }
+        .mode-btn.civ-mode.active { background-color: #f97316; border-color: #fb923c; box-shadow: 0 0 10px rgba(249, 115, 22, 0.5); }
+        .mode-btn.mil-mode.active { background-color: #64748b; border-color: #94a3b8; box-shadow: 0 0 10px rgba(100, 116, 139, 0.5); }
 
         .map-container {
             position: relative;
@@ -117,12 +100,9 @@
             transition: opacity 0.15s ease, stroke 0.15s ease;
         }
 
-        svg path:hover, svg polygon:hover, svg rect:hover {
-            opacity: 0.85;
-            stroke: #ffffff;
-        }
+        svg path:hover, svg polygon:hover, svg rect:hover { opacity: 0.85; stroke: #ffffff; }
 
-        /* Промислові індикатори */
+        /* Фабрики */
         .factory-indicator {
             position: absolute;
             width: 8px;
@@ -132,19 +112,10 @@
             pointer-events: none;
             transform: translate(-50%, -50%);
         }
-        /* Цивільна фабрика (Помаранчева) */
-        .factory-indicator.civ {
-            background-color: #f59e0b;
-            box-shadow: 0 0 6px #f59e0b;
-        }
-        /* Військова фабрика (Сіро-сталева) */
-        .factory-indicator.mil {
-            background-color: #64748b;
-            box-shadow: 0 0 6px #64748b;
-            border-radius: 2px; /* Квадратна, щоб відрізняти */
-        }
+        .factory-indicator.civ { background-color: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
+        .factory-indicator.mil { background-color: #64748b; box-shadow: 0 0 6px #64748b; border-radius: 2px; }
 
-        /* Дивізії стрільців */
+        /* Дивізії */
         .division-indicator {
             position: absolute;
             width: 0;
@@ -156,34 +127,45 @@
             pointer-events: none;
             transform: translate(-50%, -50%);
             z-index: 5;
-            transition: left 0.1s linear, top 0.1s linear;
+        }
+        .division-indicator.selected { border-bottom-color: #ffff00; filter: drop-shadow(0 0 6px #ffff00); }
+        
+        /* Колір трикутників ШІ (ворогів) */
+        .division-indicator.ai-unit { border-bottom-color: #ef4444; filter: drop-shadow(0 0 4px #ef4444); }
+
+        /* Індикатор битви */
+        .battle-indicator {
+            position: absolute;
+            background: rgba(239, 68, 68, 0.9);
+            color: #fff;
+            padding: 2px 6px;
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 4px;
+            border: 1px solid #ffffff;
+            transform: translate(-50%, -160%);
+            pointer-events: none;
+            z-index: 8;
+            box-shadow: 0 0 8px #ef4444;
+            white-space: nowrap;
         }
 
-        .division-indicator.selected {
-            border-bottom-color: #ffff00;
-            filter: drop-shadow(0 0 6px #ffff00);
-        }
-
-        /* Шар стрілок переміщення */
         .arrows-layer {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            width: calc(100% - 20px);
-            height: calc(100% - 20px);
-            pointer-events: none;
-            z-index: 4;
+            top: 10px; left: 10px;
+            width: calc(100% - 20px); height: calc(100% - 20px);
+            pointer-events: none; z-index: 4;
         }
     </style>
 </head>
 <body>
 
-    <h1>Глобальна Стратегія</h1>
-    <p>Юніти уповільнені. Кожна дивізія потребує 1 військову фабрику для постачання, інакше — штраф до монет.</p>
+    <h1>Глобальна Стратегія - Фронт та ШІ</h1>
+    <p>Нападайте на ворожі провінції. Дивізії мають 100 ОЗ і б'ються в реальному часі. ШІ ворогів теж атакує!</p>
 
     <div class="control-panel">
         <div class="panel-section">
-            <label for="country-select">Країна:</label>
+            <label for="country-select">Ваша країна:</label>
             <select id="country-select">
                 <option value="UA">Україна (UA)</option>
                 <option value="PL">Польща (PL)</option>
@@ -197,7 +179,7 @@
         </div>
 
         <div class="panel-section stats mil-stats" id="mil-panel">
-            Військові фабрики (Зайнято): <span id="mil-display">0/0</span>
+            Військові фабрики: <span id="mil-display">0/0</span>
         </div>
 
         <div class="panel-section">
@@ -225,17 +207,21 @@
         const btnMil = document.getElementById('btn-mil');
         const countrySelect = document.getElementById('country-select');
 
+        // Економіка та глобальні змінні країн
         let coins = 150;
-        let currentMode = 'army'; // 'army', 'build_civ', 'build_mil'
+        let currentMode = 'army';
         let playerCountry = countrySelect.value;
         let selectedProvinceId = null;
 
         const MAX_NEIGHBOR_DISTANCE = 180; 
-        const MS_PER_PIXEL = 100; // Юніти стали в 5 разів повільнішими (було 20)
+        const MS_PER_PIXEL = 100; // Повільна швидкість руху
 
         const countryColors = {
             'UA': '#1d4ed8', 'PL': '#b91c1c', 'DE': '#374151', 'FR': '#0284c7', 'NEUTRAL': '#2e2e35'
         };
+
+        // Стан бюджетів для ШІ ботів
+        const countryBudgets = { 'UA': 150, 'PL': 150, 'DE': 150, 'FR': 150 };
         
         const provinceData = {}; 
 
@@ -250,11 +236,10 @@
         btnMil.addEventListener('click', () => { currentMode = 'build_mil'; resetActiveButtons(); btnMil.classList.add('active'); cancelSelection(); });
 
         function resetActiveButtons() {
-            btnArmy.classList.remove('active');
-            btnCiv.classList.remove('active');
-            btnMil.classList.remove('active');
+            btnArmy.classList.remove('active'); btnCiv.classList.remove('active'); btnMil.classList.remove('active');
         }
 
+        // Завантаження карти
         fetch('map.svg')
             .then(response => response.text())
             .then(svgData => {
@@ -287,6 +272,8 @@
                             milFactories: 0,
                             hasDivision: false,
                             isMoving: false,
+                            divisionHp: 0,        // Поточне ОЗ дивізії
+                            divisionOwner: null,  // Якій країні належить дивізія
                             elementRef: element,
                             domDivisionRef: null
                         };
@@ -296,6 +283,7 @@
 
                     updateEconomyDisplay();
 
+                    // Кліки гравця
                     mapLayer.addEventListener('click', function(event) {
                         const validTags = ['path', 'polygon', 'polyline', 'rect', 'ellipse'];
                         const target = event.target;
@@ -305,45 +293,35 @@
                         const province = provinceData[provinceId];
                         if (!province || province.isMoving) return;
 
-                        // --- РЕЖИМИ БУДІВНИЦТВА ---
                         if (currentMode === 'build_civ' || currentMode === 'build_mil') {
                             if (province.country !== playerCountry) return alert("Тільки на своїй території!");
-                            
-                            // Рахуємо суму зайнятих слотів
-                            const totalFactories = province.civFactories + province.milFactories;
-                            if (totalFactories >= 3) {
-                                alert("Немає вільних слотів! У провінції вже побудовано максимум фабрик (3/3).");
-                                return;
-                            }
+                            if ((province.civFactories + province.milFactories) >= 3) return alert("Немає вільних слотів (макс 3)!");
 
                             if (currentMode === 'build_civ') {
-                                province.civFactories++;
-                                createFactoryVisual(target, provinceId, 'civ');
+                                province.civFactories++; createFactoryVisual(target, provinceId, 'civ');
                             } else {
-                                province.milFactories++;
-                                createFactoryVisual(target, provinceId, 'mil');
+                                province.milFactories++; createFactoryVisual(target, provinceId, 'mil');
                             }
                             updateEconomyDisplay();
                         } 
-                        // --- РЕЖИМ СТРІЛЬЦІВ ---
                         else if (currentMode === 'army') {
                             if (province.country === playerCountry) {
-                                if (province.hasDivision) {
+                                if (province.hasDivision && province.divisionOwner === playerCountry) {
                                     cancelSelection();
                                     selectedProvinceId = provinceId;
                                     province.domDivisionRef.classList.add('selected');
-                                } else {
+                                } else if (!province.hasDivision) {
                                     if (selectedProvinceId && selectedProvinceId !== provinceId) {
-                                        tryMoveOrAttack(selectedProvinceId, provinceId);
+                                        tryMoveOrAttack(selectedProvinceId, provinceId, playerCountry);
                                     } else if (coins >= 50) {
                                         coins -= 50; coinsDisplay.textContent = coins;
-                                        spawnDivisionVisual(provinceId);
+                                        spawnDivisionVisual(provinceId, playerCountry);
                                         updateEconomyDisplay();
                                     }
                                 }
                             } else {
                                 if (selectedProvinceId) {
-                                    tryMoveOrAttack(selectedProvinceId, provinceId);
+                                    tryMoveOrAttack(selectedProvinceId, provinceId, playerCountry);
                                 }
                             }
                         }
@@ -354,19 +332,13 @@
         function setupArrowMarker() {
             const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
             const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
-            marker.setAttribute("id", "arrowhead");
-            marker.setAttribute("viewBox", "0 0 10 10");
+            marker.setAttribute("id", "arrowhead"); marker.setAttribute("viewBox", "0 0 10 10");
             marker.setAttribute("refX", "5"); marker.setAttribute("refY", "5");
             marker.setAttribute("markerWidth", "6"); marker.setAttribute("markerHeight", "6");
             marker.setAttribute("orient", "auto-start-reverse");
-            
             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            path.setAttribute("d", "M 0 0 L 10 5 L 0 10 z");
-            path.setAttribute("fill", "#f59e0b");
-            
-            marker.appendChild(path);
-            defs.appendChild(marker);
-            arrowsLayer.appendChild(defs);
+            path.setAttribute("d", "M 0 0 L 10 5 L 0 10 z"); path.setAttribute("fill", "#f59e0b");
+            marker.appendChild(path); defs.appendChild(marker); arrowsLayer.appendChild(defs);
         }
 
         function getProvinceCenter(id) {
@@ -378,54 +350,53 @@
             };
         }
 
-        function tryMoveOrAttack(fromId, toId) {
+        function tryMoveOrAttack(fromId, toId, countryCode) {
             const start = getProvinceCenter(fromId);
             const end = getProvinceCenter(toId);
             const distance = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
 
             if (distance > MAX_NEIGHBOR_DISTANCE) {
-                alert("Провінція занадто далеко! Рухатися можна тільки в сусідні провінції.");
-                cancelSelection();
-                return;
+                if (countryCode === playerCountry) alert("Рухатися можна тільки в сусідні провінції.");
+                cancelSelection(); return;
             }
 
-            if (provinceData[toId].hasDivision) {
-                alert("Ця провінція вже зайнята військами!");
-                cancelSelection();
-                return;
+            // Якщо провінція своя і там уже є юніт, рух заблоковано
+            if (provinceData[toId].hasDivision && provinceData[toId].divisionOwner === countryCode) {
+                cancelSelection(); return;
             }
 
             const travelTime = distance * MS_PER_PIXEL;
-            executeOrderWithArrow(fromId, toId, start, end, travelTime);
+            executeOrderWithArrow(fromId, toId, start, end, travelTime, countryCode);
         }
 
-        function executeOrderWithArrow(fromId, toId, start, end, duration) {
+        function executeOrderWithArrow(fromId, toId, start, end, duration, countryCode) {
             const fromProv = provinceData[fromId];
             const toProv = provinceData[toId];
             
             fromProv.isMoving = true;
-            cancelSelection();
+            if (countryCode === playerCountry) cancelSelection();
 
             const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
             const bgLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
             bgLine.setAttribute("x1", start.x); bgLine.setAttribute("y1", start.y);
             bgLine.setAttribute("x2", end.x); bgLine.setAttribute("y2", end.y);
-            bgLine.setAttribute("stroke", "rgba(245, 158, 11, 0.2)");
-            bgLine.setAttribute("stroke-width", "6");
-            bgLine.setAttribute("stroke-dasharray", "5,5");
+            bgLine.setAttribute("stroke", "rgba(245, 158, 11, 0.2)"); bgLine.setAttribute("stroke-width", "4");
 
             const progressLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
             progressLine.setAttribute("x1", start.x); progressLine.setAttribute("y1", start.y);
             progressLine.setAttribute("x2", start.x); progressLine.setAttribute("y2", start.y);
-            progressLine.setAttribute("stroke", "#f59e0b");
-            progressLine.setAttribute("stroke-width", "6");
-            progressLine.setAttribute("marker-end", "url(#arrowhead)");
+            progressLine.setAttribute("stroke", countryCode === playerCountry ? "#f59e0b" : "#ef4444");
+            progressLine.setAttribute("stroke-width", "4"); progressLine.setAttribute("marker-end", "url(#arrowhead)");
 
-            g.appendChild(bgLine); g.appendChild(progressLine);
-            arrowsLayer.appendChild(g);
+            g.appendChild(bgLine); g.appendChild(progressLine); arrowsLayer.appendChild(g);
 
             const startTime = performance.now();
             const divEl = fromProv.domDivisionRef;
+            const movingHp = fromProv.divisionHp; // Зберігаємо ОЗ під час маршу
+
+            // Очищуємо стартову провінцію негайно
+            fromProv.hasDivision = false; fromProv.domDivisionRef = null; fromProv.divisionHp = 0; fromProv.divisionOwner = null;
+            fromProv.isMoving = false;
 
             function animateMove(now) {
                 const elapsed = now - startTime;
@@ -434,42 +405,126 @@
                 const currentX = start.x + (end.x - start.x) * progress;
                 const currentY = start.y + (end.y - start.y) * progress;
 
-                progressLine.setAttribute("x2", currentX);
-                progressLine.setAttribute("y2", currentY);
-                divEl.style.left = `${currentX}px`;
-                divEl.style.top = `${currentY}px`;
+                progressLine.setAttribute("x2", currentX); progressLine.setAttribute("y2", currentY);
+                if (divEl) { divEl.style.left = `${currentX}px`; divEl.style.top = `${currentY}px`; }
 
                 if (progress < 1) {
                     requestAnimationFrame(animateMove);
                 } else {
                     g.remove();
-                    
-                    fromProv.hasDivision = false;
-                    fromProv.domDivisionRef = null;
-                    fromProv.isMoving = false;
-
-                    if (toProv.country !== playerCountry) {
-                        toProv.country = playerCountry;
-                        toProv.elementRef.style.fill = countryColors[playerCountry];
-                    }
-
-                    toProv.hasDivision = true;
-                    toProv.domDivisionRef = divEl;
-                    updateEconomyDisplay();
+                    resolveArrival(toId, countryCode, movingHp, divEl);
                 }
             }
             requestAnimationFrame(animateMove);
         }
 
-        function spawnDivisionVisual(id) {
+        // Обробка прибуття: Мирний вхід або Бій
+        function resolveArrival(toId, attackerCountry, attackerHp, divEl) {
+            const targetProv = provinceData[toId];
+
+            // 1. МИРНИЙ ВХІД (Провінція порожня)
+            if (!targetProv.hasDivision) {
+                targetProv.hasDivision = true;
+                targetProv.divisionHp = attackerHp;
+                targetProv.divisionOwner = attackerCountry;
+                targetProv.domDivisionRef = divEl;
+
+                // Якщо зайшли на чужу/нейтральну землю — анексія
+                if (targetProv.country !== attackerCountry) {
+                    targetProv.country = attackerCountry;
+                    targetProv.elementRef.style.fill = countryColors[attackerCountry];
+                }
+                updateEconomyDisplay();
+            } 
+            // 2. СИСТЕМА БОЮ (Там стоїть ворог)
+            else if (targetProv.hasDivision && targetProv.divisionOwner !== attackerCountry) {
+                startBattle(toId, attackerCountry, attackerHp, divEl);
+            } else {
+                // Якщо за час маршу туди став свій юніт, атакуючий просто розпускається
+                if (divEl) divEl.remove();
+            }
+        }
+
+        // Функція проведення бою в реальному часі
+        function startBattle(provId, attackerCountry, attackerHp, attackerDivEl) {
+            const prov = provinceData[provId];
+            const defenderCountry = prov.divisionOwner;
+
+            // Створюємо плашку бою над провінцією
+            const center = getProvinceCenter(provId);
+            const battleHtml = document.createElement('div');
+            battleHtml.className = 'battle-indicator';
+            container.appendChild(battleHtml);
+
+            let attHp = attackerHp;
+
+            const battleInterval = setInterval(() => {
+                // Кожні 0.5с юніти б'ють один одного (Атака 20 + випадковість)
+                const dmgToDef = Math.floor(Math.random() * 15) + 10;
+                const dmgToAtt = Math.floor(Math.random() * 15) + 10;
+
+                prov.divisionHp -= dmgToDef;
+                attHp -= dmgToAtt;
+
+                // Оновлюємо текст плашки бою
+                battleHtml.style.left = `${center.x}px`;
+                battleHtml.style.top = `${center.y}px`;
+                battleHtml.textContent = `${attackerCountry}: ${Math.max(0, attHp)} VS ${defenderCountry}: ${Math.max(0, prov.divisionHp)}`;
+
+                // Перевірка на завершення бою
+                if (prov.divisionHp <= 0 || attHp <= 0) {
+                    clearInterval(battleInterval);
+                    battleHtml.remove();
+
+                    // Обоє загинули або захисник вистояв
+                    if (prov.divisionHp <= 0 && attHp <= 0) {
+                        if (prov.domDivisionRef) prov.domDivisionRef.remove();
+                        if (attackerDivEl) attackerDivEl.remove();
+                        prov.hasDivision = false; prov.domDivisionRef = null; prov.divisionOwner = null;
+                    } 
+                    // Захисник переміг
+                    else if (prov.divisionHp > 0 && attHp <= 0) {
+                        if (attackerDivEl) attackerDivEl.remove();
+                        console.log(`Захисники (${defenderCountry}) відбили атаку в ${provId}!`);
+                    } 
+                    // Атакуючий переміг (Захоплення)
+                    else if (attHp > 0 && prov.divisionHp <= 0) {
+                        if (prov.domDivisionRef) prov.domDivisionRef.remove();
+                        
+                        prov.country = attackerCountry;
+                        prov.elementRef.style.fill = countryColors[attackerCountry];
+                        
+                        prov.hasDivision = true;
+                        prov.divisionHp = attHp;
+                        prov.divisionOwner = attackerCountry;
+                        prov.domDivisionRef = attackerDivEl;
+
+                        // Якщо це був юніт гравця — міняємо стиль на зелений, якщо ШІ — на червоний
+                        if (attackerCountry === playerCountry) {
+                            attackerDivEl.classList.remove('ai-unit');
+                        } else {
+                            attackerDivEl.classList.add('ai-unit');
+                        }
+
+                        console.log(`Країна ${attackerCountry} захопила провінцію ${provId}!`);
+                    }
+                    updateEconomyDisplay();
+                }
+            }, 500);
+        }
+
+        function spawnDivisionVisual(id, countryCode) {
             const center = getProvinceCenter(id);
             const divEl = document.createElement('div');
             divEl.className = 'division-indicator';
-            divEl.style.left = `${center.x}px`;
-            divEl.style.top = `${center.y}px`;
+            if (countryCode !== playerCountry) divEl.classList.add('ai-unit');
+            
+            divEl.style.left = `${center.x}px`; divEl.style.top = `${center.y}px`;
             container.appendChild(divEl);
             
             provinceData[id].hasDivision = true;
+            provinceData[id].divisionHp = 100; // 100 ОЗ на старті
+            provinceData[id].divisionOwner = countryCode;
             provinceData[id].domDivisionRef = divEl;
         }
 
@@ -480,15 +535,11 @@
             const centerY = rect.top - containerRect.top + (rect.height / 2);
 
             const factory = document.createElement('div');
-            // Присвоюємо загальний клас та тип (civ або mil)
             factory.className = `factory-indicator ${type}`;
-            
-            // Вираховуємо індекс фабрики для зсуву на основі загальної суми фабрик
             const totalBuilt = provinceData[id].civFactories + provinceData[id].milFactories;
             const offsetX = (totalBuilt - 2) * 11; 
 
-            factory.style.left = `${centerX + offsetX}px`;
-            factory.style.top = `${centerY + 14}px`; 
+            factory.style.left = `${centerX + offsetX}px`; factory.style.top = `${centerY + 14}px`; 
             container.appendChild(factory);
         }
 
@@ -497,55 +548,114 @@
             document.querySelectorAll('.division-indicator').forEach(el => el.classList.remove('selected'));
         }
 
-        // --- ОНОВЛЕНА ЕКОНОМІЧНА СИСТЕМА ---
+        // Економічні розрахунки
         function updateEconomyDisplay() {
-            let totalCiv = 0;
-            let totalMil = 0;
-            let totalDivisions = 0;
+            // Оновлюємо баланси всіх ШІ країн пасивно
+            for (const code in countryBudgets) {
+                let civs = 0;
+                for (const pId in provinceData) {
+                    if (provinceData[pId].country === code) civs += provinceData[pId].civFactories;
+                }
+                countryBudgets[code] += civs * 5; 
+            }
 
-            // Збір статистики для обраної країни
+            // Розрахунок конкретно для гравця
+            let totalCiv = 0; let totalMil = 0; let totalDivisions = 0;
             for (const id in provinceData) {
                 if (provinceData[id].country === playerCountry) {
                     totalCiv += provinceData[id].civFactories;
                     totalMil += provinceData[id].milFactories;
-                    if (provinceData[id].hasDivision) {
-                        totalDivisions++;
-                    }
+                    if (provinceData[id].hasDivision && provinceData[id].divisionOwner === playerCountry) totalDivisions++;
                 }
             }
 
-            // Дохід від цивільних заводів (+5 монет кожен)
             let rawIncome = totalCiv * 5;
-            
-            // Перевірка логістики військових фабрик
-            let logisticsPenalty = 0;
-            if (totalDivisions > totalMil) {
-                // Штраф за дефіцит постачання: -3 монети за кожну дивізію без фабрики
-                logisticsPenalty = (totalDivisions - totalMil) * 3;
-                milPanel.classList.add('warning-stats');
-            } else {
-                milPanel.classList.remove('warning-stats');
-            }
+            let logisticsPenalty = totalDivisions > totalMil ? (totalDivisions - totalMil) * 3 : 0;
+            if (totalDivisions > totalMil) milPanel.classList.add('warning-stats'); else milPanel.classList.remove('warning-stats');
 
             let finalIncome = rawIncome - logisticsPenalty;
-
-            // Відображення результатів на панелі
             incomeDisplay.textContent = (finalIncome >= 0 ? `+${finalIncome}` : `${finalIncome}`);
             milDisplay.textContent = `${totalDivisions}/${totalMil}`;
             
-            // Зберігаємо поточний чистий дохід для таймера
             window.currentCalculatedIncome = finalIncome;
+            coinsDisplay.textContent = coins;
         }
 
-        // Щомиті нараховуємо золото з урахуванням утримання військ
+        // Таймер доходів (1 секунда)
         setInterval(function() {
             if (typeof window.currentCalculatedIncome !== 'undefined') {
                 coins += window.currentCalculatedIncome;
-                // Не дозволяємо балансу йти в мінус (банкрутство)
-                if (coins < 0) coins = 0; 
+                if (coins < 0) coins = 0;
                 coinsDisplay.textContent = coins;
             }
         }, 1000);
+
+        // --- БАЗОВИЙ Штучний Інтелект ВОРОГІВ (Кожні 5 секунд) ---
+        setInterval(function() {
+            const countries = ['UA', 'PL', 'DE', 'FR'];
+            
+            countries.forEach(bot => {
+                if (bot === playerCountry) return; // Пропускаємо країну гравця
+
+                // 1. Збір провінцій бота
+                const botProvinces = [];
+                for (const pId in provinceData) {
+                    if (provinceData[pId].country === bot) botProvinces.push(pId);
+                }
+                if (botProvinces.length === 0) return;
+
+                // 2. Логіка витрачання монет ботом
+                let botCash = countryBudgets[bot];
+
+                if (botCash >= 50) {
+                    // Вибираємо випадкову свою провінцію
+                    const randProvId = botProvinces[Math.floor(Math.random() * botProvinces.length)];
+                    const prov = provinceData[randProvId];
+
+                    // ШІ купує дивізію, якщо там порожньо
+                    if (!prov.hasDivision && !prov.isMoving) {
+                        spawnDivisionVisual(randProvId, bot);
+                        countryBudgets[bot] -= 50;
+                    } 
+                    // Або будує фабрику, якщо є вільні слоти
+                    else if ((prov.civFactories + prov.milFactories) < 3) {
+                        if (Math.random() > 0.5) {
+                            prov.civFactories++; createFactoryVisual(prov.elementRef, randProvId, 'civ');
+                        } else {
+                            prov.milFactories++; createFactoryVisual(prov.elementRef, randProvId, 'mil');
+                        }
+                        updateEconomyDisplay();
+                    }
+                }
+
+                // 3. Логіка Атаки/Переміщення ШІ (шанс 40%)
+                if (Math.random() < 0.4) {
+                    // Шукаємо провінцію бота, де вже стоїть його готова армія
+                    const armedProvinces = botProvinces.filter(pId => provinceData[pId].hasDivision && provinceData[pId].divisionOwner === bot && !provinceData[pId].isMoving);
+                    
+                    if (armedProvinces.length > 0) {
+                        const attackFrom = armedProvinces[Math.floor(Math.random() * armedProvinces.length)];
+                        
+                        // Шукаємо ВСІ провінції на карті, щоб знайти якусь близьку (сусідню)
+                        const allProvIds = Object.keys(provinceData);
+                        const targets = allProvIds.filter(pId => {
+                            if (pId === attackFrom) return false;
+                            const start = getProvinceCenter(attackFrom);
+                            const end = getProvinceCenter(pId);
+                            const dist = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
+                            // Ціль має бути сусідом і не належати самому боту
+                            return dist <= MAX_NEIGHBOR_DISTANCE && provinceData[pId].country !== bot;
+                        });
+
+                        // Якщо знайшли сусідів — ШІ атакує!
+                        if (targets.length > 0) {
+                            const attackTo = targets[Math.floor(Math.random() * targets.length)];
+                            tryMoveOrAttack(attackFrom, attackTo, bot);
+                        }
+                    }
+                }
+            });
+        }, 5000);
     });
 </script>
 </body>

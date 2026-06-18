@@ -290,7 +290,7 @@
         let isDragging = false;
         let startX, startY, hasMovedMouse = false;
 
-        // Палітра кольорів
+        // Палітра кольорів країн
         const countryColors = { 
             'UA': '#1d4ed8', 'PL': '#b91c1c', 'DE': '#374151', 'FR': '#0284c7', 
             'GB': '#7c3aed', 'IT': '#15803d', 'SOV': '#991b1b',
@@ -300,7 +300,7 @@
             'AT': '#f43f5e', 'CZ': '#0369a1', 'HU': '#16a34a', 'BG': '#047857',
             'YU': '#4338ca', 'GR': '#06b6d4', 'PT': '#15803d', 'IE': '#166534',
             'BY': '#4e7a43', 'LT': '#c29b00', 'LV': '#7a2b2d', 'EE': '#467599',
-            'AL': '#901a1e', 'MD': '#9a7b56',
+            'AL': '#901a1e', 'MD': '#9a7b56', 'LU': '#38bdf8',
             'NEUTRAL': '#2e2e35' 
         };
 
@@ -314,19 +314,53 @@
             'CZ': '🇨🇿 Чехословаччина', 'HU': '🇭🇺 Угорщина', 'BG': '🇧🇬 Болгарія', 'YU': '🪕 Югославія', 
             'GR': '🇬🇷 Греція', 'PT': '🇵🇹 Португалія', 'IE': '🇮🇪 Ірландія',
             'BY': '🇧🇾 Білорусь', 'LT': '🇱🇹 Литва', 'LV': '🇱🇻 Латвія', 'EE': '🇪🇪 Естонія',
-            'AL': '🇦🇱 Албанія', 'MD': '🇲🇩 Молдова'
+            'AL': '🇦🇱 Албанія', 'MD': '🇲🇩 Молдова', 'LU': '🇱🇺 Люксембург'
         };
 
-        // СЛОВНИК АЛІАСІВ: для підтримки 3-літерних кодів HOI4 та альтернативних назв з інтернету
-        const countryAliases = {
-            'UK': 'GB', 'ENG': 'GB', 'GBR': 'GB', // Велика Британія
-            'YUG': 'YU',                          // Югославія
-            'CZE': 'CZ', 'SK': 'CZ', 'SLO': 'CZ', // Чехія + Словаччина = Чехословаччина
-            'HUN': 'HU',                          // Угорщина
-            'RU': 'SOV', 'RUS': 'SOV',            // СРСР / Росія
-            'UKR': 'UA', 'POL': 'PL', 'GER': 'DE', 'FRA': 'FR', 'ITA': 'IT',
-            'ROM': 'RO', 'BUL': 'BG', 'GRE': 'GR', 'ALB': 'AL', 'BLR': 'BY',
-            'EST': 'EE', 'LAT': 'LV', 'LTU': 'LT', 'MDA': 'MD'
+        // Єдиний реєстр мапінгу тегів (включаючи сучасні коди Балкан, що зшиваються в Югославію)
+        const tagToCountry = {
+            'UA': 'UA', 'UKR': 'UA',
+            'PL': 'PL', 'POL': 'PL',
+            'DE': 'DE', 'GER': 'DE',
+            'FR': 'FR', 'FRA': 'FR',
+            'GB': 'GB', 'UK': 'GB', 'ENG': 'GB', 'GBR': 'GB',
+            'IT': 'IT', 'ITA': 'IT',
+            'SOV': 'SOV', 'RU': 'SOV', 'RUS': 'SOV',
+            'ES': 'ES', 'ESP': 'ES',
+            'RO': 'RO', 'ROM': 'RO',
+            'TR': 'TR', 'TUR': 'TR',
+            'US': 'US', 'USA': 'US',
+            'JP': 'JP', 'JPN': 'JP',
+            'FI': 'FI', 'FIN': 'FI',
+            'SE': 'SE', 'SWE': 'SE',
+            'NO': 'NO', 'NOR': 'NO',
+            'DK': 'DK', 'DNK': 'DK',
+            'NL': 'NL', 'NLD': 'NL',
+            'BE': 'BE', 'BEL': 'BE',
+            'CH': 'CH', 'CHE': 'CH',
+            'AT': 'AT', 'AUT': 'AT',
+            'CZ': 'CZ', 'CZE': 'CZ', 'SK': 'CZ', 'SVK': 'CZ',
+            'HU': 'HU', 'HUN': 'HU',
+            'BG': 'BG', 'BUL': 'BG',
+            'GR': 'GR', 'GRE': 'GR',
+            'PT': 'PT', 'PRT': 'PT',
+            'IE': 'IE', 'IRL': 'IE',
+            'BY': 'BY', 'BLR': 'BY',
+            'LT': 'LT', 'LTU': 'LT',
+            'LV': 'LV', 'LVA': 'LV',
+            'EE': 'EE', 'EST': 'EE',
+            'AL': 'AL', 'ALB': 'AL',
+            'MD': 'MD', 'MDA': 'MD',
+            'LU': 'LU', 'LUX': 'LU',
+            // Прошиваємо сучасну балканську роздробленість назад у Югославію!
+            'YU': 'YU', 'YUG': 'YU',
+            'RS': 'YU', 'SRB': 'YU', // Сербія
+            'HR': 'YU', 'HRV': 'YU', // Хорватія
+            'SI': 'YU', 'SVN': 'YU', 'SLO': 'YU', // Словенія
+            'BA': 'YU', 'BIH': 'YU', // Боснія і Герцеговина
+            'ME': 'YU', 'MNE': 'YU', // Чорногорія
+            'MK': 'YU', 'MKD': 'YU', // Північна Македонія
+            'XK': 'YU', 'KOS': 'YU'  // Косово
         };
         
         const countryBudgets = {};
@@ -492,7 +526,7 @@
         btnBunker.addEventListener('click', () => { currentMode = 'build_bunker'; resetActiveButtons(); btnBunker.classList.add('active'); cancelSelection(); });
         function resetActiveButtons() { btnArmy.classList.remove('active'); btnTank.classList.remove('active'); btnCiv.classList.remove('active'); btnMil.classList.remove('active'); btnBunker.classList.remove('active'); }
 
-        // ЗАВАНТАЖЕННЯ SVG ТА КОРЕКТНИЙ ПАРСИНГ З УРАХУВАННЯМ АЛІАСІВ
+        // ЗАВАНТАЖЕННЯ SVG ТА КОРЕКТНИЙ ТОКЕНІЗОВАНИЙ ПАРСИНГ
         fetch('map.svg')
             .then(response => response.text())
             .then(svgData => {
@@ -506,26 +540,20 @@
                     setupArrowMarker();
                     const allElements = mapLayer.querySelectorAll('path, polygon, polyline, rect, ellipse');
                     
-                    const sortedCodes = Object.keys(countryColors).sort((a,b) => b.length - a.length);
-
                     let index = 0;
                     allElements.forEach(element => {
                         if (!element.id) element.id = 'prov_' + Math.random().toString(36).substr(2, 5);
                         const id = element.id.toUpperCase();
                         let detectedCountry = 'NEUTRAL';
 
-                        // 1. Спроба прямого збігу
-                        for (const code of sortedCodes) {
-                            if (id.endsWith('_' + code) || id.endsWith(code)) { detectedCountry = code; break; }
-                        }
-
-                        // 2. Спроба розпізнавання через аліаси (HOI4 теги, альтернативні коди)
-                        if (detectedCountry === 'NEUTRAL') {
-                            for (const alias in countryAliases) {
-                                if (id.endsWith('_' + alias) || id.endsWith(alias)) {
-                                    detectedCountry = countryAliases[alias];
-                                    break;
-                                }
+                        // ТОКЕНІЗАТОР: Розбиваємо ID за будь-якими символами, крім літер A-Z (дефіси, цифри, підкреслення)
+                        // "HU-01" перетвориться в ["HU"], "XK_province" в ["XK", "PROVINCE"], "HUN5" в ["HUN"]
+                        const idParts = id.split(/[^A-Z]/).filter(Boolean);
+                        
+                        for (const part of idParts) {
+                            if (tagToCountry[part]) {
+                                detectedCountry = tagToCountry[part];
+                                break;
                             }
                         }
 
@@ -796,6 +824,8 @@
             }, 500);
         }
 
+        function sample(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
         function spawnDivisionVisual(id, countryCode, type) {
             const center = getProvinceCenter(id); const divEl = document.createElement('div');
             divEl.className = type.includes('tank') ? 'division-indicator tank' : 'division-indicator';
@@ -883,7 +913,7 @@
 
                 let botCash = countryBudgets[bot];
                 if (botCash >= 30 && Math.random() > 0.6) {
-                    const rProvId = botProvinces[Math.floor(Math.random() * botProvinces.length)]; const prov = provinceData[rProvId];
+                    const rProvId = sample(botProvinces); const prov = provinceData[rProvId];
                     if ((prov.civFactories + prov.milFactories + prov.oilWells + prov.bunkers) < 4) {
                         countryBudgets[bot] -= 30;
                         if (prov.hasOilDeposit) { prov.oilWells++; createFactoryVisual(prov.elementRef, rProvId, 'oil'); } 
@@ -898,17 +928,17 @@
                 }
 
                 if (botCash >= 120 && Math.random() > 0.75) {
-                    const rp = botProvinces[Math.floor(Math.random() * botProvinces.length)];
+                    const rp = sample(botProvinces);
                     if (!provinceData[rp].hasDivision && !provinceData[rp].isMoving) { spawnDivisionVisual(rp, bot, 'tank'); countryBudgets[bot] -= 120; }
                 } else if (botCash >= 50 && Math.random() > 0.65) {
-                    const rp = botProvinces[Math.floor(Math.random() * botProvinces.length)];
+                    const rp = sample(botProvinces);
                     if (!provinceData[rp].hasDivision && !provinceData[rp].isMoving) { spawnDivisionVisual(rp, bot, 'infantry'); countryBudgets[bot] -= 50; }
                 }
 
                 if (Math.random() < 0.35) {
                     const armed = botProvinces.filter(pId => provinceData[pId].hasDivision && provinceData[pId].divisionOwner === bot && !provinceData[pId].isMoving);
                     if (armed.length > 0) {
-                        const fromP = armed[Math.floor(Math.random() * armed.length)];
+                        const fromP = sample(armed);
                         const targets = Object.keys(provinceData).filter(pId => {
                             if (pId === fromP) return false;
                             const s = getProvinceCenter(fromP); const e = getProvinceCenter(pId);
@@ -916,7 +946,7 @@
                         });
 
                         if (targets.length > 0) {
-                            const toP = targets[Math.floor(Math.random() * targets.length)]; const enemy = provinceData[toP].country;
+                            const toP = sample(targets); const enemy = provinceData[toP].country;
                             if (allianceStatus[bot][enemy]) return;
 
                             if (enemy === 'NEUTRAL' || warStatus[bot][enemy]) { tryMoveOrAttack(fromP, toP, bot); } 

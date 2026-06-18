@@ -345,6 +345,7 @@
         const milDisplay = document.getElementById('mil-display');
         const milPanel = document.getElementById('mil-panel');
         const alertContainer = document.getElementById('alert-container');
+        const techListContainer = document.getElementById('tech-list-container');
         
         const dipPanel = document.getElementById('diplomacy-panel');
         const dipCountryName = document.getElementById('dip-country-name');
@@ -407,9 +408,9 @@
         const countryNames = {
             'UA': '🇺🇦 Україна', 'PL': '🇵🇱 Польща', 'DE': '🇩🇪 Німеччина', 'FR': '🇫🇷 Франція',
             'GB': '🇬🇧 Велика Британія', 'IT': '🇮🇹 Італія', 'SOV': '🇷🇺 СРСР', 'ES': '🇪🇸 Іспанія', 
-            'RO': '🇷🇴 Румунія', 'TR': '🇹🇷 Туреччина', 'US': '🇺🇸 США', 'JP': '🇯🇵 Японія', 
-            'FI': '🇫🇮 Фінляндія', 'SE': '🇸🇪 Швеція', 'NO': '🇳🇴 Норвегія', 'DK': '🇩𝕜 Данія', 
-            'NL': '🇳🇱 Нідерланди', 'BE': '🇧🇪 Бельгія', 'CH': '🇨🇭 Швейцарія', 'AT': '🇦тів Австрія', 
+            'RO': '🇷🇴 Румунія', 'TR': '🇹РУ Туреччина', 'US': '🇺🇸 США', 'JP': '🇯🇵 Японія', 
+            'FI': '🇫🇮 Фінляндія', 'SE': '🇸🇪 Швеція', 'NO': '🇳🇴 Норвегія', 'DK': '🇩🇰 Данія', 
+            'NL': '🇳🇱 Нідерланди', 'BE': '🇧🇪 Бельгія', 'CH': '🇨🇭 Швейцарія', 'AT': '🇦🇹 Австрія', 
             'CZ': '🇨🇿 Чехословаччина', 'HU': '🇭🇺 Угорщина', 'BG': '🇧🇬 Болгарія', 'YU': '🪕 Югославія', 
             'GR': '🇬🇷 Греція', 'PT': '🇵🇹 Португалія', 'IE': '🇮🇪 Ірландія',
             'BY': '🇧🇾 Білорусь', 'LT': '🇱🇹 Литва', 'LV': '🇱🇻 Латвія', 'EE': '🇪🇪 Естонія',
@@ -471,7 +472,7 @@
             },
             'SOV': {
                 'sov_alliance_by': { name: '🇧🇾 Союз із Білоруссю', time: 20, req: null, excl: null, desc: 'Покращує дипломатичні відносини з Білоруссю.' },
-                'sov_union_by': { name: '🏰 Унія з Білоруссю', time: 30, req: 'sov_alliance_by', excl: null, desc: 'Повне мирне поглинання та анексія Білорусі.' },
+                'sov_union_by': { name: '🏰 Унія з Білоруссю', time: 30, req: 'sov_alliance_by', excl: null, desc: 'Пове мирне поглинання та анексія Білорусі.' },
                 'sov_ultimatum': { name: '🚨 Ультиматум Україні', time: 40, req: 'sov_union_by', excl: null, desc: 'Вимога передати Крим та Донбас. Якщо Україна відмовляється — почнеться війна.' }
             },
             'RO': {
@@ -650,7 +651,7 @@
                 });
                 alert("🏰 Росія підписала унію та повністю анексувала Білорусь!");
             }
-            else if (focusKey === 'sov_altimatum' || focusKey === 'sov_ultimatum') {
+            else if (focusKey === 'sov_ultimatum') {
                 triggerUltimatumEvent({
                     title: "🚨 Ультиматум Кремля",
                     desc: "Російська Федерація висуває категоричну вимогу здати Крим та Донбас. Мирна передача або війна?",
@@ -774,9 +775,12 @@
                         const id = element.id.toUpperCase();
                         let detectedCountry = 'NEUTRAL';
 
-                        const idParts = id.split(/[^A-Z]/).filter(Boolean);
-                        for (const part of idParts) {
-                            if (tagToCountry[part]) { detectedCountry = tagToCountry[part]; break; }
+                        // Надійний пошук тегів у будь-якій частині ID провінції
+                        for (const tag in tagToCountry) {
+                            if (id.includes(tag)) {
+                                detectedCountry = tagToCountry[tag];
+                                break;
+                            }
                         }
 
                         index++;
@@ -1119,6 +1123,73 @@
             coinsDisplay.textContent = coins; oilDisplay.textContent = playerOil;
         }
 
+        // --- ІНТЕРФЕЙС ТА ЛОГІКА НАУКИ ---
+        function renderScienceTree() {
+            techListContainer.innerHTML = '';
+            for (const key in playerTechs) {
+                const t = playerTechs[key];
+                const card = document.createElement('div');
+                card.className = `tech-card ${t.status}`;
+                
+                let statusBadge = '🔬';
+                if (t.status === 'done') statusBadge = '✅';
+                if (t.status === 'locked') statusBadge = '🔒';
+
+                card.innerHTML = `
+                    <div>
+                        <strong>${t.name}</strong>
+                        <div style="font-size:9px; color:#a1a1aa;">${t.desc}</div>
+                    </div>
+                    <div>${statusBadge}</div>
+                `;
+
+                if (t.status === 'avail') {
+                    card.addEventListener('click', () => {
+                        startResearch(key);
+                    });
+                }
+                techListContainer.appendChild(card);
+            }
+        }
+
+        function startResearch(techKey) {
+            let freeSlot = scienceSlots.find(s => s.activeTech === null);
+            if (!freeSlot) return alert("Усі наукові слоти зайняті! Зачекайте завершення поточних досліджень.");
+            
+            let isAlreadyResearching = scienceSlots.some(s => s.activeTech === techKey);
+            if (isAlreadyResearching) return alert("Ця технологія вже розробляється в іншій лабораторії!");
+
+            freeSlot.activeTech = techKey;
+            freeSlot.timer = 0;
+            playerTechs[techKey].status = 'researching';
+            
+            document.getElementById(`slot-${freeSlot.id}-ui`).firstElementChild.textContent = `Слот ${freeSlot.id}: ${playerTechs[techKey].name}`;
+            renderScienceTree();
+        }
+
+        function updateScienceTick() {
+            scienceSlots.forEach(slot => {
+                if (slot.activeTech) {
+                    slot.timer += 1;
+                    const fill = document.getElementById(`slot-${slot.id}-bar`);
+                    fill.style.width = `${(slot.timer / slot.maxTime) * 100}%`;
+                    if (slot.timer >= slot.maxTime) completeResearch(slot);
+                }
+            });
+        }
+
+        function completeResearch(slot) {
+            const techKey = slot.activeTech; playerTechs[techKey].status = 'done';
+            for (const key in playerTechs) { if (playerTechs[key].req === techKey && playerTechs[key].status === 'locked') playerTechs[key].status = 'avail'; }
+            if (techKey === 'standardization') { buildingPrice = 20; document.getElementById('price-civ').textContent = '20'; document.getElementById('price-mil').textContent = '20'; document.getElementById('price-bunker').textContent = '20'; }
+            alert(`🔬 Дослідження завершено: ${playerTechs[techKey].name}!`);
+            slot.activeTech = null; slot.timer = 0;
+            document.getElementById(`slot-${slot.id}-ui`).firstElementChild.textContent = `Слот ${slot.id}: Вільний`;
+            document.getElementById(`slot-${slot.id}-bar`).style.width = '0%';
+            renderScienceTree();
+            updateEconomyDisplay();
+        }
+
         // ГОЛОВНИЙ ІГРОВИЙ ТАКТ (КОЖНУ СЕКУНДУ)
         setInterval(function() {
             if (!isGameStarted) return;
@@ -1130,7 +1201,7 @@
             updateFocusTick();
         }, 1000);
 
-        // КІНЕТИЧНИЙ ШІ + ШІ АВТО-ФОКУСИ
+        // КІНЕТИЧНИЙ ШІ + ШІ АВТО-ФОКУСИ (З СИСТЕМОЮ ЗМЕНШЕНОЇ АГРЕСИВНОСТІ В СТИЛІ AoH3)
         const activeAiJustifications = {};
         const aiCurrentFocus = {};
 
@@ -1143,6 +1214,7 @@
 
                 let botCash = countryBudgets[bot];
 
+                // ШІ Фокуси
                 if (!aiCurrentFocus[bot]) {
                     let treeKey = focusTrees[bot] ? bot : 'GENERIC';
                     let available = Object.keys(focusTrees[treeKey]).filter(k => {
@@ -1164,6 +1236,7 @@
                     }
                 }
 
+                // Економічні рішення бота
                 if (botCash >= 30 && Math.random() > 0.6) {
                     const rProvId = sample(botProvinces); const prov = provinceData[rProvId];
                     if ((prov.civFactories + prov.milFactories + prov.oilWells + prov.bunkers) < 4) {
@@ -1179,6 +1252,7 @@
                     }
                 }
 
+                // Військове будівництво
                 if (botCash >= 120 && Math.random() > 0.75) {
                     const rp = sample(botProvinces);
                     if (!provinceData[rp].hasDivision && !provinceData[rp].isMoving) { spawnDivisionVisual(rp, bot, 'tank'); countryBudgets[bot] -= 120; }
@@ -1187,7 +1261,8 @@
                     if (!provinceData[rp].hasDivision && !provinceData[rp].isMoving) { spawnDivisionVisual(rp, bot, 'infantry'); countryBudgets[bot] -= 50; }
                 }
 
-                if (Math.random() < 0.35) {
+                // ЗНИЖЕНА АГРЕСИВНІСТЬ ШІ (Стиль AoH3: Війни переважно через фокуси)
+                if (Math.random() < 0.02) { // Було 0.35, стало 0.02 (набагато спокійніший світ)
                     const armed = botProvinces.filter(pId => provinceData[pId].hasDivision && provinceData[pId].divisionOwner === bot && !provinceData[pId].isMoving);
                     if (armed.length > 0) {
                         const fromP = sample(armed);
@@ -1201,8 +1276,12 @@
                             const toP = sample(targets); const enemy = provinceData[toP].country;
                             if (allianceStatus[bot][enemy]) return;
 
-                            if (enemy === 'NEUTRAL' || warStatus[bot][enemy]) { tryMoveOrAttack(fromP, toP, bot); } 
-                            else {
+                            // Захоплення нейтралів або ведення поточної війни
+                            if (enemy === 'NEUTRAL' || warStatus[bot][enemy]) { 
+                                tryMoveOrAttack(fromP, toP, bot); 
+                            } 
+                            // Фабрикація претензій вручну відбувається лише при поганих стосунках
+                            else if (diplomaticRelations[bot][enemy] < -30) {
                                 const jKey = `${bot}_vs_${enemy}`;
                                 if (!activeAiJustifications[jKey]) {
                                     activeAiJustifications[jKey] = true;
@@ -1225,28 +1304,6 @@
             });
         }, 4000);
 
-        function updateScienceTick() {
-            scienceSlots.forEach(slot => {
-                if (slot.activeTech) {
-                    slot.timer += 1;
-                    const fill = document.getElementById(`slot-${slot.id}-bar`);
-                    fill.style.width = `${(slot.timer / slot.maxTime) * 100}%`;
-                    if (slot.timer >= slot.maxTime) completeResearch(slot);
-                }
-            });
-        }
-
-        function completeResearch(slot) {
-            const techKey = slot.activeTech; playerTechs[techKey].status = 'done';
-            for (const key in playerTechs) { if (playerTechs[key].req === techKey && playerTechs[key].status === 'locked') playerTechs[key].status = 'avail'; }
-            if (techKey === 'standardization') { buildingPrice = 20; document.getElementById('price-civ').textContent = '20'; document.getElementById('price-mil').textContent = '20'; document.getElementById('price-bunker').textContent = '20'; }
-            alert(`🔬 Дослідження завершено: ${playerTechs[techKey].name}!`);
-            slot.activeTech = null; slot.timer = 0;
-            document.getElementById(`slot-${slot.id}-ui`).firstElementChild.textContent = `Слот ${slot.id}: Вільний`;
-            document.getElementById(`slot-${slot.id}-bar`).style.width = '0%';
-            updateEconomyDisplay();
-        }
-
         // Вибір країни на старті
         document.body.onclick = function(e) {
             let btn = e.target.closest('.country-select-btn');
@@ -1255,6 +1312,9 @@
                 playerBadge.textContent = countryNames[playerCountry];
                 playerBadge.style.backgroundColor = countryColors[playerCountry];
                 startScreen.style.display = 'none'; isGameStarted = true;
+                
+                // Рендеримо дерево технологій одразу після вибору країни
+                renderScienceTree();
                 updateEconomyDisplay();
             }
         };

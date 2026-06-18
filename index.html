@@ -21,7 +21,6 @@
         h1 { margin-bottom: 5px; font-size: 24px; }
         p { margin-top: 0; color: #8a8a93; font-size: 14px; }
 
-        /* Ігрова панель управління */
         .control-panel {
             display: flex;
             flex-wrap: wrap;
@@ -44,12 +43,6 @@
             font-size: 16px;
             font-weight: bold;
             color: #ffd700;
-        }
-
-        label {
-            font-size: 14px;
-            color: #8a8a93;
-            font-weight: 600;
         }
 
         select {
@@ -97,7 +90,6 @@
             padding: 10px;
         }
 
-        /* Налаштування векторних елементів */
         svg path, svg polygon, svg polyline, svg rect, svg ellipse {
             cursor: pointer;
             stroke: #111113;
@@ -110,7 +102,7 @@
             stroke: #ffffff;
         }
 
-        /* Візуальні заводи на карті */
+        /* Візуальні заводи (помаранчеві кола) */
         .factory-indicator {
             position: absolute;
             width: 8px;
@@ -121,16 +113,40 @@
             pointer-events: none;
             transform: translate(-50%, -50%);
             box-shadow: 0 0 6px #f59e0b;
-            transition: all 0.3s ease;
+        }
+
+        /* Візуальні дивізії стрільців (зелені трикутники) */
+        .division-indicator {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            border-bottom: 14px solid #10b981; /* Зелений */
+            filter: drop-shadow(0 0 4px #10b981);
+            pointer-events: none;
+            transform: translate(-50%, -100%);
+            transition: left 0.3s ease, top 0.3s ease;
+        }
+
+        /* Стиль для підсвічування обраної дивізії */
+        .division-indicator.selected {
+            border-bottom-color: #ffff00; /* Жовтий коли обрано */
+            filter: drop-shadow(0 0 6px #ffff00);
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: translate(-50%, -100%) scale(1); }
+            to { transform: translate(-50%, -100%) scale(1.2); }
         }
     </style>
 </head>
 <body>
 
     <h1>Глобальна Стратегія</h1>
-    <p>Оберіть свою країну, розширюйте кордони та розбудовуйте власну промисловість.</p>
+    <p>Наймайте стрільців (50 монет), виділяйте їх кліком та атакуйте сусідні провінції.</p>
 
-    <!-- Ігрова панель -->
     <div class="control-panel">
         <div class="panel-section">
             <label for="country-select">Ваша країна:</label>
@@ -143,11 +159,11 @@
         </div>
 
         <div class="panel-section stats">
-            Монети: <span id="coins-display">0</span> (<span id="income-display">+0</span>/с)
+            Монети: <span id="coins-display">150</span> (<span id="income-display">+0</span>/с)
         </div>
 
         <div class="panel-section">
-            <button id="btn-capture" class="mode-btn active">Режим: Експансія</button>
+            <button id="btn-army" class="mode-btn active">Режим: Стрільці (Військо)</button>
             <button id="btn-build" class="mode-btn build-mode">Режим: Промисловість</button>
         </div>
     </div>
@@ -159,48 +175,33 @@
         const container = document.getElementById('map-container');
         const coinsDisplay = document.getElementById('coins-display');
         const incomeDisplay = document.getElementById('income-display');
-        const btnCapture = document.getElementById('btn-capture');
+        const btnArmy = document.getElementById('btn-army');
         const btnBuild = document.getElementById('btn-build');
         const countrySelect = document.getElementById('country-select');
 
-        // Ігрові налаштування
-        let coins = 100; // Початковий капітал
-        let currentMode = 'capture'; 
-        let playerCountry = countrySelect.value; // Поточна країна гравця
+        // Базові налаштування
+        let coins = 150; // Дамо трохи більше на старт для найму
+        let currentMode = 'army'; // 'army' або 'build'
+        let playerCountry = countrySelect.value;
+        let selectedProvinceId = null; // ID провінції, з якої хочемо рухати війська
 
-        // Палітра кольорів для різних країн
         const countryColors = {
-            'UA': '#1d4ed8', // Синій
-            'PL': '#b91c1c', // Червоний
-            'DE': '#374151', // Сіро-чорний
-            'FR': '#0284c7', // Блакитний
-            'NEUTRAL': '#2e2e35' // Колір для інших/нейтральних провінцій
+            'UA': '#1d4ed8', 'PL': '#b91c1c', 'DE': '#374151', 'FR': '#0284c7', 'NEUTRAL': '#2e2e35'
         };
         
-        // Головна база даних провінцій
         const provinceData = {}; 
 
-        // Слідкуємо за зміною обраної країни гравцем
         countrySelect.addEventListener('change', function() {
             playerCountry = this.value;
-            console.log("Ви змінили країну на: " + playerCountry);
-            updateIncomeDisplay(); // Перераховуємо дохід саме нашої країни
+            selectedProvinceId = null;
+            clearSelectionVisuals();
+            updateIncomeDisplay();
         });
 
-        // Перемикання режимів
-        btnCapture.addEventListener('click', () => {
-            currentMode = 'capture';
-            btnCapture.classList.add('active');
-            btnBuild.classList.remove('active');
-        });
+        btnArmy.addEventListener('click', () => { currentMode = 'army'; btnArmy.classList.add('active'); btnBuild.classList.remove('active'); });
+        btnBuild.addEventListener('click', () => { currentMode = 'build'; btnBuild.classList.add('active'); btnArmy.classList.remove('active'); selectedProvinceId = null; clearSelectionVisuals(); });
 
-        btnBuild.addEventListener('click', () => {
-            currentMode = 'build';
-            btnBuild.classList.add('active');
-            btnCapture.classList.remove('active');
-        });
-
-        // 1. Завантаження мапи SVG
+        // 1. Завантаження мапи
         fetch('map.svg')
             .then(response => response.text())
             .then(svgData => {
@@ -208,19 +209,13 @@
                 const mapLayer = document.getElementById('Layer_x0020_1') || container.querySelector('svg');
 
                 if (mapLayer) {
-                    // Автоматично скануємо та фарбуємо початкову карту
                     const allElements = mapLayer.querySelectorAll('path, polygon, polyline, rect, ellipse');
                     
                     allElements.forEach(element => {
-                        // Якщо ID немає — створюємо випадковий
-                        if (!element.id) {
-                            element.id = 'province_' + Math.random().toString(36).substr(2, 5) + '_UNKNOWN';
-                        }
-
+                        if (!element.id) element.id = 'prov_' + Math.random().toString(36).substr(2, 5);
                         const id = element.id;
                         let detectedCountry = 'NEUTRAL';
 
-                        // Визначаємо країну за закінченням ID (наприклад, lviv_UA -> UA)
                         for (const code in countryColors) {
                             if (id.endsWith('_' + code) || id.endsWith(code)) {
                                 detectedCountry = code;
@@ -228,95 +223,188 @@
                             }
                         }
 
-                        // Записуємо провінцію в ігрову базу даних
                         provinceData[id] = {
                             country: detectedCountry,
-                            factories: 0
+                            factories: 0,
+                            hasDivision: false,
+                            elementRef: element, // посилання на SVG фігуру
+                            domDivisionRef: null // посилання на HTML трикутник армії
                         };
 
-                        // Фарбуємо у відповідний колір
                         element.style.fill = countryColors[detectedCountry];
                     });
 
                     updateIncomeDisplay();
 
-                    // 2. Обробник кліків по карті
+                    // 2. Логіка кліків
                     mapLayer.addEventListener('click', function(event) {
                         const validTags = ['path', 'polygon', 'polyline', 'rect', 'ellipse'];
                         const target = event.target;
                         
-                        if (validTags.includes(target.tagName.toLowerCase())) {
-                            const provinceId = target.id;
-                            const province = provinceData[provinceId];
+                        if (!validTags.includes(target.tagName.toLowerCase())) return;
+                        
+                        const provinceId = target.id;
+                        const province = provinceData[provinceId];
+                        if (!province) return;
 
-                            if (!province) return;
-
-                            // --- РЕЖИМ ЕКСПАНСІЇ (ЗАХОПЛЕННЯ) ---
-                            if (currentMode === 'capture') {
-                                if (province.country === playerCountry) {
-                                    console.log("Ця провінція вже ваша!");
-                                    return;
-                                }
-
-                                // Захоплюємо провінцію: міняємо власника та колір
-                                province.country = playerCountry;
-                                target.style.fill = countryColors[playerCountry];
-                                
-                                console.log(`Провінцію ${provinceId} інтегровано до складу ${playerCountry}`);
+                        // --- РЕЖИМ ПРОМИСЛОВОСТІ ---
+                        if (currentMode === 'build') {
+                            if (province.country !== playerCountry) {
+                                alert("Будувати можна тільки на власній території!");
+                                return;
+                            }
+                            if (province.factories < 3) {
+                                province.factories++;
+                                createFactoryVisual(target, provinceId);
                                 updateIncomeDisplay();
-                            } 
+                            } else {
+                                alert("Максимум 3 заводи!");
+                            }
+                        } 
+                        
+                        // --- РЕЖИМ СТРІЛЬЦІВ (НАЙМ / РУХ / АТАКА) ---
+                        else if (currentMode === 'army') {
                             
-                            // --- РЕЖИМ ПРОМИСЛОВОСТІ (БУДІВНИЦТВО) ---
-                            else if (currentMode === 'build') {
-                                // Перевірка: чи належить провінція країні, за яку ми граємо
-                                if (province.country !== playerCountry) {
-                                    alert(`Ви не можете будувати тут! Ця територія належить: ${province.country}. Оберіть провінцію своєї країни.`);
-                                    return;
+                            // Якщо клікнули на СВОЮ провінцію
+                            if (province.country === playerCountry) {
+                                
+                                // Якщо там вже Є дивізія — вибираємо її для дії
+                                if (province.hasDivision) {
+                                    clearSelectionVisuals();
+                                    selectedProvinceId = provinceId;
+                                    province.domDivisionRef.classList.add('selected');
+                                    console.log("Дивізію вибрано. Оберіть ціль для руху чи атаки.");
+                                } 
+                                // Якщо там НЕМАЄ дивізії — пропонуємо найняти
+                                else {
+                                    // Якщо перед цим була вибрана інша дивізія, переміщуємо її сюди (рух всередині країни)
+                                    if (selectedProvinceId && selectedProvinceId !== provinceId) {
+                                        moveDivision(selectedProvinceId, provinceId);
+                                    } else {
+                                        // Інакше — купуємо нову
+                                        if (coins >= 50) {
+                                            coins -= 50;
+                                            coinsDisplay.textContent = coins;
+                                            spawnDivisionVisual(provinceId);
+                                            console.log("Найнято дивізію стрільців!");
+                                        } else {
+                                            alert("Недостатньо монет для найму дивізії (потрібно 50)!");
+                                        }
+                                    }
                                 }
-
-                                // Вартість будівництва (за бажанням, зараз безкоштовно, або можна додати умову з монетами)
-                                if (province.factories < 3) {
-                                    province.factories++;
-                                    createFactoryVisual(target, provinceId);
-                                    console.log(`Будівництво завершено в ${provinceId}. Заводів: ${province.factories}`);
-                                    updateIncomeDisplay();
+                            } 
+                            // Якщо клікнули на ЧУЖУ/НЕЙТРАЛЬНУ провінцію
+                            else {
+                                // Якщо у нас була обрана дивізія — АТАКА!
+                                if (selectedProvinceId) {
+                                    attackProvince(selectedProvinceId, provinceId);
                                 } else {
-                                    alert("У цій провінції більше немає місця для фабрик (максимум 3)!");
+                                    alert("Ця територія вам не належить. Виберіть свою дивізію, щоб атакувати її.");
                                 }
                             }
                         }
                     });
-                } else {
-                    console.error("Помилка обробки шарів мапи.");
                 }
-            })
-            .catch(error => {
-                console.error("Помилка файлу карти:", error);
-                container.innerHTML = "<p style='color:red;'>Файл map.svg не знайдено або заблоковано CORS.</p>";
             });
 
-        // Функція для створення візуальних точок-заводів
+        // Створення заводу
         function createFactoryVisual(svgElement, id) {
             const rect = svgElement.getBoundingClientRect();
             const containerRect = container.getBoundingClientRect();
-
             const centerX = rect.left - containerRect.left + (rect.width / 2);
             const centerY = rect.top - containerRect.top + (rect.height / 2);
 
             const factory = document.createElement('div');
             factory.className = 'factory-indicator';
-            
-            // Зсув для кількох заводів в одній локації
-            const factoryCount = provinceData[id].factories;
-            const offsetX = (factoryCount - 2) * 11; 
+            const offsetX = (provinceData[id].factories - 2) * 11; 
 
             factory.style.left = `${centerX + offsetX}px`;
-            factory.style.top = `${centerY}px`;
-
+            factory.style.top = `${centerY + 10}px`; // трохи змістимо вниз, щоб не заважати армії
             container.appendChild(factory);
         }
 
-        // Рахуємо дохід ЛИШЕ для тієї країни, за яку зараз грає гравець
+        // Візуалізація появи дивізії
+        function spawnDivisionVisual(id) {
+            const province = provinceData[id];
+            const rect = province.elementRef.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            const centerX = rect.left - containerRect.left + (rect.width / 2);
+            const centerY = rect.top - containerRect.top + (rect.height / 2);
+
+            const divEl = document.createElement('div');
+            divEl.className = 'division-indicator';
+            divEl.style.left = `${centerX}px`;
+            divEl.style.top = `${centerY - 5}px`; // по центру
+
+            container.appendChild(divEl);
+            
+            province.hasDivision = true;
+            province.domDivisionRef = divEl;
+        }
+
+        // Переміщення дивізії (між своїми)
+        function moveDivision(fromId, toId) {
+            const fromProv = provinceData[fromId];
+            const toProv = provinceData[toId];
+
+            if (toProv.hasDivision) {
+                alert("Провінція призначення вже зайнята іншим військом!");
+                return;
+            }
+
+            // Перераховуємо координати нової провінції
+            const rect = toProv.elementRef.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            const centerX = rect.left - containerRect.left + (rect.width / 2);
+            const centerY = rect.top - containerRect.top + (rect.height / 2);
+
+            // Анімуємо та переносимо DOM-елемент
+            const divEl = fromProv.domDivisionRef;
+            divEl.style.left = `${centerX}px`;
+            divEl.style.top = `${centerY - 5}px`;
+
+            toProv.domDivisionRef = divEl;
+            toProv.hasDivision = true;
+
+            // Очищуємо стару провінцію
+            fromProv.hasDivision = false;
+            fromProv.domDivisionRef = null;
+
+            clearSelectionVisuals();
+            console.log("Дивізію переміщено.");
+        }
+
+        // Атака та захоплення території
+        function attackProvince(fromId, targetId) {
+            const fromProv = provinceData[fromId];
+            const targetProv = provinceData[targetId];
+
+            // Зміна власника провінції
+            targetProv.country = playerCountry;
+            targetProv.elementRef.style.fill = countryColors[playerCountry];
+
+            // Якщо на ворожій території була дивізія — вона знищується (спрощена механіка)
+            if (targetProv.hasDivision && targetProv.domDivisionRef) {
+                targetProv.domDivisionRef.remove();
+                targetProv.hasDivision = false;
+            }
+
+            // Переміщуємо нашу переможну дивізію на захоплену землю
+            moveDivision(fromId, targetId);
+            
+            console.log(`Перемога! Провінція ${targetId} перейшла під контроль ${playerCountry}`);
+            updateIncomeDisplay();
+        }
+
+        // Скидання виділення з усіх армій
+        function clearSelectionVisuals() {
+            selectedProvinceId = null;
+            document.querySelectorAll('.division-indicator').forEach(el => {
+                el.classList.remove('selected');
+            });
+        }
+
+        // Економіка
         function calculatePlayerIncome() {
             let totalFactories = 0;
             for (const id in provinceData) {
@@ -331,10 +419,8 @@
             incomeDisplay.textContent = `+${calculatePlayerIncome()}`;
         }
 
-        // Щомиті додаємо золото в бюджет гравця
         setInterval(function() {
-            const income = calculatePlayerIncome();
-            coins += income;
+            coins += calculatePlayerIncome();
             coinsDisplay.textContent = coins;
         }, 1000);
     });

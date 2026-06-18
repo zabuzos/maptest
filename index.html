@@ -21,6 +21,22 @@
         h1 { margin-bottom: 5px; font-size: 24px; }
         p { margin-top: 0; color: #8a8a93; font-size: 14px; }
 
+        /* Панель ресурсів */
+        .dashboard {
+            display: flex;
+            gap: 20px;
+            background: #16161a;
+            padding: 10px 20px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid #2a2a30;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .dashboard span {
+            color: #ffcc00;
+        }
+
         .map-container {
             width: 90vw;
             max-width: 1200px;
@@ -31,15 +47,44 @@
             padding: 10px;
         }
 
-        /* Стилі для провінцій, які завантажаться з файлу */
-        svg path {
+        /* Панель керування провінцією */
+        .control-panel {
+            margin-top: 15px;
+            background: #16161a;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #2a2a30;
+            width: 90vw;
+            max-width: 1200px;
+            box-sizing: border-box;
+            display: none; /* Показується тільки при виборі провінції */
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-build {
+            background-color: #3a86ff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .btn-build:hover { background-color: #2a6ed2; }
+        .btn-build:disabled { background-color: #444; cursor: not-allowed; }
+
+        /* Стилі для провінцій */
+        svg path, svg polygon, svg polyline, svg rect, svg ellipse {
             cursor: pointer;
             stroke: #222222;
             stroke-width: 0.5px;
             transition: opacity 0.15s ease, stroke 0.15s ease;
         }
 
-        svg path:hover {
+        svg path:hover, svg polygon:hover, svg polyline:hover, svg rect:hover, svg ellipse:hover {
             opacity: 0.75;
             stroke: #ffffff;
         }
@@ -48,46 +93,164 @@
 <body>
 
     <h1>Глобальна Стратегія</h1>
-    <p>Карта завантажується окремо з файлу map.svg...</p>
+    <p>Натисніть на провінцію, щоб захопити її або побудувати фабрику</p>
+
+    <div class="dashboard">
+        <div>Баланс: <span id="total-money">100</span> 🪙</div>
+        <div>Прибуток: +<span id="total-income">0</span> 🪙/сек</div>
+    </div>
 
     <div id="map-container" class="map-container"></div>
 
-   <script>
+    <div id="control-panel" class="control-panel">
+        <div>
+            <strong id="province-title">Провінція: —</strong> <br>
+            <span id="province-status" style="color: #8a8a93;">Статус: Вільна</span> | 
+            Фабрик: <span id="province-factories" style="color: #3a86ff;">0</span>
+        </div>
+        <button id="btn-build-factory" class="btn-build">Побудувати фабрику (Ціна: 50 🪙)</button>
+    </div>
+
+<script>
     document.addEventListener("DOMContentLoaded", function() {
         const container = document.getElementById('map-container');
-        const targetColor = "#555555"; // Колір захопленої провінції (сірий)
+        const controlPanel = document.getElementById('control-panel');
+        const provinceTitle = document.getElementById('province-title');
+        const provinceStatus = document.getElementById('province-status');
+        const provinceFactories = document.getElementById('province-factories');
+        const btnBuildFactory = document.getElementById('btn-build-factory');
+        
+        const moneyDisplay = document.getElementById('total-money');
+        const incomeDisplay = document.getElementById('total-income');
+
+        // Ігрові константи та змінні
+        let playerMoney = 100;         // Стартовий капітал
+        const FACTORY_COST = 50;       // Вартість фабрики
+        const INCOME_PER_FACTORY = 10; // Прибуток з однієї фабрики (можна змінити на 5)
+        
+        let selectedElement = null;    // Поточний вибраний об'єкт на карті
+        let provinceData = {};         // База даних провінцій { id: { captured: bool, factories: int } }
+
+        const capturedColor = "#555555"; // Колір захопленої території
+        const factoryColor = "#3a86ff";  // Колір провінції, де є фабрики
 
         // 1. Завантажуємо зовнішній файл карти map.svg
         fetch('map.svg')
             .then(response => response.text())
             .then(svgData => {
-                // Вставляємо вміст SVG прямо в наш HTML-контейнер
                 container.innerHTML = svgData;
-
-                // 2. Шукаємо головний шар, який створив CorelDRAW
                 const mapLayer = document.getElementById('Layer_x0020_1');
 
                 if (mapLayer) {
-                    // 3. Слухаємо кліки на ВСІ можливі типи векторних фігур
+                    // 2. Слухаємо кліки на карті
                     mapLayer.addEventListener('click', function(event) {
                         const validTags = ['path', 'polygon', 'polyline', 'rect', 'ellipse'];
+                        const target = event.target;
                         
-                        if (validTags.includes(event.target.tagName.toLowerCase())) {
-                            // Фарбуємо фігуру, на яку клікнули
-                            event.target.style.fill = targetColor;
-                            
-                            // Виводимо її ID в консоль браузера (F12 -> Console)
-                            console.log("Захоплено об'єкт з ID: " + event.target.id);
+                        if (validTags.includes(target.tagName.toLowerCase())) {
+                            const id = target.id || "Unknown_" + Math.random().toString(36).substr(2, 5);
+                            if (!target.id) target.id = id; // На випадок, якщо в SVG немає ID
+
+                            // Ініціалізуємо дані провінції, якщо їх ще немає в базі
+                            if (!provinceData[id]) {
+                                provinceData[id] = { captured: false, factories: 0 };
+                            }
+
+                            selectedElement = target;
+                            showProvinceInfo(id);
                         }
                     });
                 } else {
-                    console.error("Помилка: Не вдалося знайти шар карти 'Layer_x0020_1' всередині вашого SVG.");
+                    console.error("Помилка: Не вдалося знайти шар карти 'Layer_x0020_1'.");
                 }
             })
             .catch(error => {
                 console.error("Помилка завантаження файлу карти:", error);
                 container.innerHTML = "<p style='color:red;'>Не вдалося завантажити карту map.svg. Перевірте, чи лежить файл у тій же папці.</p>";
             });
+
+        // 3. Функція оновлення і показу інфо-панелі провінції
+        function showProvinceInfo(id) {
+            const data = provinceData[id];
+            controlPanel.style.display = "flex";
+            provinceTitle.innerText = "Провінція: " + id;
+            
+            if (!data.captured) {
+                provinceStatus.innerText = "Статус: Вільна (Натисніть кнопку, щоб захопити)";
+                provinceStatus.style.color = "#8a8a93";
+                btnBuildFactory.innerText = "Захопити провінцію (Безкоштовно)";
+                btnBuildFactory.disabled = false;
+            } else {
+                provinceStatus.innerText = "Статус: Захоплено";
+                provinceStatus.style.color = "#ffcc00";
+                btnBuildFactory.innerText = `Побудувати фабрику (${FACTORY_COST} 🪙)`;
+                // Кнопка активна, тільки якщо вистачає грошей
+                btnBuildFactory.disabled = playerMoney < FACTORY_COST;
+            }
+            
+            provinceFactories.innerText = data.factories;
+        }
+
+        // 4. Логіка кнопки "Захопити / Побудувати"
+        btnBuildFactory.addEventListener('click', function() {
+            if (!selectedElement) return;
+            const id = selectedElement.id;
+            const data = provinceData[id];
+
+            if (!data.captured) {
+                // Дія: Захоплення провінції
+                data.captured = true;
+                selectedElement.style.fill = capturedColor;
+                console.log(`Провінцію ${id} захоплено.`);
+            } else {
+                // Дія: Будівництво фабрики
+                if (playerMoney >= FACTORY_COST) {
+                    playerMoney -= FACTORY_COST;
+                    data.factories += 1;
+                    
+                    // Змінюємо колір провінції на "промисловий", щоб бачити візуально
+                    selectedElement.style.fill = factoryColor;
+                    
+                    moneyDisplay.innerText = Math.floor(playerMoney);
+                    console.log(`На провінції ${id} побудовано фабрику. Всього фабрик тут: ${data.factories}`);
+                }
+            }
+            
+            // Перераховуємо загальний прибуток відразу після змін
+            updateIncomeDisplay();
+            // Оновлюємо інтерфейс панелі
+            showProvinceInfo(id);
+        });
+
+        // 5. Підрахунок загального прибутку в секунду
+        function calculateTotalIncome() {
+            let income = 0;
+            for (let id in provinceData) {
+                income += provinceData[id].factories * INCOME_PER_FACTORY;
+            }
+            return income;
+        }
+
+        function updateIncomeDisplay() {
+            incomeDisplay.innerText = calculateTotalIncome();
+        }
+
+        // 6. Ігровий таймер (Геймплейний цикл: кожну 1 секунду)
+        setInterval(function() {
+            const currentIncome = calculateTotalIncome();
+            playerMoney += currentIncome;
+            
+            // Оновлюємо значення на екрані
+            moneyDisplay.innerText = Math.floor(playerMoney);
+            
+            // Якщо зараз відкрита панель захопленої провінції, динамічно перевіряємо чи доступне будівництво за гроші
+            if (selectedElement) {
+                const id = selectedElement.id;
+                if (provinceData[id] && provinceData[id].captured) {
+                    btnBuildFactory.disabled = playerMoney < FACTORY_COST;
+                }
+            }
+        }, 1000);
     });
 </script>
 </body>

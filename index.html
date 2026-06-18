@@ -31,6 +31,7 @@
             border-radius: 8px;
             margin-bottom: 15px;
             border: 1px solid #2a2a30;
+            z-index: 10;
         }
 
         .panel-section {
@@ -102,7 +103,7 @@
             stroke: #ffffff;
         }
 
-        /* Візуальні заводи (помаранчеві кола) */
+        /* Помаранчеві заводи */
         .factory-indicator {
             position: absolute;
             width: 8px;
@@ -115,37 +116,42 @@
             box-shadow: 0 0 6px #f59e0b;
         }
 
-        /* Візуальні дивізії стрільців (зелені трикутники) */
+        /* Дивізії стрільців */
         .division-indicator {
             position: absolute;
             width: 0;
             height: 0;
             border-left: 7px solid transparent;
             border-right: 7px solid transparent;
-            border-bottom: 14px solid #10b981; /* Зелений */
+            border-bottom: 14px solid #10b981;
             filter: drop-shadow(0 0 4px #10b981);
             pointer-events: none;
-            transform: translate(-50%, -100%);
-            transition: left 0.3s ease, top 0.3s ease;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            transition: left 0.1s linear, top 0.1s linear;
         }
 
-        /* Стиль для підсвічування обраної дивізії */
         .division-indicator.selected {
-            border-bottom-color: #ffff00; /* Жовтий коли обрано */
+            border-bottom-color: #ffff00;
             filter: drop-shadow(0 0 6px #ffff00);
-            animation: pulse 1s infinite alternate;
         }
 
-        @keyframes pulse {
-            from { transform: translate(-50%, -100%) scale(1); }
-            to { transform: translate(-50%, -100%) scale(1.2); }
+        /* Окремий SVG-шар для стрілок переміщення військ */
+        .arrows-layer {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: calc(100% - 20px);
+            height: calc(100% - 20px);
+            pointer-events: none;
+            z-index: 4;
         }
     </style>
 </head>
 <body>
 
     <h1>Глобальна Стратегія</h1>
-    <p>Наймайте стрільців (50 монет), виділяйте їх кліком та атакуйте сусідні провінції.</p>
+    <p>Клікніть на дивізію, а потім на СУСІДНЮ провінцію. Стрілка покаже час маршу.</p>
 
     <div class="control-panel">
         <div class="panel-section">
@@ -163,27 +169,34 @@
         </div>
 
         <div class="panel-section">
-            <button id="btn-army" class="mode-btn active">Режим: Стрільці (Військо)</button>
+            <button id="btn-army" class="mode-btn active">Режим: Стрільці</button>
             <button id="btn-build" class="mode-btn build-mode">Режим: Промисловість</button>
         </div>
     </div>
 
-    <div id="map-container" class="map-container"></div>
+    <div id="map-container" class="map-container">
+        <svg id="arrows-layer" class="arrows-layer"></svg>
+    </div>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const container = document.getElementById('map-container');
+        const arrowsLayer = document.getElementById('arrows-layer');
         const coinsDisplay = document.getElementById('coins-display');
         const incomeDisplay = document.getElementById('income-display');
         const btnArmy = document.getElementById('btn-army');
         const btnBuild = document.getElementById('btn-build');
         const countrySelect = document.getElementById('country-select');
 
-        // Базові налаштування
-        let coins = 150; // Дамо трохи більше на старт для найму
-        let currentMode = 'army'; // 'army' або 'build'
+        let coins = 150;
+        let currentMode = 'army';
         let playerCountry = countrySelect.value;
-        let selectedProvinceId = null; // ID провінції, з якої хочемо рухати війська
+        let selectedProvinceId = null;
+
+        // Максимальна відстань між центрами для визначення сусідства (налаштуйте під свою карту)
+        const MAX_NEIGHBOR_DISTANCE = 180; 
+        // Швидкість руху: скільки мілісекунд займає подолання 1 пікселя відстані
+        const MS_PER_PIXEL = 20; 
 
         const countryColors = {
             'UA': '#1d4ed8', 'PL': '#b91c1c', 'DE': '#374151', 'FR': '#0284c7', 'NEUTRAL': '#2e2e35'
@@ -193,24 +206,31 @@
 
         countrySelect.addEventListener('change', function() {
             playerCountry = this.value;
-            selectedProvinceId = null;
-            clearSelectionVisuals();
+            cancelSelection();
             updateIncomeDisplay();
         });
 
         btnArmy.addEventListener('click', () => { currentMode = 'army'; btnArmy.classList.add('active'); btnBuild.classList.remove('active'); });
-        btnBuild.addEventListener('click', () => { currentMode = 'build'; btnBuild.classList.add('active'); btnArmy.classList.remove('active'); selectedProvinceId = null; clearSelectionVisuals(); });
+        btnBuild.addEventListener('click', () => { currentMode = 'build'; btnBuild.classList.add('active'); btnArmy.classList.remove('active'); cancelSelection(); });
 
-        // 1. Завантаження мапи
         fetch('map.svg')
             .then(response => response.text())
             .then(svgData => {
-                container.innerHTML = svgData;
-                const mapLayer = document.getElementById('Layer_x0020_1') || container.querySelector('svg');
+                // Вшиваємо мапу, але зберігаємо наш шар стрілок
+                const parser = new DOMParser();
+                const svgDoc = parser.parseFromString(svgData, 'image/svg+xml');
+                const importedSvg = svgDoc.querySelector('svg');
+                
+                // Переносимо вміст завантаженого SVG в контейнер
+                container.insertBefore(importedSvg, arrowsLayer);
+
+                const mapLayer = document.getElementById('Layer_x0020_1') || importedSvg;
 
                 if (mapLayer) {
+                    // Конфігуруємо маркер стрілки для HoI4 ефекту
+                    setupArrowMarker();
+
                     const allElements = mapLayer.querySelectorAll('path, polygon, polyline, rect, ellipse');
-                    
                     allElements.forEach(element => {
                         if (!element.id) element.id = 'prov_' + Math.random().toString(36).substr(2, 5);
                         const id = element.id;
@@ -227,8 +247,9 @@
                             country: detectedCountry,
                             factories: 0,
                             hasDivision: false,
-                            elementRef: element, // посилання на SVG фігуру
-                            domDivisionRef: null // посилання на HTML трикутник армії
+                            isMoving: false, // Чи йде зараз марш
+                            elementRef: element,
+                            domDivisionRef: null
                         };
 
                         element.style.fill = countryColors[detectedCountry];
@@ -236,70 +257,40 @@
 
                     updateIncomeDisplay();
 
-                    // 2. Логіка кліків
                     mapLayer.addEventListener('click', function(event) {
                         const validTags = ['path', 'polygon', 'polyline', 'rect', 'ellipse'];
                         const target = event.target;
-                        
                         if (!validTags.includes(target.tagName.toLowerCase())) return;
                         
                         const provinceId = target.id;
                         const province = provinceData[provinceId];
-                        if (!province) return;
+                        if (!province || province.isMoving) return;
 
-                        // --- РЕЖИМ ПРОМИСЛОВОСТІ ---
                         if (currentMode === 'build') {
-                            if (province.country !== playerCountry) {
-                                alert("Будувати можна тільки на власній території!");
-                                return;
-                            }
+                            if (province.country !== playerCountry) return alert("Тільки на своїй території!");
                             if (province.factories < 3) {
                                 province.factories++;
                                 createFactoryVisual(target, provinceId);
                                 updateIncomeDisplay();
-                            } else {
-                                alert("Максимум 3 заводи!");
                             }
                         } 
-                        
-                        // --- РЕЖИМ СТРІЛЬЦІВ (НАЙМ / РУХ / АТАКА) ---
                         else if (currentMode === 'army') {
-                            
-                            // Якщо клікнули на СВОЮ провінцію
                             if (province.country === playerCountry) {
-                                
-                                // Якщо там вже Є дивізія — вибираємо її для дії
                                 if (province.hasDivision) {
-                                    clearSelectionVisuals();
+                                    cancelSelection();
                                     selectedProvinceId = provinceId;
                                     province.domDivisionRef.classList.add('selected');
-                                    console.log("Дивізію вибрано. Оберіть ціль для руху чи атаки.");
-                                } 
-                                // Якщо там НЕМАЄ дивізії — пропонуємо найняти
-                                else {
-                                    // Якщо перед цим була вибрана інша дивізія, переміщуємо її сюди (рух всередині країни)
+                                } else {
                                     if (selectedProvinceId && selectedProvinceId !== provinceId) {
-                                        moveDivision(selectedProvinceId, provinceId);
-                                    } else {
-                                        // Інакше — купуємо нову
-                                        if (coins >= 50) {
-                                            coins -= 50;
-                                            coinsDisplay.textContent = coins;
-                                            spawnDivisionVisual(provinceId);
-                                            console.log("Найнято дивізію стрільців!");
-                                        } else {
-                                            alert("Недостатньо монет для найму дивізії (потрібно 50)!");
-                                        }
+                                        tryMoveOrAttack(selectedProvinceId, provinceId);
+                                    } else if (coins >= 50) {
+                                        coins -= 50; coinsDisplay.textContent = coins;
+                                        spawnDivisionVisual(provinceId);
                                     }
                                 }
-                            } 
-                            // Якщо клікнули на ЧУЖУ/НЕЙТРАЛЬНУ провінцію
-                            else {
-                                // Якщо у нас була обрана дивізія — АТАКА!
+                            } else {
                                 if (selectedProvinceId) {
-                                    attackProvince(selectedProvinceId, provinceId);
-                                } else {
-                                    alert("Ця територія вам не належить. Виберіть свою дивізію, щоб атакувати її.");
+                                    tryMoveOrAttack(selectedProvinceId, provinceId);
                                 }
                             }
                         }
@@ -307,7 +298,148 @@
                 }
             });
 
-        // Створення заводу
+        // Маркер стрілочки в кінці лінії
+        function setupArrowMarker() {
+            const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+            const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+            marker.setAttribute("id", "arrowhead");
+            marker.setAttribute("viewBox", "0 0 10 10");
+            marker.setAttribute("refX", "5");
+            marker.setAttribute("refY", "5");
+            marker.setAttribute("markerWidth", "6");
+            marker.setAttribute("markerHeight", "6");
+            marker.setAttribute("orient", "auto-start-reverse");
+            
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", "M 0 0 L 10 5 L 0 10 z");
+            path.setAttribute("fill", "#f59e0b");
+            
+            marker.appendChild(path);
+            defs.appendChild(marker);
+            arrowsLayer.appendChild(defs);
+        }
+
+        // Отримання центру провінції
+        function getProvinceCenter(id) {
+            const rect = provinceData[id].elementRef.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            return {
+                x: rect.left - containerRect.left + (rect.width / 2),
+                y: rect.top - containerRect.top + (rect.height / 2)
+            };
+        }
+
+        // Перевірка сусідства та запуск переміщення/атаки
+        function tryMoveOrAttack(fromId, toId) {
+            const start = getProvinceCenter(fromId);
+            const end = getProvinceCenter(toId);
+
+            // Вираховуємо дистанцію по формулі Гіпотенузи
+            const distance = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
+
+            // Перевірка на межування
+            if (distance > MAX_NEIGHBOR_DISTANCE) {
+                alert("Провінція занадто далеко! Рухатися можна тільки в межуючі (сусідні) провінції.");
+                cancelSelection();
+                return;
+            }
+
+            if (provinceData[toId].hasDivision) {
+                alert("Ця провінція вже зайнята військами!");
+                cancelSelection();
+                return;
+            }
+
+            const travelTime = distance * MS_PER_PIXEL; // Час у мілісекундах
+            executeOrderWithArrow(fromId, toId, start, end, travelTime);
+        }
+
+        // Малювання ХоІ4 стрілки та процес переміщення
+        function executeOrderWithArrow(fromId, toId, start, end, duration) {
+            const fromProv = provinceData[fromId];
+            const toProv = provinceData[toId];
+            
+            fromProv.isMoving = true;
+            cancelSelection();
+
+            // Створюємо SVG групу для анімованої стрілки
+            const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            
+            // Задній напівпрозорий шлях стрілки
+            const bgLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            bgLine.setAttribute("x1", start.x); bgLine.setAttribute("y1", start.y);
+            bgLine.setAttribute("x2", end.x); bgLine.setAttribute("y2", end.y);
+            bgLine.setAttribute("stroke", "rgba(245, 158, 11, 0.2)");
+            bgLine.setAttribute("stroke-width", "6");
+            bgLine.setAttribute("stroke-dasharray", "5,5");
+
+            // Передній заповнюваний шлях (Прогрес-бар)
+            const progressLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            progressLine.setAttribute("x1", start.x); progressLine.setAttribute("y1", start.y);
+            progressLine.setAttribute("x2", start.x); progressLine.setAttribute("y2", start.y); // Починаємо з нуля
+            progressLine.setAttribute("stroke", "#f59e0b");
+            progressLine.setAttribute("stroke-width", "6");
+            progressLine.setAttribute("marker-end", "url(#arrowhead)");
+
+            g.appendChild(bgLine);
+            g.appendChild(progressLine);
+            arrowsLayer.appendChild(g);
+
+            const startTime = performance.now();
+            const divEl = fromProv.domDivisionRef;
+
+            // Рендер кадрів анімації
+            function animateMove(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                // Поточні координати дивізії в дорозі
+                const currentX = start.x + (end.x - start.x) * progress;
+                const currentY = start.y + (end.y - start.y) * progress;
+
+                // Оновлюємо стрілку прогресу та позицію юніта
+                progressLine.setAttribute("x2", currentX);
+                progressLine.setAttribute("y2", currentY);
+                divEl.style.left = `${currentX}px`;
+                divEl.style.top = `${currentY}px`;
+
+                if (progress < 1) {
+                    requestAnimationFrame(animateMove);
+                } else {
+                    // Кінець руху
+                    g.remove(); // Видаляємо стрілку
+                    
+                    fromProv.hasDivision = false;
+                    fromProv.domDivisionRef = null;
+                    fromProv.isMoving = false;
+
+                    // Якщо провінція була ворожою — Атака (захоплення)
+                    if (toProv.country !== playerCountry) {
+                        toProv.country = playerCountry;
+                        toProv.elementRef.style.fill = countryColors[playerCountry];
+                        updateIncomeDisplay();
+                    }
+
+                    toProv.hasDivision = true;
+                    toProv.domDivisionRef = divEl;
+                }
+            }
+
+            requestAnimationFrame(animateMove);
+        }
+
+        function spawnDivisionVisual(id) {
+            const center = getProvinceCenter(id);
+            const divEl = document.createElement('div');
+            divEl.className = 'division-indicator';
+            divEl.style.left = `${center.x}px`;
+            divEl.style.top = `${center.y}px`;
+            container.appendChild(divEl);
+            
+            provinceData[id].hasDivision = true;
+            provinceData[id].domDivisionRef = divEl;
+        }
+
         function createFactoryVisual(svgElement, id) {
             const rect = svgElement.getBoundingClientRect();
             const containerRect = container.getBoundingClientRect();
@@ -317,107 +449,25 @@
             const factory = document.createElement('div');
             factory.className = 'factory-indicator';
             const offsetX = (provinceData[id].factories - 2) * 11; 
-
             factory.style.left = `${centerX + offsetX}px`;
-            factory.style.top = `${centerY + 10}px`; // трохи змістимо вниз, щоб не заважати армії
+            factory.style.top = `${centerY + 14}px`; 
             container.appendChild(factory);
         }
 
-        // Візуалізація появи дивізії
-        function spawnDivisionVisual(id) {
-            const province = provinceData[id];
-            const rect = province.elementRef.getBoundingClientRect();
-            const containerRect = container.getBoundingClientRect();
-            const centerX = rect.left - containerRect.left + (rect.width / 2);
-            const centerY = rect.top - containerRect.top + (rect.height / 2);
-
-            const divEl = document.createElement('div');
-            divEl.className = 'division-indicator';
-            divEl.style.left = `${centerX}px`;
-            divEl.style.top = `${centerY - 5}px`; // по центру
-
-            container.appendChild(divEl);
-            
-            province.hasDivision = true;
-            province.domDivisionRef = divEl;
-        }
-
-        // Переміщення дивізії (між своїми)
-        function moveDivision(fromId, toId) {
-            const fromProv = provinceData[fromId];
-            const toProv = provinceData[toId];
-
-            if (toProv.hasDivision) {
-                alert("Провінція призначення вже зайнята іншим військом!");
-                return;
-            }
-
-            // Перераховуємо координати нової провінції
-            const rect = toProv.elementRef.getBoundingClientRect();
-            const containerRect = container.getBoundingClientRect();
-            const centerX = rect.left - containerRect.left + (rect.width / 2);
-            const centerY = rect.top - containerRect.top + (rect.height / 2);
-
-            // Анімуємо та переносимо DOM-елемент
-            const divEl = fromProv.domDivisionRef;
-            divEl.style.left = `${centerX}px`;
-            divEl.style.top = `${centerY - 5}px`;
-
-            toProv.domDivisionRef = divEl;
-            toProv.hasDivision = true;
-
-            // Очищуємо стару провінцію
-            fromProv.hasDivision = false;
-            fromProv.domDivisionRef = null;
-
-            clearSelectionVisuals();
-            console.log("Дивізію переміщено.");
-        }
-
-        // Атака та захоплення території
-        function attackProvince(fromId, targetId) {
-            const fromProv = provinceData[fromId];
-            const targetProv = provinceData[targetId];
-
-            // Зміна власника провінції
-            targetProv.country = playerCountry;
-            targetProv.elementRef.style.fill = countryColors[playerCountry];
-
-            // Якщо на ворожій території була дивізія — вона знищується (спрощена механіка)
-            if (targetProv.hasDivision && targetProv.domDivisionRef) {
-                targetProv.domDivisionRef.remove();
-                targetProv.hasDivision = false;
-            }
-
-            // Переміщуємо нашу переможну дивізію на захоплену землю
-            moveDivision(fromId, targetId);
-            
-            console.log(`Перемога! Провінція ${targetId} перейшла під контроль ${playerCountry}`);
-            updateIncomeDisplay();
-        }
-
-        // Скидання виділення з усіх армій
-        function clearSelectionVisuals() {
+        function cancelSelection() {
             selectedProvinceId = null;
-            document.querySelectorAll('.division-indicator').forEach(el => {
-                el.classList.remove('selected');
-            });
+            document.querySelectorAll('.division-indicator').forEach(el => el.classList.remove('selected'));
         }
 
-        // Економіка
         function calculatePlayerIncome() {
             let totalFactories = 0;
             for (const id in provinceData) {
-                if (provinceData[id].country === playerCountry) {
-                    totalFactories += provinceData[id].factories;
-                }
+                if (provinceData[id].country === playerCountry) totalFactories += provinceData[id].factories;
             }
             return totalFactories * 5; 
         }
 
-        function updateIncomeDisplay() {
-            incomeDisplay.textContent = `+${calculatePlayerIncome()}`;
-        }
+        function updateIncomeDisplay() { incomeDisplay.textContent = `+${calculatePlayerIncome()}`; }
 
         setInterval(function() {
             coins += calculatePlayerIncome();

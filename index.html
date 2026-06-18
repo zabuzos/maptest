@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2D HOI4 Mini Strategy - Наука та Технології</title>
+    <title>2D HOI4 Mini Strategy - Велика Карта</title>
     <style>
         html, body {
             margin: 0; padding: 0; width: 100%; height: 100vh; overflow: hidden;
@@ -16,16 +16,28 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: #09090b; z-index: 9999; display: flex;
             flex-direction: column; align-items: center; justify-content: center;
-            gap: 30px; box-sizing: border-box;
+            gap: 20px; box-sizing: border-box; padding: 20px;
         }
-        .start-screen h2 { margin: 0; font-size: 28px; color: #fff; letter-spacing: 1px; }
+        .start-screen h2 { margin: 0; font-size: 26px; color: #fff; letter-spacing: 1px; text-align: center; }
+        
         .country-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; max-width: 800px;
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+            gap: 12px; 
+            width: 100%;
+            max-width: 1000px; 
+            max-height: 70vh;
+            overflow-y: auto;
+            padding: 10px;
+            background: #111115;
+            border-radius: 8px;
+            border: 1px solid #232329;
         }
+        
         .country-select-btn {
-            background: #16161a; border: 2px solid #2d2d35; color: white; padding: 15px 25px;
-            font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: all 0.2s;
-            text-align: center;
+            background: #16161a; border: 2px solid #2d2d35; color: white; padding: 12px 15px;
+            font-size: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: all 0.2s;
+            text-align: left; display: flex; align-items: center; gap: 8px;
         }
         .country-select-btn:hover { border-color: #3b82f6; background: #1c1c22; transform: translateY(-2px); }
 
@@ -78,7 +90,7 @@
         .dip-btn:hover { background-color: #a855f7; color: white; }
         .dip-btn:disabled { background-color: #221f26; border-color: #4a375e; color: #6b587d; cursor: not-allowed; }
 
-        /* Стилі науки */
+        /* Наука */
         .tech-slot-box {
             background: #25252e; border: 1px dashed #4b4b5e; border-radius: 4px; padding: 6px; margin-top: 4px;
             font-size: 11px; display: flex; flex-direction: column; gap: 3px;
@@ -86,7 +98,7 @@
         .tech-progress-bar { width: 100%; height: 4px; background: #111; border-radius: 2px; overflow: hidden; }
         .tech-progress-fill { width: 0%; height: 100%; background: #a855f7; transition: width 0.2s linear; }
         
-        .tech-select-grid { display: grid; grid-template-columns: 1fr; gap: 4px; max-height: 150px; overflow-y: auto; padding-right: 2px; }
+        .tech-select-grid { display: grid; grid-template-columns: 1fr; gap: 4px; max-height: 140px; overflow-y: auto; padding-right: 2px; }
         .tech-card {
             background: #272730; border: 1px solid #3f3f4e; border-radius: 4px; padding: 6px; font-size: 11px;
             cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s;
@@ -143,18 +155,9 @@
 <body>
 
     <div class="start-screen" id="start-screen">
-        <h2>Оберіть свою націю (Hearts of Iron Mode)</h2>
-        <div class="country-grid">
-            <button class="country-select-btn" data-code="UA" style="border-left: 5px solid #1d4ed8;">🇺🇦 Україна</button>
-            <button class="country-select-btn" data-code="PL" style="border-left: 5px solid #b91c1c;">🇵🇱 Польща</button>
-            <button class="country-select-btn" data-code="DE" style="border-left: 5px solid #374151;">🇩🇪 Німеччина</button>
-            <button class="country-select-btn" data-code="FR" style="border-left: 5px solid #0284c7;">🇫🇷 Франція</button>
-            <button class="country-select-btn" data-code="GB" style="border-left: 5px solid #7c3aed;">🇬🇧 Великобританія</button>
-            <button class="country-select-btn" data-code="IT" style="border-left: 5px solid #15803d;">🇮🇹 Італія</button>
-            <button class="country-select-btn" data-code="SOV" style="border-left: 5px solid #991b1b;">🇷🇺 СРСР / Росія</button>
-            <button class="country-select-btn" data-code="ES" style="border-left: 5px solid #b45309;">🇪🇸 Іспанія</button>
-            <button class="country-select-btn" data-code="RO" style="border-left: 5px solid #eab308;">🇷🇴 Румунія</button>
-        </div>
+        <h2>Оберіть свою націю (Велика стратегічна карта)</h2>
+        <div class="country-grid" id="start-country-grid">
+            </div>
     </div>
 
     <div class="game-layout">
@@ -162,7 +165,7 @@
         <div class="sidebar">
             <div>
                 <h1>2D HOI4 Mini Strategy</h1>
-                <p>Керуйте військами, укладайте альянси, торгуйте нафтою та захоплюйте ворожі фабрики!</p>
+                <p>Керуйте військами, досліджуйте технології та фарбуйте мапу у свій колір!</p>
             </div>
 
             <div class="panel-section">
@@ -195,8 +198,7 @@
                     </div>
                 </div>
 
-                <div class="tech-select-grid" id="tech-list-container">
-                    </div>
+                <div class="tech-select-grid" id="tech-list-container"></div>
             </div>
 
             <div class="panel-section" id="diplomacy-panel" style="display: none; background: #221f28; border-color: #a855f7;">
@@ -243,6 +245,7 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const startScreen = document.getElementById('start-screen');
+        const startGrid = document.getElementById('start-country-grid');
         const playerBadge = document.getElementById('player-flag-badge');
         
         const mapArea = document.getElementById('map-area');
@@ -256,7 +259,6 @@
         const milPanel = document.getElementById('mil-panel');
         const alertContainer = document.getElementById('alert-container');
         
-        // Дипломатія
         const dipPanel = document.getElementById('diplomacy-panel');
         const dipCountryName = document.getElementById('dip-country-name');
         const dipRelationsVal = document.getElementById('dip-relations-val');
@@ -280,28 +282,35 @@
         let isGameStarted = false;
         let selectedProvinceId = null;
         let selectedDiplomacyCountry = null;
-
-        // Ціни побудови (можуть зменшуватися наукою)
         let buildingPrice = 30;
 
         const MAX_NEIGHBOR_DISTANCE = 220; 
-
         let zoomScale = 1.0;
         let panX = 0; panY = 0;
         let isDragging = false;
-        let startX, startY;
-        let hasMovedMouse = false;
+        let startX, startY, hasMovedMouse = false;
 
+        // Повністю розширений список кольорів для 26 націй
         const countryColors = { 
             'UA': '#1d4ed8', 'PL': '#b91c1c', 'DE': '#374151', 'FR': '#0284c7', 
             'GB': '#7c3aed', 'IT': '#15803d', 'SOV': '#991b1b', 'RU': '#991b1b',
-            'ES': '#b45309', 'RO': '#eab308', 'TR': '#0d9488',
+            'ES': '#b45309', 'RO': '#eab308', 'TR': '#0d9488', 'US': '#1e3a8a',
+            'JP': '#9a3412', 'FI': '#67e8f9', 'SE': '#eab308', 'NO': '#0f766e',
+            'DK': '#be123c', 'NL': '#ea580c', 'BE': '#854d0e', 'CH': '#ef4444',
+            'AT': '#f43f5e', 'CZ': '#0369a1', 'HU': '#16a34a', 'BG': '#047857',
+            'YU': '#4338ca', 'GR': '#06b6d4', 'PT': '#15803d', 'IE': '#166534',
             'NEUTRAL': '#2e2e35' 
         };
 
+        // Локалізація націй для UI
         const countryNames = {
             'UA': '🇺🇦 Україна', 'PL': '🇵🇱 Польща', 'DE': '🇩🇪 Німеччина', 'FR': '🇫🇷 Франція',
-            'GB': '🇬🇧 Великобританія', 'IT': '🇮🇹 Італія', 'SOV': '🇷🇺 СРСР / Росія', 'ES': '🇪🇸 Іспанія', 'RO': '🇷🇴 Румунія'
+            'GB': '🇬🇧 Велика Британія', 'IT': '🇮🇹 Італія', 'SOV': '🇷🇺 СРСР', 'ES': '🇪🇸 Іспанія', 
+            'RO': '🇷🇴 Румунія', 'TR': '🇹🇷 Туреччина', 'US': '🇺🇸 США', 'JP': '🇯🇵 Японія', 
+            'FI': '🇫🇮 Фінляндія', 'SE': '🇸🇪 Швеція', 'NO': '🇳🇴 Норвегія', 'DK': '🇩🇰 Данія', 
+            'NL': '🇳🇱 Нідерланди', 'BE': '🇧🇪 Бельгія', 'CH': '🇨🇭 Швейцарія', 'AT': '🇦🇹 Австрія', 
+            'CZ': '🇨🇿 Чехословаччина', 'HU': '🇭🇺 Угорщина', 'BG': '🇧🇬 Болгарія', 'YU': '🪕 Югославія', 
+            'GR': '🇬🇷 Греція', 'PT': '🇵🇹 Португалія', 'IE': '🇮🇪 Ірландія'
         };
         
         const countryBudgets = {};
@@ -310,7 +319,7 @@
         const allianceStatus = {}; 
         const diplomaticRelations = {}; 
 
-        const allCountries = Object.keys(countryColors).filter(c => c !== 'NEUTRAL');
+        const allCountries = Object.keys(countryNames);
         
         allCountries.forEach(c => {
             countryBudgets[c] = 150;
@@ -325,21 +334,28 @@
             });
         });
 
+        // Генеруємо кнопки країн на старті
+        allCountries.forEach(code => {
+            const btn = document.createElement('button');
+            btn.className = 'country-select-btn';
+            btn.setAttribute('data-code', code);
+            btn.style.borderLeft = `5px solid ${countryColors[code] || '#fff'}`;
+            btn.textContent = countryNames[code];
+            startGrid.appendChild(btn);
+        });
+
         const provinceData = {}; 
 
-        // --- СИСТЕМА НАУКИ ТА ТЕХНОЛОГІЙ ---
+        // --- НАУКА ---
         const playerTechs = {
-            // Індустрія
             'standardization': { name: '🏗️ Стандартизація', cat: 'ind', status: 'avail', req: null, desc: 'Заводи та форти коштують 20💰 замість 30.' },
             'oil_extraction': { name: '🛢️ Екстракція нафти', cat: 'ind', status: 'avail', req: null, desc: 'Нафтові вишки дають +2 нафти/с замість +1.' },
-            // Техніка
             'medium_tank': { name: '🚜 Середній Танк', cat: 'tech', status: 'avail', req: null, desc: 'Нові танки мають 220 HP та сильнішу атаку.' },
             'heavy_tank': { name: '🛡️ Важкий Танк', cat: 'tech', status: 'locked', req: 'medium_tank', desc: 'Танки мають 350 HP, але без нафти дуже повільні.' },
-            'modern_tank': { name: '⚡ Сучасний Танк', cat: 'tech', status: 'locked', req: 'heavy_tank', desc: 'Супер-танк: 500 HP та величезна швидкість руху.' },
-            // Піхота
-            'assault': { name: '🪖 Штурмовики', cat: 'inf', status: 'avail', req: null, desc: 'Нова піхота отримує 130 HP та більше атаки.' },
-            'motorized': { name: '🚚 Моторизована піхота', cat: 'inf', status: 'locked', req: 'assault', desc: 'Дуже швидка піхота (165 HP). Потребує нафту!' },
-            'mechanized': { name: '🦾 Механізована піхота', cat: 'inf', status: 'locked', req: 'motorized', desc: 'Максимальний захист піхоти (210 HP). Споживає нафту.' }
+            'modern_tank': { name: '⚡ Сучасний Танк', cat: 'tech', status: 'locked', req: 'heavy_tank', desc: 'Супер-танк: 500 HP та шалена швидкість.' },
+            'assault': { name: '🪖 Штурмовики', cat: 'inf', status: 'avail', req: null, desc: 'Нова піхота отримує 130 HP та більше шкоди.' },
+            'motorized': { name: '🚚 Моторизована піхота', cat: 'inf', status: 'locked', req: 'assault', desc: 'Швидка піхота (165 HP). Використовує нафту!' },
+            'mechanized': { name: '🦾 Механізована піхота', cat: 'inf', status: 'locked', req: 'motorized', desc: 'Максимальний захист (210 HP). Споживає нафту.' }
         };
 
         const scienceSlots = [
@@ -350,12 +366,10 @@
         function renderTechTree() {
             const containerUi = document.getElementById('tech-list-container');
             containerUi.innerHTML = '';
-
             for (const key in playerTechs) {
                 const t = playerTechs[key];
                 const card = document.createElement('div');
                 card.className = `tech-card ${t.status}`;
-                
                 let badge = '⏳ Вільна';
                 if (t.status === 'done') badge = '✅ Вивчено';
                 else if (t.status === 'locked') badge = '🔒 Закрито';
@@ -368,25 +382,17 @@
                     </div>
                     <span style="font-weight:bold; font-size:10px; color:#a855f7;">${badge}</span>
                 `;
-
-                if (t.status === 'avail') {
-                    card.addEventListener('click', () => startResearch(key));
-                }
+                if (t.status === 'avail') card.addEventListener('click', () => startResearch(key));
                 containerUi.appendChild(card);
             }
         }
 
         function startResearch(techKey) {
             let freeSlot = scienceSlots.find(s => s.activeTech === null);
-            if (!freeSlot) return alert("Усі наукові слоти зайняті! Зачекайте завершення попередніх досліджень.");
-
+            if (!freeSlot) return alert("Усі наукові слоти зайняті!");
             playerTechs[techKey].status = 'researching';
-            freeSlot.activeTech = techKey;
-            freeSlot.timer = 0;
-
-            const slotUi = document.getElementById(`slot-${freeSlot.id}-ui`);
-            slotUi.firstElementChild.textContent = `${playerTechs[techKey].name}`;
-            
+            freeSlot.activeTech = techKey; freeSlot.timer = 0;
+            document.getElementById(`slot-${freeSlot.id}-ui`).firstElementChild.textContent = `${playerTechs[techKey].name}`;
             renderTechTree();
         }
 
@@ -395,12 +401,8 @@
                 if (slot.activeTech) {
                     slot.timer += 1;
                     const fill = document.getElementById(`slot-${slot.id}-bar`);
-                    let pct = (slot.timer / slot.maxTime) * 100;
-                    fill.style.width = `${pct}%`;
-
-                    if (slot.timer >= slot.maxTime) {
-                        completeResearch(slot);
-                    }
+                    fill.style.width = `${(slot.timer / slot.maxTime) * 100}%`;
+                    if (slot.timer >= slot.maxTime) completeResearch(slot);
                 }
             });
         }
@@ -408,98 +410,59 @@
         function completeResearch(slot) {
             const techKey = slot.activeTech;
             playerTechs[techKey].status = 'done';
-            
-            // Відкриваємо доступ до наступних гілок
             for (const key in playerTechs) {
-                if (playerTechs[key].req === techKey && playerTechs[key].status === 'locked') {
-                    playerTechs[key].status = 'avail';
-                }
+                if (playerTechs[key].req === techKey && playerTechs[key].status === 'locked') playerTechs[key].status = 'avail';
             }
-
-            // Ефекти від технологій
             if (techKey === 'standardization') {
                 buildingPrice = 20;
                 document.getElementById('price-civ').textContent = '20';
                 document.getElementById('price-mil').textContent = '20';
                 document.getElementById('price-bunker').textContent = '20';
             }
-            if (techKey === 'assault') {
-                btnArmy.textContent = "🪖 Штурмовики (50💰)";
-            }
-            if (techKey === 'motorized') {
-                btnArmy.textContent = "🚚 Моторизована піх. (50💰)";
-            }
-            if (techKey === 'mechanized') {
-                btnArmy.textContent = "🦾 Механізована піх. (50💰)";
-            }
-            if (techKey === 'medium_tank') {
-                btnTank.textContent = "🚜 Середній танк (120💰)";
-            }
-            if (techKey === 'heavy_tank') {
-                btnTank.textContent = "🛡️ Важкий танк (120💰)";
-            }
-            if (techKey === 'modern_tank') {
-                btnTank.textContent = "⚡ Сучасний танк (120💰)";
-            }
+            if (techKey === 'assault') btnArmy.textContent = "🪖 Штурмовики (50💰)";
+            if (techKey === 'motorized') btnArmy.textContent = "🚚 Моторизована піх. (50💰)";
+            if (techKey === 'mechanized') btnArmy.textContent = "🦾 Механізована піх. (50💰)";
+            if (techKey === 'medium_tank') btnTank.textContent = "🚜 Середній танк (120💰)";
+            if (techKey === 'heavy_tank') btnTank.textContent = "🛡️ Важкий танк (120💰)";
+            if (techKey === 'modern_tank') btnTank.textContent = "⚡ Сучасний танк (120💰)";
 
             alert(`🔬 Дослідження завершено: ${playerTechs[techKey].name}!`);
-
-            slot.activeTech = null;
-            slot.timer = 0;
+            slot.activeTech = null; slot.timer = 0;
             document.getElementById(`slot-${slot.id}-ui`).firstElementChild.textContent = `Слот ${slot.id}: Вільний`;
             document.getElementById(`slot-${slot.id}-bar`).style.width = '0%';
-            
-            renderTechTree();
-            updateEconomyDisplay();
+            renderTechTree(); updateEconomyDisplay();
         }
 
-        // ОБРОБКА ВИБОРУ КРАЇНИ На СТАРТІ
+        // Клік вибору країни
         document.querySelectorAll('.country-select-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 playerCountry = this.getAttribute('data-code');
                 playerBadge.textContent = countryNames[playerCountry];
                 playerBadge.style.backgroundColor = countryColors[playerCountry];
-                
                 startScreen.style.display = 'none';
                 isGameStarted = true;
-                
-                renderTechTree();
-                updateEconomyDisplay();
+                renderTechTree(); updateEconomyDisplay();
             });
         });
 
-        function updateMapTransform() {
-            container.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomScale})`;
-        }
+        function updateMapTransform() { container.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomScale})`; }
 
         mapArea.addEventListener('mousedown', function(e) {
             if (!isGameStarted || e.target.closest('.zoom-controls') || e.target.closest('#diplomacy-panel')) return;
-            isDragging = true; hasMovedMouse = false;
-            startX = e.clientX - panX; startY = e.clientY - panY;
+            isDragging = true; hasMovedMouse = false; startX = e.clientX - panX; startY = e.clientY - panY;
         });
-
         window.addEventListener('mousemove', function(e) {
-            if (!isDragging) return;
-            hasMovedMouse = true;
-            panX = e.clientX - startX; panY = e.clientY - startY;
-            updateMapTransform();
+            if (!isDragging) return; hasMovedMouse = true; panX = e.clientX - startX; panY = e.clientY - startY; updateMapTransform();
         });
-
         window.addEventListener('mouseup', function() { isDragging = false; });
 
         mapArea.addEventListener('wheel', function(e) {
-            if (!isGameStarted) return;
-            e.preventDefault();
-            const zoomFactor = 1.15;
+            if (!isGameStarted) return; e.preventDefault();
             const rect = mapArea.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left; const mouseY = e.clientY - rect.top;
-            const mapX = (mouseX - panX) / zoomScale; const mapY = (mouseY - panY) / zoomScale;
-
-            if (e.deltaY < 0) zoomScale = Math.min(zoomScale * zoomFactor, 5);
-            else zoomScale = Math.max(zoomScale / zoomFactor, 0.3);
-
-            panX = mouseX - mapX * zoomScale; panY = mouseY - mapY * zoomScale;
-            updateMapTransform();
+            const mX = e.clientX - rect.left; const mY = e.clientY - rect.top;
+            const mapX = (mX - panX) / zoomScale; const mapY = (mY - panY) / zoomScale;
+            if (e.deltaY < 0) zoomScale = Math.min(zoomScale * 1.15, 5); else zoomScale = Math.max(zoomScale / 1.15, 0.3);
+            panX = mX - mapX * zoomScale; panY = mY - mapY * zoomScale; updateMapTransform();
         }, { passive: false });
 
         document.getElementById('zoom-in').addEventListener('click', () => { zoomScale = Math.min(zoomScale * 1.25, 5); updateMapTransform(); });
@@ -511,9 +474,9 @@
         btnCiv.addEventListener('click', () => { currentMode = 'build_civ'; resetActiveButtons(); btnCiv.classList.add('active'); cancelSelection(); });
         btnMil.addEventListener('click', () => { currentMode = 'build_mil'; resetActiveButtons(); btnMil.classList.add('active'); cancelSelection(); });
         btnBunker.addEventListener('click', () => { currentMode = 'build_bunker'; resetActiveButtons(); btnBunker.classList.add('active'); cancelSelection(); });
-
         function resetActiveButtons() { btnArmy.classList.remove('active'); btnTank.classList.remove('active'); btnCiv.classList.remove('active'); btnMil.classList.remove('active'); btnBunker.classList.remove('active'); }
 
+        // ЗАВАНТАЖЕННЯ SVG ТА ПЕРЕВІРКА КОРДОНІВ
         fetch('map.svg')
             .then(response => response.text())
             .then(svgData => {
@@ -527,46 +490,43 @@
                     setupArrowMarker();
                     const allElements = mapLayer.querySelectorAll('path, polygon, polyline, rect, ellipse');
                     
+                    // Відсортовані коди країн від найдовших до найкоротших, щоб уникнути помилок префіксів в ID
+                    const sortedCodes = Object.keys(countryColors).sort((a,b) => b.length - a.length);
+
                     let index = 0;
                     allElements.forEach(element => {
                         if (!element.id) element.id = 'prov_' + Math.random().toString(36).substr(2, 5);
-                        const id = element.id;
+                        const id = element.id.toUpperCase();
                         let detectedCountry = 'NEUTRAL';
 
-                        for (const code in countryColors) {
+                        for (const code of sortedCodes) {
                             if (id.endsWith('_' + code) || id.endsWith(code)) { detectedCountry = code; break; }
                         }
 
                         index++;
-                        let hasOilDeposit = (index % 5 === 0 && detectedCountry !== 'NEUTRAL'); 
+                        let hasOilDeposit = (index % 6 === 0 && detectedCountry !== 'NEUTRAL'); 
 
-                        provinceData[id] = {
+                        provinceData[element.id] = {
                             country: detectedCountry, civFactories: 0, milFactories: 0, oilWells: 0, bunkers: 0,
                             hasOilDeposit: hasOilDeposit, hasDivision: false, isMoving: false, 
-                            divisionHp: 0, divisionOwner: null, divisionType: null, 
-                            elementRef: element, domDivisionRef: null
+                            divisionHp: 0, divisionOwner: null, divisionType: null, elementRef: element, domDivisionRef: null
                         };
                         element.style.fill = countryColors[detectedCountry];
-
-                        if (hasOilDeposit) createOilVisualMark(element, id);
+                        if (hasOilDeposit) createOilVisualMark(element, element.id);
                     });
 
                     mapLayer.addEventListener('click', function(event) {
                         if (!isGameStarted || hasMovedMouse) return;
-                        const validTags = ['path', 'polygon', 'polyline', 'rect', 'ellipse'];
                         const target = event.target;
-                        if (!validTags.includes(target.tagName.toLowerCase())) return;
+                        if (!['path', 'polygon', 'polyline', 'rect', 'ellipse'].includes(target.tagName.toLowerCase())) return;
                         
-                        const provinceId = target.id;
-                        const province = provinceData[provinceId];
+                        const provinceId = target.id; const province = provinceData[provinceId];
                         if (!province || province.isMoving) return;
 
-                        if (currentMode === 'build_civ' || currentMode === 'build_mil' || currentMode === 'build_bunker') {
+                        if (currentMode.startsWith('build_')) {
                             if (province.country !== playerCountry) return alert("Будувати можна лише на своїй території!");
-                            if (coins < buildingPrice) return alert(`Недостатньо монет! Будівництво коштує ${buildingPrice}💰`);
-                            
-                            const totalBuildings = province.civFactories + province.milFactories + province.oilWells + province.bunkers;
-                            if (totalBuildings >= 4) return alert("Немає вільних слотів для забудови (макс. 4)!");
+                            if (coins < buildingPrice) return alert(`Недостатньо монет! (${buildingPrice}💰)`);
+                            if ((province.civFactories + province.milFactories + province.oilWells + province.bunkers) >= 4) return alert("Всі слоти зайняті (макс. 4)!");
 
                             coins -= buildingPrice; coinsDisplay.textContent = coins;
                             if (currentMode === 'build_civ') { province.civFactories++; createFactoryVisual(target, provinceId, 'civ'); } 
@@ -576,35 +536,29 @@
                             } else if (currentMode === 'build_bunker') { province.bunkers++; createFactoryVisual(target, provinceId, 'bunker'); }
                             updateEconomyDisplay();
                         } 
-                        else if (currentMode === 'army' || currentMode === 'tank') {
+                        else {
                             if (province.country === playerCountry) {
                                 dipPanel.style.display = 'none';
                                 if (province.hasDivision && province.divisionOwner === playerCountry) {
                                     cancelSelection(); selectedProvinceId = provinceId;
                                     province.domDivisionRef.classList.add('selected');
+                                } else if (!province.hasDivision && selectedProvinceId && selectedProvinceId !== provinceId) {
+                                    tryMoveOrAttack(selectedProvinceId, provinceId, playerCountry);
                                 } else if (!province.hasDivision) {
-                                    if (selectedProvinceId && selectedProvinceId !== provinceId) {
-                                        tryMoveOrAttack(selectedProvinceId, provinceId, playerCountry);
-                                    } else {
-                                        if (currentMode === 'army' && coins >= 50) {
-                                            coins -= 50; 
-                                            let pType = 'infantry';
-                                            if (playerTechs['mechanized'].status === 'done') pType = 'mechanized';
-                                            else if (playerTechs['motorized'].status === 'done') pType = 'motorized';
-                                            else if (playerTechs['assault'].status === 'done') pType = 'assault';
-                                            
-                                            spawnDivisionVisual(provinceId, playerCountry, pType); 
-                                            updateEconomyDisplay();
-                                        } else if (currentMode === 'tank' && coins >= 120) {
-                                            coins -= 120; 
-                                            let tType = 'tank'; // легкий за замовчуванням
-                                            if (playerTechs['modern_tank'].status === 'done') tType = 'modern_tank';
-                                            else if (playerTechs['heavy_tank'].status === 'done') tType = 'heavy_tank';
-                                            else if (playerTechs['medium_tank'].status === 'done') tType = 'medium_tank';
-
-                                            spawnDivisionVisual(provinceId, playerCountry, tType); 
-                                            updateEconomyDisplay();
-                                        }
+                                    if (currentMode === 'army' && coins >= 50) {
+                                        coins -= 50; 
+                                        let pType = 'infantry';
+                                        if (playerTechs['mechanized'].status === 'done') pType = 'mechanized';
+                                        else if (playerTechs['motorized'].status === 'done') pType = 'motorized';
+                                        else if (playerTechs['assault'].status === 'done') pType = 'assault';
+                                        spawnDivisionVisual(provinceId, playerCountry, pType); updateEconomyDisplay();
+                                    } else if (currentMode === 'tank' && coins >= 120) {
+                                        coins -= 120; 
+                                        let tType = 'tank';
+                                        if (playerTechs['modern_tank'].status === 'done') tType = 'modern_tank';
+                                        else if (playerTechs['heavy_tank'].status === 'done') tType = 'heavy_tank';
+                                        else if (playerTechs['medium_tank'].status === 'done') tType = 'medium_tank';
+                                        spawnDivisionVisual(provinceId, playerCountry, tType); updateEconomyDisplay();
                                     }
                                 }
                             } else {
@@ -616,77 +570,55 @@
                 }
             });
 
-        // ДИПЛОМАТИЧНІ ФУНКЦІЇ
+        // ДИПЛОМАТІЯ
         function openDiplomacyWith(countryCode) {
-            selectedDiplomacyCountry = countryCode;
-            dipCountryName.textContent = countryCode;
-            
-            let rel = diplomaticRelations[playerCountry][countryCode];
-            dipRelationsVal.textContent = rel;
-            if (rel > 0) dipRelationsVal.style.color = '#22c55e';
-            else if (rel < 0) dipRelationsVal.style.color = '#ef4444';
-            else dipRelationsVal.style.color = '#ffffff';
+            selectedDiplomacyCountry = countryCode; dipCountryName.textContent = countryNames[countryCode] || countryCode;
+            let rel = diplomaticRelations[playerCountry][countryCode]; dipRelationsVal.textContent = rel;
+            dipRelationsVal.style.color = rel > 0 ? '#22c55e' : (rel < 0 ? '#ef4444' : '#fff');
 
             if (warStatus[playerCountry][countryCode]) { dipStatusVal.textContent = "ВІЙНА 🚨"; dipStatusVal.style.color = '#ef4444'; }
             else if (allianceStatus[playerCountry][countryCode]) { dipStatusVal.textContent = "СОЮЗ 🤝"; dipStatusVal.style.color = '#3b82f6'; }
             else { dipStatusVal.textContent = "Мир"; dipStatusVal.style.color = '#ffffff'; }
 
             dipBtnAlliance.disabled = (rel < 50 || allianceStatus[playerCountry][countryCode] || warStatus[playerCountry][countryCode]);
-            dipBtnJustify.disabled = warStatus[playerCountry][countryCode];
-            dipPanel.style.display = 'flex';
+            dipBtnJustify.disabled = warStatus[playerCountry][countryCode]; dipPanel.style.display = 'flex';
         }
 
         dipBtnJustify.addEventListener('click', function() {
             if (!selectedDiplomacyCountry) return;
-            const target = selectedDiplomacyCountry;
-            dipPanel.style.display = 'none';
-            alert(`Обґрунтування війни проти ${target} розпочато (10 секунд)...`);
-            
+            const target = selectedDiplomacyCountry; dipPanel.style.display = 'none';
+            alert(`Обґрунтування Casus Belli проти ${countryNames[target]} розпочато (10с)...`);
             let timeLeft = 10;
             const cbInterval = setInterval(() => {
-                if (!isGameStarted) return;
-                timeLeft--;
-                if (timeLeft <= 0) {
-                    clearInterval(cbInterval);
-                    declareWar(playerCountry, target);
-                }
+                if (!isGameStarted) return; timeLeft--;
+                if (timeLeft <= 0) { clearInterval(cbInterval); declareWar(playerCountry, target); }
             }, 1000);
         });
 
         dipBtnGift.addEventListener('click', function() {
             if (!selectedDiplomacyCountry || coins < 50) return alert("Недостатньо монет!");
             coins -= 50; countryBudgets[selectedDiplomacyCountry] += 50;
-            changeRelations(playerCountry, selectedDiplomacyCountry, 25);
-            openDiplomacyWith(selectedDiplomacyCountry);
-            updateEconomyDisplay();
+            changeRelations(playerCountry, selectedDiplomacyCountry, 25); openDiplomacyWith(selectedDiplomacyCountry); updateEconomyDisplay();
         });
 
         dipBtnAlliance.addEventListener('click', function() {
             if (!selectedDiplomacyCountry) return;
-            allianceStatus[playerCountry][selectedDiplomacyCountry] = true;
-            allianceStatus[selectedDiplomacyCountry][playerCountry] = true;
-            alert(`🤝 Укладено військовий альянс між Вами та ${selectedDiplomacyCountry}!`);
-            openDiplomacyWith(selectedDiplomacyCountry);
+            allianceStatus[playerCountry][selectedDiplomacyCountry] = true; allianceStatus[selectedDiplomacyCountry][playerCountry] = true;
+            alert(`🤝 Військовий союз укладено з ${countryNames[selectedDiplomacyCountry]}!`); openDiplomacyWith(selectedDiplomacyCountry);
         });
 
         dipBtnBuyOil.addEventListener('click', function() {
             if (!selectedDiplomacyCountry || coins < 40) return alert("Недостатньо монет!");
-            if (countryOilReserves[selectedDiplomacyCountry] < 5) return alert("У цієї країни немає стільки нафти!");
-            coins -= 40; playerOil += 5;
-            countryBudgets[selectedDiplomacyCountry] += 40; countryOilReserves[selectedDiplomacyCountry] -= 5;
-            changeRelations(playerCountry, selectedDiplomacyCountry, 10);
-            openDiplomacyWith(selectedDiplomacyCountry);
-            updateEconomyDisplay();
+            if (countryOilReserves[selectedDiplomacyCountry] < 5) return alert("У них немає стільки нафти!");
+            coins -= 40; playerOil += 5; countryBudgets[selectedDiplomacyCountry] += 40; countryOilReserves[selectedDiplomacyCountry] -= 5;
+            changeRelations(playerCountry, selectedDiplomacyCountry, 10); openDiplomacyWith(selectedDiplomacyCountry); updateEconomyDisplay();
         });
 
         dipBtnSellOil.addEventListener('click', function() {
-            if (!selectedDiplomacyCountry || playerOil < 5) return alert("У вас немає 5 барелів нафти!");
-            if (countryBudgets[selectedDiplomacyCountry] < 30) return alert("У країни немає грошей!");
-            playerOil -= 5; coins += 30;
-            countryOilReserves[selectedDiplomacyCountry] += 5; countryBudgets[selectedDiplomacyCountry] -= 30;
-            changeRelations(playerCountry, selectedDiplomacyCountry, 10);
-            openDiplomacyWith(selectedDiplomacyCountry);
-            updateEconomyDisplay();
+            if (!selectedDiplomacyCountry || playerOil < 5) return alert("У вас немає нафти!");
+            if (countryBudgets[selectedDiplomacyCountry] < 30) return alert("У них немає грошей!");
+            playerOil -= 5; coins += 30; countryOilReserves[selectedDiplomacyCountry] += 5; countryBudgets[selectedDiplomacyCountry] -= 30;
+            changeRelations(playerCountry, selectedDiplomacyCountry, 10); openDiplomacyWith(selectedDiplomacyCountry); updateEconomyDisplay();
         });
 
         function changeRelations(from, to, amount) {
@@ -699,18 +631,12 @@
             allianceStatus[attacker][defender] = false; allianceStatus[defender][attacker] = false;
             changeRelations(attacker, defender, -100);
 
-            if (defender === playerCountry) alert(`🚨 КРАЇНА ${attacker} ОГОЛОСИЛА ВАМ ВІЙНУ!`);
-            else if (attacker === playerCountry) alert(`⚔️ Ви оголосили війну країні ${defender}!`);
+            if (defender === playerCountry) alert(`🚨 ${countryNames[attacker]} ОГОЛОСИЛА ВАМ ВІЙНУ!`);
+            else if (attacker === playerCountry) alert(`⚔️ Ви оголосили війну ${countryNames[defender]}!`);
 
             allCountries.forEach(country => {
-                if (allianceStatus[defender][country] && !warStatus[attacker][country] && country !== attacker) {
-                    alert(`🤝 ${country} вступає у війну на захист свого союзника ${defender}!`);
-                    declareWar(attacker, country);
-                }
-                if (allianceStatus[attacker][country] && !warStatus[defender][country] && country !== defender) {
-                    alert(`🤝 ${country} вступає у війну на боці свого союзника ${attacker}!`);
-                    declareWar(country, defender);
-                }
+                if (allianceStatus[defender][country] && !warStatus[attacker][country] && country !== attacker) declareWar(attacker, country);
+                if (allianceStatus[attacker][country] && !warStatus[defender][country] && country !== defender) declareWar(country, defender);
             });
             if (selectedDiplomacyCountry) openDiplomacyWith(selectedDiplomacyCountry);
         }
@@ -742,47 +668,33 @@
             if (distance > MAX_NEIGHBOR_DISTANCE) { cancelSelection(); return; }
 
             const targetProv = provinceData[toId];
-            if (targetProv.country !== 'NEUTRAL' && targetProv.country !== countryCode) {
-                if (!warStatus[countryCode][targetProv.country]) { cancelSelection(); return; }
-            }
+            if (targetProv.country !== 'NEUTRAL' && targetProv.country !== countryCode && !warStatus[countryCode][targetProv.country]) { cancelSelection(); return; }
             if (targetProv.hasDivision && targetProv.divisionOwner === countryCode) { cancelSelection(); return; }
 
             const divType = provinceData[fromId].divisionType;
-            
-            // Налаштування швидкості залежно від технологічного типу дивізії
-            let currentMsPerPixel = 100; // Базова швидкість
-
+            let speedFactor = 100;
             let requiresFuel = ['tank', 'medium_tank', 'heavy_tank', 'modern_tank', 'motorized', 'mechanized'].includes(divType);
 
             if (requiresFuel) {
-                let currentFuel = (countryCode === playerCountry) ? playerOil : countryOilReserves[countryCode];
-                if (currentFuel > 0) {
-                    if (divType === 'modern_tank') currentMsPerPixel = 25;
-                    else if (divType === 'heavy_tank' || divType === 'mechanized') currentMsPerPixel = 50;
-                    else currentMsPerPixel = 40; // легкий танк, середній танк, моторизована піхота
+                let fuel = (countryCode === playerCountry) ? playerOil : countryOilReserves[countryCode];
+                if (fuel > 0) {
+                    if (divType === 'modern_tank') speedFactor = 25;
+                    else if (divType === 'heavy_tank' || divType === 'mechanized') speedFactor = 50;
+                    else speedFactor = 40;
+                    if (countryCode === playerCountry) playerOil = Math.max(0, playerOil - 1); else countryOilReserves[countryCode] = Math.max(0, countryOilReserves[countryCode] - 1);
+                } else { speedFactor = divType.includes('tank') ? 250 : 180; }
+            } else if (divType === 'assault') speedFactor = 85;
 
-                    if (countryCode === playerCountry) playerOil = Math.max(0, playerOil - 1);
-                    else countryOilReserves[countryCode] = Math.max(0, countryOilReserves[countryCode] - 1);
-                } else {
-                    currentMsPerPixel = (divType.includes('tank')) ? 250 : 180; // Штраф без пального
-                }
-            } else {
-                if (divType === 'assault') currentMsPerPixel = 85; // Штурмовики трохи спритніші за стрільців
-            }
-
-            const travelTime = distance * currentMsPerPixel;
-            executeOrderWithArrow(fromId, toId, start, end, travelTime, countryCode, divType);
+            executeOrderWithArrow(fromId, toId, start, end, distance * speedFactor, countryCode, divType);
         }
 
         function executeOrderWithArrow(fromId, toId, start, end, duration, countryCode, divType) {
-            const fromProv = provinceData[fromId];
-            fromProv.isMoving = true;
+            const fromProv = provinceData[fromId]; fromProv.isMoving = true;
             if (countryCode === playerCountry) cancelSelection();
 
             const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
             const bgLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            bgLine.setAttribute("x1", start.x); bgLine.setAttribute("y1", start.y);
-            bgLine.setAttribute("x2", end.x); bgLine.setAttribute("y2", end.y);
+            bgLine.setAttribute("x1", start.x); bgLine.setAttribute("y1", start.y); bgLine.setAttribute("x2", end.x); bgLine.setAttribute("y2", end.y);
             bgLine.setAttribute("stroke", "rgba(245, 158, 11, 0.2)"); bgLine.setAttribute("stroke-width", "4");
 
             const progressLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -793,24 +705,15 @@
 
             g.appendChild(bgLine); g.appendChild(progressLine); arrowsLayer.appendChild(g);
 
-            const startTime = performance.now();
-            const divEl = fromProv.domDivisionRef;
-            const movingHp = fromProv.divisionHp;
-
-            fromProv.hasDivision = false; fromProv.domDivisionRef = null; fromProv.divisionHp = 0; fromProv.divisionOwner = null; fromProv.divisionType = null;
-            fromProv.isMoving = false;
+            const startTime = performance.now(); const divEl = fromProv.domDivisionRef; const movingHp = fromProv.divisionHp;
+            fromProv.hasDivision = false; fromProv.domDivisionRef = null; fromProv.divisionHp = 0; fromProv.divisionOwner = null; fromProv.divisionType = null; fromProv.isMoving = false;
 
             function animateMove(now) {
-                const elapsed = now - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                const currentX = start.x + (end.x - start.x) * progress;
-                const currentY = start.y + (end.y - start.y) * progress;
-
-                progressLine.setAttribute("x2", currentX); progressLine.setAttribute("y2", currentY);
-                if (divEl) { divEl.style.left = `${currentX}px`; divEl.style.top = `${currentY}px`; }
-
-                if (progress < 1) requestAnimationFrame(animateMove);
-                else { g.remove(); resolveArrival(toId, countryCode, movingHp, divEl, divType); }
+                const progress = Math.min((now - startTime) / duration, 1);
+                const cX = start.x + (end.x - start.x) * progress; const cY = start.y + (end.y - start.y) * progress;
+                progressLine.setAttribute("x2", cX); progressLine.setAttribute("y2", cY);
+                if (divEl) { divEl.style.left = `${cX}px`; divEl.style.top = `${cY}px`; }
+                if (progress < 1) requestAnimationFrame(animateMove); else { g.remove(); resolveArrival(toId, countryCode, movingHp, divEl, divType); }
             }
             requestAnimationFrame(animateMove);
         }
@@ -819,12 +722,7 @@
             const targetProv = provinceData[toId];
             if (!targetProv.hasDivision) {
                 targetProv.hasDivision = true; targetProv.divisionHp = attackerHp; targetProv.divisionOwner = attackerCountry; targetProv.domDivisionRef = divEl; targetProv.divisionType = divType;
-                
-                if (targetProv.country !== attackerCountry) { 
-                    targetProv.country = attackerCountry; 
-                    targetProv.elementRef.style.fill = countryColors[attackerCountry];
-                    redrawProvinceBuildings(toId);
-                }
+                if (targetProv.country !== attackerCountry) { targetProv.country = attackerCountry; targetProv.elementRef.style.fill = countryColors[attackerCountry]; redrawProvinceBuildings(toId); }
                 updateEconomyDisplay();
             } else if (targetProv.hasDivision && targetProv.divisionOwner !== attackerCountry) {
                 startBattle(toId, attackerCountry, attackerHp, divEl, divType);
@@ -832,289 +730,184 @@
         }
 
         function startBattle(provId, attackerCountry, attackerHp, attackerDivEl, attType) {
-            const prov = provinceData[provId];
-            const defenderCountry = prov.divisionOwner;
-            const defType = prov.divisionType;
+            const prov = provinceData[provId]; const defenderCountry = prov.divisionOwner; const defType = prov.divisionType;
             const center = getProvinceCenter(provId);
-            const battleHtml = document.createElement('div');
-            battleHtml.className = 'battle-indicator';
-            container.appendChild(battleHtml);
+            const battleHtml = document.createElement('div'); battleHtml.className = 'battle-indicator'; container.appendChild(battleHtml);
 
             let attHp = attackerHp;
             const battleInterval = setInterval(() => {
                 if (!isGameStarted) return;
-                
-                // Базовий розрахунок шкоди на основі ТЕХНОЛОГІЧНОГО рівня юнітів
-                let baseAttDmg = 20;
-                if (['tank', 'medium_tank', 'motorized'].includes(attType)) baseAttDmg = 35;
-                if (['heavy_tank', 'mechanized'].includes(attType)) baseAttDmg = 50;
-                if (attType === 'modern_tank') baseAttDmg = 70;
-                if (attType === 'assault') baseAttDmg = 28;
+                let bAtt = 20, bDef = 20;
+                if (['tank', 'medium_tank', 'motorized'].includes(attType)) bAtt = 35; if (['heavy_tank', 'mechanized'].includes(attType)) bAtt = 50; if (attType === 'modern_tank') bAtt = 70; if (attType === 'assault') bAtt = 28;
+                if (['tank', 'medium_tank', 'motorized'].includes(defType)) bDef = 35; if (['heavy_tank', 'mechanized'].includes(defType)) bDef = 50; if (defType === 'modern_tank') bDef = 70; if (defType === 'assault') bDef = 28;
 
-                let baseDefDmg = 20;
-                if (['tank', 'medium_tank', 'motorized'].includes(defType)) baseDefDmg = 35;
-                if (['heavy_tank', 'mechanized'].includes(defType)) baseDefDmg = 50;
-                if (defType === 'modern_tank') baseDefDmg = 70;
-                if (defType === 'assault') baseDefDmg = 28;
+                if (['tank', 'medium_tank', 'heavy_tank', 'modern_tank', 'motorized', 'mechanized'].includes(attType) && ((attackerCountry === playerCountry ? playerOil : countryOilReserves[attackerCountry]) <= 0)) bAtt = 12;
+                if (['tank', 'medium_tank', 'heavy_tank', 'modern_tank', 'motorized', 'mechanized'].includes(defType) && ((defenderCountry === playerCountry ? playerOil : countryOilReserves[defenderCountry]) <= 0)) bDef = 12;
 
-                // Перевірка нафти
-                let attFuel = (attackerCountry === playerCountry) ? playerOil : countryOilReserves[attackerCountry];
-                let defFuel = (defenderCountry === playerCountry) ? playerOil : countryOilReserves[defenderCountry];
-                let attNeedsFuel = ['tank', 'medium_tank', 'heavy_tank', 'modern_tank', 'motorized', 'mechanized'].includes(attType);
-                let defNeedsFuel = ['tank', 'medium_tank', 'heavy_tank', 'modern_tank', 'motorized', 'mechanized'].includes(defType);
-
-                if (attNeedsFuel && attFuel <= 0) baseAttDmg = 12; 
-                if (defNeedsFuel && defFuel <= 0) baseDefDmg = 12;
-
-                const bunkerCount = prov.bunkers || 0;
-                const damageMitigation = Math.max(0.4, 1 - (bunkerCount * 0.15));
-
-                let dmgToDef = Math.floor(Math.random() * 15) + baseAttDmg - 5;
-                let dmgToAtt = Math.floor(Math.random() * 15) + baseDefDmg - 5;
-                
-                dmgToDef = Math.floor(dmgToDef * damageMitigation);
-                prov.divisionHp -= dmgToDef; attHp -= dmgToAtt;
+                const dmgMitigation = Math.max(0.4, 1 - ((prov.bunkers || 0) * 0.15));
+                let dToDef = Math.floor((Math.random() * 15) + bAtt - 5) * dmgMitigation;
+                let dToAtt = Math.floor((Math.random() * 15) + bDef - 5);
+                prov.divisionHp -= Math.floor(dToDef); attHp -= Math.floor(dToAtt);
 
                 battleHtml.style.left = `${center.x}px`; battleHtml.style.top = `${center.y}px`;
-                battleHtml.textContent = `${attackerCountry}: ${Math.max(0, attHp)} VS ${defenderCountry}: ${Math.max(0, prov.divisionHp)} (🛡️x${bunkerCount})`;
+                battleHtml.textContent = `${attackerCountry}: ${Math.max(0, attHp)} VS ${defenderCountry}: ${Math.max(0, prov.divisionHp)}`;
 
                 if (prov.divisionHp <= 0 || attHp <= 0) {
                     clearInterval(battleInterval); battleHtml.remove();
                     if (prov.divisionHp <= 0 && attHp <= 0) {
                         if (prov.domDivisionRef) prov.domDivisionRef.remove(); if (attackerDivEl) attackerDivEl.remove();
                         prov.hasDivision = false; prov.domDivisionRef = null; prov.divisionOwner = null; prov.divisionType = null;
-                    } else if (prov.divisionHp > 0 && attHp <= 0) {
-                        if (attackerDivEl) attackerDivEl.remove();
-                    } else if (attHp > 0 && prov.divisionHp <= 0) {
+                    } else if (prov.divisionHp > 0 && attHp <= 0) { if (attackerDivEl) attackerDivEl.remove(); }
+                    else {
                         if (prov.domDivisionRef) prov.domDivisionRef.remove();
                         prov.country = attackerCountry; prov.elementRef.style.fill = countryColors[attackerCountry];
                         prov.hasDivision = true; prov.divisionHp = attHp; prov.divisionOwner = attackerCountry; prov.domDivisionRef = attackerDivEl; prov.divisionType = attType;
                         if (attackerCountry === playerCountry) attackerDivEl.classList.remove('ai-unit'); else attackerDivEl.classList.add('ai-unit');
-                        
                         redrawProvinceBuildings(provId);
                     }
-                    updateEconomyDisplay();
-                    if (selectedDiplomacyCountry) openDiplomacyWith(selectedDiplomacyCountry);
+                    updateEconomyDisplay(); if (selectedDiplomacyCountry) openDiplomacyWith(selectedDiplomacyCountry);
                 }
             }, 500);
         }
 
         function spawnDivisionVisual(id, countryCode, type) {
-            const center = getProvinceCenter(id);
-            const divEl = document.createElement('div');
-            
-            if (type.includes('tank')) divEl.className = 'division-indicator tank';
-            else divEl.className = 'division-indicator';
-
+            const center = getProvinceCenter(id); const divEl = document.createElement('div');
+            divEl.className = type.includes('tank') ? 'division-indicator tank' : 'division-indicator';
             if (countryCode !== playerCountry) divEl.classList.add('ai-unit');
-            divEl.style.left = `${center.x}px`; divEl.style.top = `${center.y}px`;
-            container.appendChild(divEl);
+            divEl.style.left = `${center.x}px`; divEl.style.top = `${center.y}px`; container.appendChild(divEl);
             
-            // Розрахунок HP на основі типу та дослідженого рівня
-            let maxHp = 100;
-            if (type === 'assault') maxHp = 130;
-            else if (type === 'motorized') maxHp = 165;
-            else if (type === 'mechanized') maxHp = 210;
-            else if (type === 'tank') maxHp = 150;
-            else if (type === 'medium_tank') maxHp = 220;
-            else if (type === 'heavy_tank') maxHp = 350;
-            else if (type === 'modern_tank') maxHp = 500;
+            let mHp = 100;
+            if (type === 'assault') mHp = 130; else if (type === 'motorized') mHp = 165; else if (type === 'mechanized') mHp = 210;
+            else if (type === 'tank') mHp = 150; else if (type === 'medium_tank') mHp = 220; else if (type === 'heavy_tank') mHp = 350; else if (type === 'modern_tank') mHp = 500;
 
-            provinceData[id].hasDivision = true; 
-            provinceData[id].divisionHp = maxHp; 
-            provinceData[id].divisionOwner = countryCode;
-            provinceData[id].divisionType = type;
-            provinceData[id].domDivisionRef = divEl;
+            provinceData[id].hasDivision = true; provinceData[id].divisionHp = mHp; provinceData[id].divisionOwner = countryCode; provinceData[id].divisionType = type; provinceData[id].domDivisionRef = divEl;
         }
 
         function createFactoryVisual(svgElement, id, type, countIndex) {
-            const center = getProvinceCenter(id);
-            const factory = document.createElement('div');
-            
-            let index = countIndex;
-            if (index === undefined) {
-                index = provinceData[id].civFactories + provinceData[id].milFactories + provinceData[id].oilWells + provinceData[id].bunkers;
-            }
-            
+            const center = getProvinceCenter(id); const factory = document.createElement('div');
+            let idx = countIndex !== undefined ? countIndex : (provinceData[id].civFactories + provinceData[id].milFactories + provinceData[id].oilWells + provinceData[id].bunkers);
             factory.className = `factory-indicator ${type} prov-building-${id}`;
-            const offsetX = (index - 2.5) * 10; 
-            factory.style.left = `${center.x + offsetX}px`; factory.style.top = `${center.y + 14}px`; 
-            container.appendChild(factory);
+            factory.style.left = `${center.x + (idx - 2.5) * 10}px`; factory.style.top = `${center.y + 14}px`; container.appendChild(factory);
         }
 
         function redrawProvinceBuildings(id) {
             document.querySelectorAll(`.prov-building-${id}`).forEach(el => el.remove());
-            let count = 1;
-            const p = provinceData[id];
-            for(let i=0; i<p.civFactories; i++) { createFactoryVisual(p.elementRef, id, 'civ', count); count++; }
-            for(let i=0; i<p.milFactories; i++) { createFactoryVisual(p.elementRef, id, 'mil', count); count++; }
-            for(let i=0; i<p.oilWells; i++) { createFactoryVisual(p.elementRef, id, 'oil', count); count++; }
-            for(let i=0; i<p.bunkers; i++) { createFactoryVisual(p.elementRef, id, 'bunker', count); count++; }
+            let count = 1; const p = provinceData[id];
+            for(let i=0; i<p.civFactories; i++) createFactoryVisual(p.elementRef, id, 'civ', count++);
+            for(let i=0; i<p.milFactories; i++) createFactoryVisual(p.elementRef, id, 'mil', count++);
+            for(let i=0; i<p.oilWells; i++) createFactoryVisual(p.elementRef, id, 'oil', count++);
+            for(let i=0; i<p.bunkers; i++) createFactoryVisual(p.elementRef, id, 'bunker', count++);
         }
 
         function createOilVisualMark(svgElement, id) {
-            const center = getProvinceCenter(id);
-            const mark = document.createElement('div');
+            const center = getProvinceCenter(id); const mark = document.createElement('div');
             mark.className = 'oil-deposit-mark'; mark.textContent = '💧';
-            mark.style.left = `${center.x}px`; mark.style.top = `${center.y - 10}px`;
-            container.appendChild(mark);
+            mark.style.left = `${center.x}px`; mark.style.top = `${center.y - 10}px`; container.appendChild(mark);
         }
 
-        function cancelSelection() {
-            selectedProvinceId = null;
-            document.querySelectorAll('.division-indicator').forEach(el => el.classList.remove('selected'));
-        }
+        function cancelSelection() { selectedProvinceId = null; document.querySelectorAll('.division-indicator').forEach(el => el.classList.remove('selected')); }
 
         function updateEconomyDisplay() {
             if (!isGameStarted) return;
-
-            // Ефект технології «Екстракція нафти»
-            let oilPerWell = (playerTechs['oil_extraction'].status === 'done') ? 2 : 1;
+            let oilPerWell = playerTechs['oil_extraction'].status === 'done' ? 2 : 1;
 
             for (const code in countryBudgets) {
-                let civs = 0; let wells = 0;
-                for (const pId in provinceData) {
-                    if (provinceData[pId].country === code) {
-                        civs += provinceData[pId].civFactories;
-                        wells += provinceData[pId].oilWells;
-                    }
-                }
-                countryBudgets[code] += civs * 5; 
-                
-                // Для гравця діє бонус технології, для ботів звичайна видобуча
-                let currentBonus = (code === playerCountry) ? oilPerWell : 1;
-                countryOilReserves[code] += wells * currentBonus; 
+                let civs = 0, wells = 0;
+                for (const pId in provinceData) { if (provinceData[pId].country === code) { civs += provinceData[pId].civFactories; wells += provinceData[pId].oilWells; } }
+                countryBudgets[code] += civs * 5; countryOilReserves[code] += wells * (code === playerCountry ? oilPerWell : 1);
             }
 
-            let totalCiv = 0; let totalMil = 0; let totalWells = 0; let totalDivisions = 0;
+            let tCiv = 0, tMil = 0, tWells = 0, tDivs = 0;
             for (const id in provinceData) {
                 if (provinceData[id].country === playerCountry) {
-                    totalCiv += provinceData[id].civFactories;
-                    totalMil += provinceData[id].milFactories;
-                    totalWells += provinceData[id].oilWells;
-                    if (provinceData[id].hasDivision && provinceData[id].divisionOwner === playerCountry) totalDivisions++;
+                    tCiv += provinceData[id].civFactories; tMil += provinceData[id].milFactories; tWells += provinceData[id].oilWells;
+                    if (provinceData[id].hasDivision && provinceData[id].divisionOwner === playerCountry) tDivs++;
                 }
             }
 
-            let rawIncome = totalCiv * 5;
-            let logisticsPenalty = totalDivisions > totalMil ? (totalDivisions - totalMil) * 3 : 0;
-            if (totalDivisions > totalMil) milPanel.classList.add('warning-stats'); else milPanel.classList.remove('warning-stats');
+            let penalty = tDivs > tMil ? (tDivs - tMil) * 3 : 0;
+            if (tDivs > tMil) milPanel.classList.add('warning-stats'); else milPanel.classList.remove('warning-stats');
 
-            let finalIncome = rawIncome - logisticsPenalty;
-            incomeDisplay.textContent = (finalIncome >= 0 ? `+${finalIncome}` : `${finalIncome}`);
-            oilIncomeDisplay.textContent = `+${totalWells * oilPerWell}`;
-            milDisplay.textContent = `${totalDivisions}/${totalMil + totalWells}`;
+            let finalIncome = (tCiv * 5) - penalty;
+            incomeDisplay.textContent = finalIncome >= 0 ? `+${finalIncome}` : finalIncome;
+            oilIncomeDisplay.textContent = `+${tWells * oilPerWell}`;
+            milDisplay.textContent = `${tDivs}/${tMil + tWells}`;
             
-            window.currentCalculatedIncome = finalIncome;
-            window.currentOilIncome = totalWells * oilPerWell;
-
-            coinsDisplay.textContent = coins;
-            oilDisplay.textContent = playerOil;
+            window.currentCalculatedIncome = finalIncome; window.currentOilIncome = tWells * oilPerWell;
+            coinsDisplay.textContent = coins; oilDisplay.textContent = playerOil;
         }
 
-        // ІГРОВИЙ ЩОСЕКУНДНИЙ ТИК (Економіка + Наука)
         setInterval(function() {
             if (!isGameStarted) return;
             if (typeof window.currentCalculatedIncome !== 'undefined') {
-                coins += window.currentCalculatedIncome; if (coins < 0) coins = 0;
-                playerOil += window.currentOilIncome;
+                coins += window.currentCalculatedIncome; playerOil += window.currentOilIncome;
                 coinsDisplay.textContent = coins; oilDisplay.textContent = playerOil;
             }
             updateScienceTick();
         }, 1000);
 
-        // ЦИКЛ ШІ 
+        // КІНЕТИЧНИЙ ШІ ДЛЯ 25 БОТІВ
         const activeAiJustifications = {};
         setInterval(function() {
             if (!isGameStarted) return;
-            const activeAiCountries = Object.keys(countryBudgets);
-            activeAiCountries.forEach(bot => {
+            Object.keys(countryBudgets).forEach(bot => {
                 if (bot === playerCountry) return;
-
-                const botProvinces = [];
-                for (const pId in provinceData) { if (provinceData[pId].country === bot) botProvinces.push(pId); }
+                const botProvinces = Object.keys(provinceData).filter(pId => provinceData[pId].country === bot);
                 if (botProvinces.length === 0) return;
 
                 let botCash = countryBudgets[bot];
-                
-                // 1. ШІ Будує
-                if (botCash >= 30 && Math.random() > 0.5) {
-                    const randProvId = botProvinces[Math.floor(Math.random() * botProvinces.length)];
-                    const prov = provinceData[randProvId];
-                    const totalB = prov.civFactories + prov.milFactories + prov.oilWells + prov.bunkers;
-                    
-                    if (totalB < 4) {
+                if (botCash >= 30 && Math.random() > 0.6) {
+                    const rProvId = botProvinces[Math.floor(Math.random() * botProvinces.length)]; const prov = provinceData[rProvId];
+                    if ((prov.civFactories + prov.milFactories + prov.oilWells + prov.bunkers) < 4) {
                         countryBudgets[bot] -= 30;
-                        if (prov.hasOilDeposit) {
-                            prov.oilWells++; createFactoryVisual(prov.elementRef, randProvId, 'oil');
-                        } else {
-                            const rng = Math.random();
-                            if (rng < 0.4) { prov.civFactories++; createFactoryVisual(prov.elementRef, randProvId, 'civ'); } 
-                            else if (rng < 0.7) { prov.milFactories++; createFactoryVisual(prov.elementRef, randProvId, 'mil'); }
-                            else { prov.bunkers++; createFactoryVisual(prov.elementRef, randProvId, 'bunker'); }
+                        if (prov.hasOilDeposit) { prov.oilWells++; createFactoryVisual(prov.elementRef, rProvId, 'oil'); } 
+                        else {
+                            let rng = Math.random();
+                            if (rng < 0.4) { prov.civFactories++; createFactoryVisual(prov.elementRef, rProvId, 'civ'); }
+                            else if (rng < 0.7) { prov.milFactories++; createFactoryVisual(prov.elementRef, rProvId, 'mil'); }
+                            else { prov.bunkers++; createFactoryVisual(prov.elementRef, rProvId, 'bunker'); }
                         }
                         updateEconomyDisplay();
                     }
                 }
 
-                // 2. ШІ купує армію
-                if (botCash >= 120 && Math.random() > 0.7) {
-                    const randProvId = botProvinces[Math.floor(Math.random() * botProvinces.length)];
-                    const prov = provinceData[randProvId];
-                    if (!prov.hasDivision && !prov.isMoving) {
-                        spawnDivisionVisual(randProvId, bot, 'tank'); countryBudgets[bot] -= 120;
-                    }
-                } else if (botCash >= 50 && Math.random() > 0.6) {
-                    const randProvId = botProvinces[Math.floor(Math.random() * botProvinces.length)];
-                    const prov = provinceData[randProvId];
-                    if (!prov.hasDivision && !prov.isMoving) {
-                        spawnDivisionVisual(randProvId, bot, 'infantry'); countryBudgets[bot] -= 50;
-                    }
+                if (botCash >= 120 && Math.random() > 0.75) {
+                    const rp = botProvinces[Math.floor(Math.random() * botProvinces.length)];
+                    if (!provinceData[rp].hasDivision && !provinceData[rp].isMoving) { spawnDivisionVisual(rp, bot, 'tank'); countryBudgets[bot] -= 120; }
+                } else if (botCash >= 50 && Math.random() > 0.65) {
+                    const rp = botProvinces[Math.floor(Math.random() * botProvinces.length)];
+                    if (!provinceData[rp].hasDivision && !provinceData[rp].isMoving) { spawnDivisionVisual(rp, bot, 'infantry'); countryBudgets[bot] -= 50; }
                 }
 
-                // 3. ШІ Атакує
-                if (Math.random() < 0.4) {
-                    const armedProvinces = botProvinces.filter(pId => provinceData[pId].hasDivision && provinceData[pId].divisionOwner === bot && !provinceData[pId].isMoving);
-                    if (armedProvinces.length > 0) {
-                        const attackFrom = armedProvinces[Math.floor(Math.random() * armedProvinces.length)];
-                        const allProvIds = Object.keys(provinceData);
-                        const targets = allProvIds.filter(pId => {
-                            if (pId === attackFrom) return false;
-                            const start = getProvinceCenter(attackFrom); const end = getProvinceCenter(pId);
-                            const dist = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
-                            return dist <= MAX_NEIGHBOR_DISTANCE && provinceData[pId].country !== bot;
+                if (Math.random() < 0.35) {
+                    const armed = botProvinces.filter(pId => provinceData[pId].hasDivision && provinceData[pId].divisionOwner === bot && !provinceData[pId].isMoving);
+                    if (armed.length > 0) {
+                        const fromP = armed[Math.floor(Math.random() * armed.length)];
+                        const targets = Object.keys(provinceData).filter(pId => {
+                            if (pId === fromP) return false;
+                            const s = getProvinceCenter(fromP); const e = getProvinceCenter(pId);
+                            return Math.sqrt(Math.pow(e.x - s.x, 2) + Math.pow(e.y - s.y, 2)) <= MAX_NEIGHBOR_DISTANCE && provinceData[pId].country !== bot;
                         });
 
                         if (targets.length > 0) {
-                            const attackTo = targets[Math.floor(Math.random() * targets.length)];
-                            const enemyCountry = provinceData[attackTo].country;
+                            const toP = targets[Math.floor(Math.random() * targets.length)]; const enemy = provinceData[toP].country;
+                            if (allianceStatus[bot][enemy]) return;
 
-                            if (allianceStatus[bot][enemyCountry]) return;
-
-                            if (enemyCountry === 'NEUTRAL' || warStatus[bot][enemyCountry]) {
-                                tryMoveOrAttack(attackFrom, attackTo, bot);
-                            } else {
-                                const justificationKey = `${bot}_vs_${enemyCountry}`;
-                                if (!activeAiJustifications[justificationKey]) {
-                                    activeAiJustifications[justificationKey] = true;
-
-                                    let warningBox = null;
-                                    if (enemyCountry === playerCountry) {
-                                        warningBox = document.createElement('div'); warningBox.className = 'war-warning';
-                                        warningBox.innerHTML = `⚠️ ${bot} обґрунтовує привід для війни проти вас! (10с)`;
-                                        alertContainer.appendChild(warningBox);
+                            if (enemy === 'NEUTRAL' || warStatus[bot][enemy]) { tryMoveOrAttack(fromP, toP, bot); } 
+                            else {
+                                const jKey = `${bot}_vs_${enemy}`;
+                                if (!activeAiJustifications[jKey]) {
+                                    activeAiJustifications[jKey] = true;
+                                    let wBox = null;
+                                    if (enemy === playerCountry) {
+                                        wBox = document.createElement('div'); wBox.className = 'war-warning';
+                                        wBox.innerHTML = `⚠️ ${countryNames[bot]} обґрунтовує привід для війни проти вас! (10с)`; alertContainer.appendChild(wBox);
                                     }
-
-                                    let aiCbTime = 10;
-                                    const aiCbInterval = setInterval(() => {
-                                        if (!isGameStarted) return;
-                                        aiCbTime--;
-                                        if (warningBox) warningBox.innerHTML = `⚠️ ${bot} обґрунтовує привід для війни проти вас! (${aiCbTime}с)`;
-                                        if (aiCbTime <= 0) {
-                                            clearInterval(aiCbInterval); if (warningBox) warningBox.remove();
-                                            declareWar(bot, enemyCountry);
-                                            delete activeAiJustifications[justificationKey];
-                                        }
+                                    let aiTime = 10;
+                                    const aiInterval = setInterval(() => {
+                                        if (!isGameStarted) return; aiTime--;
+                                        if (wBox) wBox.innerHTML = `⚠️ ${countryNames[bot]} обґрунтовує привід для війни! (${aiTime}с)`;
+                                        if (aiTime <= 0) { clearInterval(aiInterval); if (wBox) wBox.remove(); declareWar(bot, enemy); delete activeAiJustifications[jKey]; }
                                     }, 1000);
                                 }
                             }

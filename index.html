@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Стратегічна Карта Європи</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0c0c0e;
+            color: #ffffff;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        h1 { margin-bottom: 5px; font-size: 24px; }
+        p { margin-top: 0; color: #8a8a93; font-size: 14px; }
+
+        .map-container {
+            width: 90vw;
+            max-width: 1200px;
+            border: 2px solid #2a2a30;
+            background-color: #000000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        /* Стилі для провінцій, які завантажаться з файлу */
+        svg path {
+            cursor: pointer;
+            stroke: #222222;
+            stroke-width: 0.5px;
+            transition: opacity 0.15s ease, stroke 0.15s ease;
+        }
+
+        svg path:hover {
+            opacity: 0.75;
+            stroke: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Глобальна Стратегія</h1>
+    <p>Карта завантажується окремо з файлу map.svg...</p>
+
+    <div id="map-container" class="map-container"></div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const container = document.getElementById('map-container');
+            const targetColor = "#555555"; // Колір зафарбовування (сірий)
+
+            // 1. Завантажуємо зовнішній файл карти
+            fetch('map.svg')
+                .then(response => response.text())
+                .then(svgData => {
+                    // Вставляємо вміст SVG прямо в наш контейнер
+                    container.innerHTML = svgData;
+
+                    // 2. Коли карта вставилась, шукаємо її головний шар від CorelDRAW
+                    const mapLayer = document.getElementById('Layer_x0020_1');
+
+                    if (mapLayer) {
+                        // 3. Вішаємо кліки на провінції
+                        mapLayer.addEventListener('click', function(event) {
+                            if (event.target.tagName === 'path') {
+                                // Фарбуємо в сірий
+                                event.target.style.fill = targetColor;
+                                
+                                // Виводимо ID провінції в консоль браузера
+                                console.log("Захоплено: " + event.target.id);
+                            }
+                        });
+                    } else {
+                        console.error("Не вдалося знайти шар карти Layer_x0020_1 всередині SVG.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Помилка завантаження карти:", error);
+                    container.innerHTML = "<p style='color:red;'>Не вдалося завантажити карту map.svg</p>";
+                });
+        });
+    </script>
+</body>
+</html>

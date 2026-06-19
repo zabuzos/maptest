@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2D HOI4 Mini Strategy - Clean Map</title>
+    <title>2D HOI4 Mini Strategy - Battle Phase & Optimized</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
@@ -14,7 +14,6 @@
             user-select: none;
         }
 
-        /* Стартовий екран вибору країни */
         .start-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: #09090b; z-index: 9999; display: flex;
@@ -48,10 +47,8 @@
         }
         .country-select-btn:hover { border-color: #3b82f6; background: #1c1c22; transform: translateY(-2px); }
 
-        /* Головний макет гри */
         .game-layout { display: flex; width: 100%; height: 100vh; }
 
-        /* Ліва бічна панель (Сайдбар) */
         .sidebar {
             width: 340px; min-width: 340px; background: #16161a; border-right: 2px solid #2a2a30;
             padding: 12px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px;
@@ -72,7 +69,6 @@
         .player-badge { font-size: 13px; font-weight: bold; padding: 6px; border-radius: 4px; text-align: center; color: white; }
         .actions-grid { display: flex; flex-direction: column; gap: 5px; }
 
-        /* Кнопки режимів гри */
         .mode-btn {
             background-color: #2a2a33; color: #fff; border: 1px solid #444; padding: 8px;
             cursor: pointer; border-radius: 4px; font-weight: 600; text-align: left; transition: all 0.2s; width: 100%;
@@ -84,7 +80,6 @@
         .mode-btn.mil-mode.active { background-color: #64748b; border-color: #94a3b8; }
         .mode-btn.bunker-mode.active { background-color: #4b5563; border-color: #9ca3af; }
 
-        /* Візуалізація науки (Слоти) */
         .tech-slots-row { display: flex; gap: 4px; margin-bottom: 4px; }
         .tech-slot-box { background: #25252e; border: 1px dashed #4b4b5e; border-radius: 4px; padding: 4px; font-size: 10px; flex: 1; }
         .tech-progress-bar { width: 100%; height: 4px; background: #111; border-radius: 2px; overflow: hidden; margin-top: 3px; }
@@ -94,10 +89,6 @@
         .tech-card.locked { border-color: #444; background: #1a1a22; color: #555; cursor: not-allowed; }
         .tech-card.done { border-color: #22c55e; background: rgba(34, 197, 94, 0.1); cursor: default; }
 
-        /* Дипломатична панель */
-        .panel-section id="diplomacy-panel" { border-color: #0d9488; }
-
-        /* Мапа та керування камерою */
         .map-area { flex-grow: 1; position: relative; background-color: #050507; overflow: hidden; cursor: grab; }
         .map-area:active { cursor: grabbing; }
         .map-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform-origin: 0 0; }
@@ -106,38 +97,44 @@
         .zoom-controls { position: absolute; top: 15px; right: 15px; display: flex; flex-direction: column; gap: 5px; z-index: 100; }
         .zoom-btn { background: #1e1e24; color: white; border: 1px solid #3d3d45; width: 32px; height: 32px; font-size: 16px; cursor: pointer; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
 
-        /* Інтерактивні провінції - ЧИСТІ ТОНКІ КОРДОНИ */
         svg path, svg polygon, svg polyline, svg rect, svg ellipse { 
             cursor: pointer; 
             stroke: #111114; 
-            stroke-width: 0.3px; /* Тонша лінія для чистоти карти */
+            stroke-width: 0.3px; 
             transition: opacity 0.1s; 
         }
         svg path:hover, svg polygon:hover { opacity: 0.85; stroke: #fff; stroke-width: 0.6px; }
 
-        /* ІКОНКИ ЗМЕНШЕНО НА 40-60% (БУЛО 22px -> СТАЛО 11px) */
+        /* Анімація бою на карті */
+        @keyframes battle-blink {
+            0% { fill: #ef4444; opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { fill: #ef4444; opacity: 1; }
+        }
+        .under-attack {
+            animation: battle-blink 0.4s infinite !important;
+        }
+
         .factory-indicator { 
             position: absolute; width: 11px; height: 11px; 
             pointer-events: none; transform: translate(-50%, -50%); 
             display: flex; align-items: center; justify-content: center; 
-            font-size: 8px; /* Менший шрифт для чистоти */
+            font-size: 8px; 
         }
 
-        /* КРАПЛІ НАФТИ ЗМЕНШЕНО */
         .oil-deposit-mark { 
             position: absolute; font-size: 8px; pointer-events: none; 
             transform: translate(-50%, -50%); filter: drop-shadow(0 1px 1px #000);
         }
         body.editor-active .oil-deposit-mark { display: none !important; }
 
-        /* ДИВІЗІЇ ЗМЕНШЕНО НА 50% (БУЛО 26px -> СТАЛО 13px) */
         .division-indicator { 
             position: absolute; width: 13px; height: 13px; 
-            background-color: #15803d; border: 1px solid #ffffff; /* Тонша рамка */
+            background-color: #15803d; border: 1px solid #ffffff; 
             border-radius: 2px; box-shadow: 0 1px 4px rgba(0,0,0,0.8);
             pointer-events: none; transform: translate(-50%, -50%); z-index: 5; 
             display: flex; align-items: center; justify-content: center; 
-            font-size: 8px; /* Компактний емодзі-текст всередині */
+            font-size: 8px; 
             font-weight: bold; color: white;
         }
         .division-indicator.tank { 
@@ -150,7 +147,6 @@
 
         .arrows-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
 
-        /* Модальні вікна */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 10, 12, 0.85); z-index: 10000; display: none; align-items: center; justify-content: center; }
         .focus-tree-window { background: #141419; border: 2px solid #a855f7; border-radius: 10px; width: 90%; max-width: 800px; height: 80vh; display: flex; flex-direction: column; overflow: hidden; }
         .focus-header { background: #1c1c24; padding: 12px; border-bottom: 1px solid #2d2d38; display: flex; justify-content: space-between; align-items: center; }
@@ -289,10 +285,7 @@
     <div id="alert-container"></div>
 
 <script>
-    // =================================================================
-    // 🔥 ВСТАВ СЮДИ ДАНІ СВОГО НОВОГО ДОДАТКУ З FIREBASE CONSOLE
-    // =================================================================
-const firebaseConfig = {
+   const firebaseConfig = {
     apiKey: "AIzaSyBG54L-ISILxa5RajGY99P7cBOlHvqsLgI",
     authDomain: "the-animals-wars-1.firebaseapp.com",
     databaseURL: "https://the-animals-wars-1-default-rtdb.europe-west1.firebasedatabase.app",
@@ -304,7 +297,6 @@ const firebaseConfig = {
     
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
-    // =================================================================
 
     document.addEventListener("DOMContentLoaded", function() {
         const startScreen = document.getElementById('start-screen');
@@ -358,6 +350,9 @@ const firebaseConfig = {
         const MAX_NEIGHBOR_DISTANCE = 220; 
         let zoomScale = 1.0; let panX = 0; let panY = 0;
         let isDragging = false; let startX, startY, hasMovedMouse = false;
+
+        // КЕШ ДЛЯ ОПТИМІЗАЦІЇ КООРДИНАТ ЦЕНТРІВ (Припиняє фризи)
+        const cachedCenters = {};
 
         const countryColors = { 
             'UA': '#1d4ed8', 'PL': '#b91c1c', 'DE': '#374151', 'FR': '#0284c7', 
@@ -441,11 +436,9 @@ const firebaseConfig = {
         const playerTechs = {
             'standardization': { name: '🏗️ Стандартизація', cat: 'ind', status: 'avail', req: null, desc: 'Заводи коштують 20💰.' },
             'oil_extraction': { name: '🛢️ Екстракція нафти', cat: 'ind', status: 'avail', req: null, desc: 'Вишки дають +2 нафти.' },
-            
             'medium_tank': { name: '🚜 Середній Танк', cat: 'tech', status: 'avail', req: null, desc: 'Відкриває танки середнього класу.' },
             'heavy_tank': { name: '🚂 Важкий Танк', cat: 'tech', status: 'locked', req: 'medium_tank', desc: 'Важка проривна бронетехніка.' },
             'modern_tank': { name: '⚡ Сучасний Танк', cat: 'tech', status: 'locked', req: 'heavy_tank', desc: 'Найдосконаліші бойові машини.' },
-            
             'assault': { name: '🪖 Штурмовики', cat: 'inf', status: 'avail', req: null, desc: 'Покращена штурмова піхота.' },
             'motorized_inf': { name: '🛞 Моторизована піхота', cat: 'inf', status: 'locked', req: 'assault', desc: 'Піхота на вантажівках та джипах.' },
             'mechanized_inf': { name: '🛡️ Механізована піхота', cat: 'inf', status: 'locked', req: 'motorized_inf', desc: 'Бронетранспортери та БМП.' }
@@ -586,16 +579,16 @@ const firebaseConfig = {
 
                 if (countryBudgets[bot] >= 50 && botProvs.length > 0) {
                     let spawnProv = botProvs[Math.floor(Math.random() * botProvs.length)];
-                    if (!provinceData[spawnProv].hasDivision) {
+                    if (!provinceData[spawnProv].hasDivision && !provinceData[spawnProv].isUnderAttack) {
                         countryBudgets[bot] -= 50;
                         spawnDivisionVisual(spawnProv, bot, 'infantry');
                     }
                 }
 
                 botProvs.forEach(pId => {
-                    if (provinceData[pId].hasDivision) {
+                    if (provinceData[pId].hasDivision && !provinceData[pId].isUnderAttack) {
                         let neighbors = findNeighborProvinces(pId);
-                        let enemyNeighbors = neighbors.filter(nId => warStatus[bot][provinceData[nId].country] === true);
+                        let enemyNeighbors = neighbors.filter(nId => warStatus[bot][provinceData[nId].country] === true && !provinceData[nId].isUnderAttack);
                         if (enemyNeighbors.length > 0 && Math.random() < 0.12) {
                             let targetAttack = enemyNeighbors[Math.floor(Math.random() * enemyNeighbors.length)];
                             executeBattleCombat(pId, targetAttack);
@@ -605,15 +598,15 @@ const firebaseConfig = {
             });
         }
 
+        // ШВИДКИЙ ПОШУК СУСІДІВ (Використовує кеш замість getBoundingClientRect кожну секунду)
         function findNeighborProvinces(originId) {
             let neighbors = [];
-            let originCenter = getProvinceCenter(originId);
+            let originCenter = cachedCenters[originId];
             if (!originCenter) return neighbors;
 
-            for (const id in provinceData) {
+            for (const id in cachedCenters) {
                 if (id === originId) continue;
-                let targetCenter = getProvinceCenter(id);
-                if (!targetCenter) continue;
+                let targetCenter = cachedCenters[id];
 
                 let dx = originCenter.x - targetCenter.x;
                 let dy = originCenter.y - targetCenter.y;
@@ -624,6 +617,7 @@ const firebaseConfig = {
             return neighbors;
         }
 
+        // РЕЖИМ СТИМУЛЯЦІЇ БОЮ (НЕ МИТТЄВА АНЕКСІЯ)
         function executeBattleCombat(fromId, toId) {
             let attackerCountry = provinceData[fromId].country;
             let defenderCountry = provinceData[toId].country;
@@ -635,51 +629,74 @@ const firebaseConfig = {
                 return;
             }
 
-            drawFrontlineAttackArrow(fromId, toId);
+            if(provinceData[toId].isUnderAttack) return; // Провінція вже воює
 
-            let attackerPower = Math.random() * 50 + 10;
-            let defenderPower = Math.random() * 40 + (provinceData[toId].bunkers * 15);
+            // Встановлюємо візуальну фазу активного бою
+            provinceData[toId].isUnderAttack = true;
+            provinceData[toId].elementRef.classList.add('under-attack');
+            
+            let arrow = drawFrontlineAttackArrow(fromId, toId);
 
-            if (attackerCountry === playerCountry) attackerPower *= infantryAttackBonus;
+            // Бій триває 1.5 секунди (фаза симуляції бою)
+            setTimeout(() => {
+                provinceData[toId].isUnderAttack = false;
+                if(provinceData[toId].elementRef) {
+                    provinceData[toId].elementRef.classList.remove('under-attack');
+                }
+                if (arrow) arrow.remove();
 
-            if (attackerPower > defenderPower) {
-                provinceData[toId].country = attackerCountry;
-                provinceData[toId].elementRef.style.fill = countryColors[attackerCountry] || '#2e2e35';
-                
-                if (provinceData[toId].domDivisionRef) provinceData[toId].domDivisionRef.remove();
-                if (provinceData[fromId].domDivisionRef) {
-                    provinceData[fromId].domDivisionRef.remove();
-                    provinceData[fromId].hasDivision = false;
+                // Перевірка, чи за час бою атакуючий не втратив свою базу
+                if(provinceData[fromId].country !== attackerCountry) return;
+
+                let attackerPower = Math.random() * 50 + 10;
+                let defenderPower = provinceData[toId].hasDivision ? (Math.random() * 40 + (provinceData[toId].bunkers * 15)) : 5; // без юніта захист мінімальний
+
+                if (attackerCountry === playerCountry) attackerPower *= infantryAttackBonus;
+
+                if (attackerPower > defenderPower) {
+                    // Перемога атаки
+                    provinceData[toId].country = attackerCountry;
+                    provinceData[toId].elementRef.style.fill = countryColors[attackerCountry] || '#2e2e35';
+                    
+                    if (provinceData[toId].domDivisionRef) {
+                        provinceData[toId].domDivisionRef.remove();
+                        provinceData[toId].hasDivision = false;
+                    }
+                    if (provinceData[fromId].domDivisionRef) {
+                        provinceData[fromId].domDivisionRef.remove();
+                        provinceData[fromId].hasDivision = false;
+                    }
+                    
+                    spawnDivisionVisual(toId, attackerCountry, attackerCountry === playerCountry ? getBestAvailableInfantryType() : 'infantry');
+                    
+                    if (attackerCountry === playerCountry) {
+                        showNotification(`⚔️ Перемога! Ми прорвали оборону і захопили провінцію у ${countryNames[defenderCountry]}!`);
+                    }
+                } else {
+                    // Відбито
+                    if (provinceData[fromId].domDivisionRef) {
+                        provinceData[fromId].domDivisionRef.remove();
+                        provinceData[fromId].hasDivision = false;
+                    }
+                    if (attackerCountry === playerCountry) {
+                        showNotification(`💥 Нашу атаку на провінцію ${countryNames[defenderCountry]} було відбито з великими втратами!`);
+                    }
                 }
-                spawnDivisionVisual(toId, attackerCountry, attackerCountry === playerCountry ? getBestAvailableInfantryType() : 'infantry');
-                
-                if (attackerCountry === playerCountry) {
-                    showNotification(`⚔️ Ми захопили провінцію у ${countryNames[defenderCountry]}!`);
-                }
-            } else {
-                if (provinceData[fromId].domDivisionRef) {
-                    provinceData[fromId].domDivisionRef.remove();
-                    provinceData[fromId].hasDivision = false;
-                }
-                if (attackerCountry === playerCountry) {
-                    showNotification(`💥 Нашу атаку на провінцію ${countryNames[defenderCountry]} було відбито!`);
-                }
-            }
-            updateEconomyDisplay();
+                updateEconomyDisplay();
+            }, 1500);
         }
 
         function drawFrontlineAttackArrow(fromId, toId) {
-            let p1 = getProvinceCenter(fromId); let p2 = getProvinceCenter(toId);
-            if (!p1 || !p2) return;
+            let p1 = cachedCenters[fromId]; let p2 = cachedCenters[toId];
+            if (!p1 || !p2) return null;
 
             let arrow = document.createElementNS("http://www.w3.org/2000/svg", "line");
             arrow.setAttribute("x1", p1.x); arrow.setAttribute("y1", p1.y);
             arrow.setAttribute("x2", p2.x); arrow.setAttribute("y2", p2.y);
-            arrow.setAttribute("stroke", "#ef4444"); arrow.setAttribute("stroke-width", "2"); /* Тонші стрілки */
-            arrow.setAttribute("stroke-dasharray", "3");
+            arrow.setAttribute("stroke", "#ef4444"); arrow.setAttribute("stroke-width", "2"); 
+            arrow.setAttribute("stroke-dasharray", "4");
             arrowsLayer.appendChild(arrow);
-
-            setTimeout(() => arrow.remove(), 1200);
+            return arrow;
         }
 
         function runGameTick() {
@@ -713,7 +730,7 @@ const firebaseConfig = {
         }
 
         function updateMapTransform() { container.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomScale})`; }
-        mapArea.addEventListener('mousedown', function(e) { isDragging = true; hasMovedMouse = false; startX = e.clientX - panX; startY = e.clientY - panY; });
+        mapArea.addEventListener('mousedown', function(e) { isDragging = true; hasMovedMouse = false; startX = e.clientX - panX; startY = e.clientY - startY; });
         window.addEventListener('mousemove', function(e) { if (!isDragging) return; hasMovedMouse = true; panX = e.clientX - startX; panY = e.clientY - startY; updateMapTransform(); });
         window.addEventListener('mouseup', function() { isDragging = false; });
 
@@ -741,6 +758,8 @@ const firebaseConfig = {
 
                 if (mapLayer) {
                     const allElements = mapLayer.querySelectorAll('path, polygon, polyline, rect, ellipse');
+                    
+                    // Початковий прохід: заповнюємо дані провінцій
                     allElements.forEach((element, index) => {
                         if (!element.id) element.id = 'prov_' + Math.random().toString(36).substr(2, 5);
                         let detectedCountry = 'NEUTRAL';
@@ -749,11 +768,25 @@ const firebaseConfig = {
 
                         provinceData[element.id] = {
                             country: detectedCountry, civFactories: 0, milFactories: 0, oilWells: 0, bunkers: 0,
-                            hasOilDeposit: (index % 8 === 0), hasDivision: false, elementRef: element
+                            hasOilDeposit: (index % 8 === 0), hasDivision: false, elementRef: element, isUnderAttack: false
                         };
                         element.style.fill = countryColors[detectedCountry] || '#2e2e35';
-                        if (provinceData[element.id].hasOilDeposit) createOilVisualMark(element.id);
                     });
+
+                    // КЕШУВАННЯ ЦЕНТРІВ (Викликається лише 1 раз при завантаженні гри)
+                    setTimeout(() => {
+                        allElements.forEach(element => {
+                            const rect = element.getBoundingClientRect();
+                            const containerRect = container.getBoundingClientRect();
+                            cachedCenters[element.id] = {
+                                x: (rect.left - containerRect.left) / zoomScale + (rect.width / (2 * zoomScale)),
+                                y: (rect.top - containerRect.top) / zoomScale + (rect.height / (2 * zoomScale))
+                            };
+                            
+                            // Малюємо нафту за збереженими координатами
+                            if (provinceData[element.id].hasOilDeposit) createOilVisualMark(element.id);
+                        });
+                    }, 300);
 
                     database.ref('global_map/start_template').on('value', (snapshot) => {
                         const data = snapshot.val();
@@ -785,6 +818,7 @@ const firebaseConfig = {
 
                         if (!isGameStarted) return;
 
+                        // Якщо клікнули на чужу/ворожу територію
                         if (province.country !== playerCountry) {
                             if (selectedProvinceId && provinceData[selectedProvinceId].hasDivision) {
                                 let pathNeighbors = findNeighborProvinces(selectedProvinceId);
@@ -805,13 +839,14 @@ const firebaseConfig = {
                             return;
                         }
 
+                        // Натискання на свою дивізію з метою вибору для атаки
                         if (province.hasDivision) {
                             if (selectedProvinceId && provinceData[selectedProvinceId].domDivisionRef) {
                                 provinceData[selectedProvinceId].domDivisionRef.classList.remove('selected-unit');
                             }
                             selectedProvinceId = provinceId;
                             province.domDivisionRef.classList.add('selected-unit');
-                            showNotification("🎯 Дивізію обрано!");
+                            showNotification("🎯 Дивізію обрано! Вкажіть сусідню ворожу провінцію для атаки.");
                             return;
                         }
 
@@ -829,7 +864,7 @@ const firebaseConfig = {
                             coins -= buildingPrice;
                             updateEconomyDisplay();
                         } else {
-                            if (!province.hasDivision) {
+                            if (!province.hasDivision && !province.isUnderAttack) {
                                 if (currentMode === 'army' && coins >= 50) { coins -= 50; spawnDivisionVisual(provinceId, playerCountry, getBestAvailableInfantryType()); }
                                 if (currentMode === 'tank' && coins >= 120) { coins -= 120; spawnDivisionVisual(provinceId, playerCountry, getBestAvailableTankType()); }
                                 updateEconomyDisplay();
@@ -839,18 +874,8 @@ const firebaseConfig = {
                 }
             });
 
-        function getProvinceCenter(id) {
-            if (!provinceData[id] || !provinceData[id].elementRef) return null;
-            const rect = provinceData[id].elementRef.getBoundingClientRect();
-            const containerRect = container.getBoundingClientRect();
-            return { 
-                x: (rect.left - containerRect.left) / zoomScale + (rect.width / (2 * zoomScale)), 
-                y: (rect.top - containerRect.top) / zoomScale + (rect.height / (2 * zoomScale)) 
-            };
-        }
-
         function spawnDivisionVisual(id, countryCode, type) {
-            const center = getProvinceCenter(id); if (!center) return;
+            const center = cachedCenters[id]; if (!center) return;
             const divEl = document.createElement('div');
             divEl.className = (type.includes('tank') || type.includes('heavy') || type.includes('modern')) ? 'division-indicator tank' : 'division-indicator';
             divEl.style.left = `${center.x}px`; divEl.style.top = `${center.y}px`;
@@ -867,24 +892,22 @@ const firebaseConfig = {
         }
 
         function createFactoryVisual(id, type, icon) {
-            const center = getProvinceCenter(id); if (!center) return;
+            const center = cachedCenters[id]; if (!center) return;
             const factory = document.createElement('div');
             factory.className = `factory-indicator ${type}`;
             let slotIndex = (provinceData[id].civFactories + provinceData[id].milFactories + provinceData[id].oilWells + provinceData[id].bunkers);
-            /* Відступи зменшено під нові компактні іконки */
             factory.style.left = `${center.x + (slotIndex - 2.5) * 12}px`; factory.style.top = `${center.y + 8}px`;
             factory.textContent = icon;
             container.appendChild(factory);
         }
 
         function createOilVisualMark(id) {
-            const center = getProvinceCenter(id); if (!center) return;
+            const center = cachedCenters[id]; if (!center) return;
             const mark = document.createElement('div');
             mark.className = 'oil-deposit-mark'; mark.textContent = '💧';
             mark.style.left = `${center.x}px`; mark.style.top = `${center.y - 7}px`; container.appendChild(mark);
         }
 
-        // Дипломатія
         document.getElementById('dip-btn-improve').addEventListener('click', () => {
             if (!selectedDiplomacyCountry || isSandboxEditorMode) return;
             diplomaticRelations[playerCountry][selectedDiplomacyCountry] += 15;

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2D HOI4 Mini Strategy - Historical Tech Line</title>
+    <title>2D HOI4 Mini Strategy - Clean Map</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
@@ -94,6 +94,9 @@
         .tech-card.locked { border-color: #444; background: #1a1a22; color: #555; cursor: not-allowed; }
         .tech-card.done { border-color: #22c55e; background: rgba(34, 197, 94, 0.1); cursor: default; }
 
+        /* Дипломатична панель */
+        .panel-section id="diplomacy-panel" { border-color: #0d9488; }
+
         /* Мапа та керування камерою */
         .map-area { flex-grow: 1; position: relative; background-color: #050507; overflow: hidden; cursor: grab; }
         .map-area:active { cursor: grabbing; }
@@ -103,30 +106,38 @@
         .zoom-controls { position: absolute; top: 15px; right: 15px; display: flex; flex-direction: column; gap: 5px; z-index: 100; }
         .zoom-btn { background: #1e1e24; color: white; border: 1px solid #3d3d45; width: 32px; height: 32px; font-size: 16px; cursor: pointer; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
 
-        /* Інтерактивні провінції */
-        svg path, svg polygon, svg polyline, svg rect, svg ellipse { cursor: pointer; stroke: #111113; stroke-width: 0.5px; transition: opacity 0.1s; }
-        svg path:hover, svg polygon:hover { opacity: 0.85; stroke: #fff; }
+        /* Інтерактивні провінції - ЧИСТІ ТОНКІ КОРДОНИ */
+        svg path, svg polygon, svg polyline, svg rect, svg ellipse { 
+            cursor: pointer; 
+            stroke: #111114; 
+            stroke-width: 0.3px; /* Тонша лінія для чистоти карти */
+            transition: opacity 0.1s; 
+        }
+        svg path:hover, svg polygon:hover { opacity: 0.85; stroke: #fff; stroke-width: 0.6px; }
 
-        /* Іконки фабрик та міст */
+        /* ІКОНКИ ЗМЕНШЕНО НА 40-60% (БУЛО 22px -> СТАЛО 11px) */
         .factory-indicator { 
-            position: absolute; width: 22px; height: 22px; 
+            position: absolute; width: 11px; height: 11px; 
             pointer-events: none; transform: translate(-50%, -50%); 
-            display: flex; align-items: center; justify-content: center; font-size: 14px;
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 8px; /* Менший шрифт для чистоти */
         }
 
+        /* КРАПЛІ НАФТИ ЗМЕНШЕНО */
         .oil-deposit-mark { 
-            position: absolute; font-size: 14px; pointer-events: none; 
-            transform: translate(-50%, -50%); filter: drop-shadow(0 1px 2px #000);
+            position: absolute; font-size: 8px; pointer-events: none; 
+            transform: translate(-50%, -50%); filter: drop-shadow(0 1px 1px #000);
         }
         body.editor-active .oil-deposit-mark { display: none !important; }
 
-        /* Великі квадратні оригінальні дивізії */
+        /* ДИВІЗІЇ ЗМЕНШЕНО НА 50% (БУЛО 26px -> СТАЛО 13px) */
         .division-indicator { 
-            position: absolute; width: 26px; height: 26px; 
-            background-color: #15803d; border: 2px solid #ffffff;
-            border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.8);
+            position: absolute; width: 13px; height: 13px; 
+            background-color: #15803d; border: 1px solid #ffffff; /* Тонша рамка */
+            border-radius: 2px; box-shadow: 0 1px 4px rgba(0,0,0,0.8);
             pointer-events: none; transform: translate(-50%, -50%); z-index: 5; 
-            display: flex; align-items: center; justify-content: center; font-size: 14px;
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 8px; /* Компактний емодзі-текст всередині */
             font-weight: bold; color: white;
         }
         .division-indicator.tank { 
@@ -134,7 +145,7 @@
         }
         .division-indicator.selected-unit {
             border-color: #eab308 !important;
-            box-shadow: 0 0 12px #eab308 !important;
+            box-shadow: 0 0 6px #eab308 !important;
         }
 
         .arrows-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
@@ -281,15 +292,15 @@
     // =================================================================
     // 🔥 ВСТАВ СЮДИ ДАНІ СВОГО НОВОГО ДОДАТКУ З FIREBASE CONSOLE
     // =================================================================
-    const firebaseConfig = {
-        apiKey: "YOUR_NEW_API_KEY",
-        authDomain: "YOUR_NEW_PROJECT_ID.firebaseapp.com",
-        databaseURL: "https://YOUR_NEW_PROJECT_ID-default-rtdb.firebaseio.com",
-        projectId: "YOUR_NEW_PROJECT_ID",
-        storageBucket: "YOUR_NEW_PROJECT_ID.appspot.com",
-        messagingSenderId: "YOUR_NEW_MESSAGING_ID",
-        appId: "YOUR_NEW_APP_ID"
-    };
+const firebaseConfig = {
+    apiKey: "AIzaSyBG54L-ISILxa5RajGY99P7cBOlHvqsLgI",
+    authDomain: "the-animals-wars-1.firebaseapp.com",
+    databaseURL: "https://the-animals-wars-1-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "the-animals-wars-1",
+    storageBucket: "the-animals-wars-1.firebasestorage.app",
+    messagingSenderId: "861315182995",
+    appId: "1:861315182995:web:926ca3ec63b9a0d4b6f866"
+  };
     
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
@@ -427,17 +438,14 @@
             }
         };
 
-        // 🔬 ПРАВИЛЬНЕ ІСТОРИЧНЕ ДЕРЕВО ДОСЛІДЖЕНЬ
         const playerTechs = {
             'standardization': { name: '🏗️ Стандартизація', cat: 'ind', status: 'avail', req: null, desc: 'Заводи коштують 20💰.' },
             'oil_extraction': { name: '🛢️ Екстракція нафти', cat: 'ind', status: 'avail', req: null, desc: 'Вишки дають +2 нафти.' },
             
-            // Гілка Танків: Легкий (старт) -> Середній -> Важкий -> Сучасний
             'medium_tank': { name: '🚜 Середній Танк', cat: 'tech', status: 'avail', req: null, desc: 'Відкриває танки середнього класу.' },
             'heavy_tank': { name: '🚂 Важкий Танк', cat: 'tech', status: 'locked', req: 'medium_tank', desc: 'Важка проривна бронетехніка.' },
             'modern_tank': { name: '⚡ Сучасний Танк', cat: 'tech', status: 'locked', req: 'heavy_tank', desc: 'Найдосконаліші бойові машини.' },
             
-            // Гілка Піхоти: Стрілець (старт) -> Штурмовик -> Моторизована -> Механізована
             'assault': { name: '🪖 Штурмовики', cat: 'inf', status: 'avail', req: null, desc: 'Покращена штурмова піхота.' },
             'motorized_inf': { name: '🛞 Моторизована піхота', cat: 'inf', status: 'locked', req: 'assault', desc: 'Піхота на вантажівках та джипах.' },
             'mechanized_inf': { name: '🛡️ Механізована піхота', cat: 'inf', status: 'locked', req: 'motorized_inf', desc: 'Бронетранспортери та БМП.' }
@@ -560,7 +568,6 @@
                 }
                 countryBudgets[bot] += (botCivs * 5) + 5;
 
-                // 📉 Знижений шанс війни (0.01)
                 if (Math.random() < 0.01 && botProvs.length > 0) {
                     let targets = Object.keys(countryNames).filter(c => c !== 'NEUTRAL' && c !== bot);
                     let randomTarget = targets[Math.floor(Math.random() * targets.length)];
@@ -589,7 +596,6 @@
                     if (provinceData[pId].hasDivision) {
                         let neighbors = findNeighborProvinces(pId);
                         let enemyNeighbors = neighbors.filter(nId => warStatus[bot][provinceData[nId].country] === true);
-                        // 📉 Знижений шанс атаки ботів (0.12)
                         if (enemyNeighbors.length > 0 && Math.random() < 0.12) {
                             let targetAttack = enemyNeighbors[Math.floor(Math.random() * enemyNeighbors.length)];
                             executeBattleCombat(pId, targetAttack);
@@ -669,8 +675,8 @@
             let arrow = document.createElementNS("http://www.w3.org/2000/svg", "line");
             arrow.setAttribute("x1", p1.x); arrow.setAttribute("y1", p1.y);
             arrow.setAttribute("x2", p2.x); arrow.setAttribute("y2", p2.y);
-            arrow.setAttribute("stroke", "#ef4444"); arrow.setAttribute("stroke-width", "4");
-            arrow.setAttribute("stroke-dasharray", "5");
+            arrow.setAttribute("stroke", "#ef4444"); arrow.setAttribute("stroke-width", "2"); /* Тонші стрілки */
+            arrow.setAttribute("stroke-dasharray", "3");
             arrowsLayer.appendChild(arrow);
 
             setTimeout(() => arrow.remove(), 1200);
@@ -805,7 +811,7 @@
                             }
                             selectedProvinceId = provinceId;
                             province.domDivisionRef.classList.add('selected-unit');
-                            showNotification("🎯 Дивізію обрано! Клікніть по сусідній ворожій провінції (має бути стан війни).");
+                            showNotification("🎯 Дивізію обрано!");
                             return;
                         }
 
@@ -843,14 +849,12 @@
             };
         }
 
-        // 🎨 ГРАФІЧНІ ЕМОДЗІ-ІКОНКИ ДЛЯ ДИВІЗІЙ ЗАМІСТЬ ТЕКСТУ INF
         function spawnDivisionVisual(id, countryCode, type) {
             const center = getProvinceCenter(id); if (!center) return;
             const divEl = document.createElement('div');
             divEl.className = (type.includes('tank') || type.includes('heavy') || type.includes('modern')) ? 'division-indicator tank' : 'division-indicator';
             divEl.style.left = `${center.x}px`; divEl.style.top = `${center.y}px`;
             
-            // Динамічні іконки під кожен відкритий тир
             if (type === 'modern_tank') divEl.textContent = '⚡';
             else if (type === 'heavy_tank') divEl.textContent = '🚂';
             else if (type === 'medium_tank' || type === 'tank') divEl.textContent = '🚜';
@@ -867,7 +871,8 @@
             const factory = document.createElement('div');
             factory.className = `factory-indicator ${type}`;
             let slotIndex = (provinceData[id].civFactories + provinceData[id].milFactories + provinceData[id].oilWells + provinceData[id].bunkers);
-            factory.style.left = `${center.x + (slotIndex - 2.5) * 24}px`; factory.style.top = `${center.y + 14}px`;
+            /* Відступи зменшено під нові компактні іконки */
+            factory.style.left = `${center.x + (slotIndex - 2.5) * 12}px`; factory.style.top = `${center.y + 8}px`;
             factory.textContent = icon;
             container.appendChild(factory);
         }
@@ -876,7 +881,7 @@
             const center = getProvinceCenter(id); if (!center) return;
             const mark = document.createElement('div');
             mark.className = 'oil-deposit-mark'; mark.textContent = '💧';
-            mark.style.left = `${center.x}px`; mark.style.top = `${center.y - 12}px`; container.appendChild(mark);
+            mark.style.left = `${center.x}px`; mark.style.top = `${center.y - 7}px`; container.appendChild(mark);
         }
 
         // Дипломатія
@@ -907,7 +912,6 @@
             showNotification(`🔥 Оголошено війну державі ${countryNames[selectedDiplomacyCountry]}!`);
         });
 
-        // 🔬 КОРЕКТНЕ ВІДКРИТТЯ НАСТУПНИХ ТИРІВ ТЕХНОЛОГІЙ
         function updateTechListUI() {
             if(isSandboxEditorMode) return;
             techListContainer.innerHTML = '';

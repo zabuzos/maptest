@@ -801,9 +801,10 @@
                     // ===================================================
                     database.ref('global_map/provinces').on('value', (snapshot) => {
                         const data = snapshot.val();
-                        if (data) {
+                        // Захист від затирання: оновлюємо тільки якщо в базі дійсно є дані
+                        if (data && Object.keys(data).length > 0) {
                             for (const provId in data) {
-                                if (provinceData[provId]) {
+                                if (provinceData[provId] && data[provId]) {
                                     const newCountry = data[provId];
                                     provinceData[provId].country = newCountry;
                                     provinceData[provId].elementRef.style.fill = countryColors[newCountry] || '#2e2e35';
@@ -821,10 +822,18 @@
                         const provinceId = target.id; const province = provinceData[provinceId];
                         if (!province || province.isMoving) return;
 
-                        // --- ФІКС: ЛОГІКА РЕДАКТОРА КОРДОНІВ ПРАЦЮЄ ЗАВЖДИ ДЛЯ БУДЬ-ЯКОЇ ПРОВІНЦІЇ ---
+                        // --- ФІКС: МИТТЄВА ЗМІНА ВЛАСНИКА В РЕДАКТОРІ (БЕЗ ОЧІКУВАННЯ ВІДПОВІДІ ВІД БАЗИ) ---
                         if (currentMode === 'editor') {
                             const selectedTargetCountry = editorCountrySelect.value;
-                            database.ref('global_map/provinces/' + provinceId).set(selectedTargetCountry);
+                            
+                            // 1. Одразу міняємо локальний стан і колір, щоб гравець бачив результат
+                            province.country = selectedTargetCountry;
+                            target.style.fill = countryColors[selectedTargetCountry] || '#2e2e35';
+                            
+                            // 2. Фоново шлемо в Firebase (використовуємо .update замість .set для збереження всієї структури)
+                            database.ref('global_map/provinces').update({
+                                [provinceId]: selectedTargetCountry
+                            });
                             return; 
                         }
 

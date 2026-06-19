@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2D HOI4 Mini Strategy - Full Firebase Edition</title>
+    <title>2D HOI4 Mini Strategy - Full Monolith Engine</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
@@ -268,14 +268,7 @@
     // =================================================================
     // 🔥 ВСТАВ СЮДИ ДАНІ СВОГО НОВОГО ДОДАТКУ З FIREBASE CONSOLE
     // =================================================================
-    <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
+   const firebaseConfig = {
     apiKey: "AIzaSyBG54L-ISILxa5RajGY99P7cBOlHvqsLgI",
     authDomain: "the-animals-wars-1.firebaseapp.com",
     databaseURL: "https://the-animals-wars-1-default-rtdb.europe-west1.firebasedatabase.app",
@@ -284,10 +277,9 @@
     messagingSenderId: "861315182995",
     appId: "1:861315182995:web:926ca3ec63b9a0d4b6f866"
   };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-</script>
+    
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
     // =================================================================
 
     document.addEventListener("DOMContentLoaded", function() {
@@ -513,10 +505,156 @@
             return { incMoney: incomePerSecond, incOil: oilPerSecond };
         }
 
+        // ==========================================
+        // 🤖 СИСТЕМА ШТУЧНОГО ІНТЕЛЕКТУ БОТІВ (ПОВНА)
+        // ==========================================
+        function runAICampaignLogic() {
+            Object.keys(countryNames).forEach(bot => {
+                if (bot === 'NEUTRAL' || bot === playerCountry) return;
+                
+                // Нарахування коштів ботам від їхніх провінцій
+                let botCivs = 0; let botProvs = [];
+                for(const id in provinceData) {
+                    if(provinceData[id].country === bot) {
+                        botCivs += (provinceData[id].civFactories || 0);
+                        botProvs.push(id);
+                    }
+                }
+                countryBudgets[bot] += (botCivs * 5) + 5;
+
+                // Випадкове оголошення війни між ботами на основі блоків
+                if (Math.random() < 0.04 && botProvs.length > 0) {
+                    let targets = Object.keys(countryNames).filter(c => c !== 'NEUTRAL' && c !== bot);
+                    let randomTarget = targets[Math.floor(Math.random() * targets.length)];
+                    
+                    if (!warStatus[bot][randomTarget]) {
+                        let isSameBloc = (euBloc.includes(bot) && euBloc.includes(randomTarget)) || (cisBloc.includes(bot) && cisBloc.includes(randomTarget));
+                        if (!isSameBloc || Math.random() < 0.1) {
+                            warStatus[bot][randomTarget] = true;
+                            warStatus[randomTarget][bot] = true;
+                            if(randomTarget === playerCountry) {
+                                showNotification(`🚨 ДЕРЖАВА ${countryNames[bot]} ОГОЛОСИЛА ВАМ ВІЙНУ!`);
+                            }
+                        }
+                    }
+                }
+
+                // Спавн дивізій ботами та проведення експансії
+                if (countryBudgets[bot] >= 50 && botProvs.length > 0) {
+                    let spawnProv = botProvs[Math.floor(Math.random() * botProvs.length)];
+                    if (!provinceData[spawnProv].hasDivision) {
+                        countryBudgets[bot] -= 50;
+                        spawnDivisionVisual(spawnProv, bot, 'infantry');
+                    }
+                }
+
+                // Спроба ботів атакувати сусідів, з якими йде війна
+                botProvs.forEach(pId => {
+                    if (provinceData[pId].hasDivision) {
+                        let neighbors = findNeighborProvinces(pId);
+                        let enemyNeighbors = neighbors.filter(nId => warStatus[bot][provinceData[nId].country]);
+                        if (enemyNeighbors.length > 0 && Math.random() < 0.3) {
+                            let targetAttack = enemyNeighbors[Math.floor(Math.random() * enemyNeighbors.length)];
+                            executeBattleCombat(pId, targetAttack);
+                        }
+                    }
+                });
+            });
+        }
+
+        // Пошук сусідніх провінцій через геометричну відстань
+        function findNeighborProvinces(originId) {
+            let neighbors = [];
+            let originCenter = getProvinceCenter(originId);
+            if (!originCenter) return neighbors;
+
+            for (const id in provinceData) {
+                if (id === originId) continue;
+                let targetCenter = getProvinceCenter(id);
+                if (!targetCenter) continue;
+
+                let dx = originCenter.x - targetCenter.x;
+                let dy = originCenter.y - targetCenter.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < MAX_NEIGHBOR_DISTANCE) {
+                    neighbors.push(id);
+                }
+            }
+            return neighbors;
+        }
+
+        // ==========================================
+        // ⚔️ БОЙОВА СИСТЕМА ТА ФРОНТОВІ СТРІЛКИ
+        // ==========================================
+        function executeBattleCombat(fromId, toId) {
+            let attackerCountry = provinceData[fromId].country;
+            let defenderCountry = provinceData[toId].country;
+
+            // Візуалізація стрілки наступу
+            drawFrontlineAttackArrow(fromId, toId);
+
+            let attackerPower = Math.random() * 50 + 10;
+            let defenderPower = Math.random() * 40 + (provinceData[toId].bunkers * 15);
+
+            if (attackerCountry === playerCountry) attackerPower *= infantryAttackBonus;
+
+            if (attackerPower > defenderPower) {
+                // Перемога атакуючих
+                provinceData[toId].country = attackerCountry;
+                provinceData[toId].elementRef.style.fill = countryColors[attackerCountry] || '#2e2e35';
+                
+                if (provinceData[toId].domDivisionRef) {
+                    provinceData[toId].domDivisionRef.remove();
+                }
+                
+                // Переміщення дивізії
+                if (provinceData[fromId].domDivisionRef) {
+                    provinceData[fromId].domDivisionRef.remove();
+                    provinceData[fromId].hasDivision = false;
+                }
+                spawnDivisionVisual(toId, attackerCountry, 'infantry');
+                
+                if (attackerCountry === playerCountry) {
+                    showNotification(`⚔️ Ми захопили провінцію у ${countryNames[defenderCountry]}!`);
+                }
+                
+                // Оновлення бази даних
+                database.ref('global_map/provinces').child(toId).set(attackerCountry);
+            } else {
+                // Поразка атаки
+                if (provinceData[fromId].domDivisionRef) {
+                    provinceData[fromId].domDivisionRef.remove();
+                    provinceData[fromId].hasDivision = false;
+                }
+                if (attackerCountry === playerCountry) {
+                    showNotification(`💥 Нашу атаку на провінцію ${countryNames[defenderCountry]} було відбито!`);
+                }
+            }
+            updateEconomyDisplay();
+        }
+
+        function drawFrontlineAttackArrow(fromId, toId) {
+            let p1 = getProvinceCenter(fromId);
+            let p2 = getProvinceCenter(toId);
+            if (!p1 || !p2) return;
+
+            let arrow = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            arrow.setAttribute("x1", p1.x); arrow.setAttribute("y1", p1.y);
+            arrow.setAttribute("x2", p2.x); arrow.setAttribute("y2", p2.y);
+            arrow.setAttribute("stroke", "#ef4444"); arrow.setAttribute("stroke-width", "2");
+            arrow.setAttribute("stroke-dasharray", "4");
+            arrowsLayer.appendChild(arrow);
+
+            setTimeout(() => arrow.remove(), 1200);
+        }
+
+        // ==========================================
+        // 📅 СИСТЕМА СЛУХАЧІВ ТА ГЛОБАЛЬНИХ ТІКІВ
+        // ==========================================
         function runGameTick() {
             if (!isGameStarted) return;
             
-            // Нараховуємо кошти кожну секунду
             let rates = updateEconomyDisplay();
             coins += rates.incMoney;
             playerOil += rates.incOil;
@@ -526,6 +664,25 @@
 
             updateScienceTick(); 
             updateFocusTick();
+            runAICampaignLogic();
+
+            // Випадкові історичні івенти
+            if (Math.random() < 0.015) {
+                triggerRandomPoliticalEvent();
+            }
+        }
+
+        function triggerRandomPoliticalEvent() {
+            if (!isGameStarted) return;
+            eventTitle.textContent = "📰 Напруження на кордонах";
+            eventDesc.textContent = "Генеральний штаб повідомляє про активне стягування військ сусідніх держав. Нам необхідно виділити додаткові 50 монет на модернізацію укріплень або проігнорувати загрозу.";
+            eventModal.style.display = "flex";
+
+            eventBtnYes.onclick = function() {
+                if (coins >= 50) { coins -= 50; infantryAttackBonus += 0.05; showNotification("🛡️ Обороноздатність покращена!"); }
+                eventModal.style.display = "none"; updateEconomyDisplay();
+            };
+            eventBtnNo.onclick = function() { eventModal.style.display = "none"; };
         }
 
         // Управління камерою / Трансформації
@@ -611,10 +768,27 @@
 
                         // Логіка Кліку по провінції у грі (Дипломатія / Будівництво)
                         if (province.country !== playerCountry) {
+                            // Якщо у нас є дивізія у сусідній провінції і триває війна — атакуємо!
+                            if (selectedProvinceId && provinceData[selectedProvinceId].hasDivision && warStatus[playerCountry][province.country]) {
+                                let pathNeighbors = findNeighborProvinces(selectedProvinceId);
+                                if (pathNeighbors.includes(provinceId)) {
+                                    executeBattleCombat(selectedProvinceId, provinceId);
+                                    selectedProvinceId = null;
+                                    return;
+                                }
+                            }
+
                             selectedDiplomacyCountry = province.country;
                             dipCountryName.textContent = countryNames[selectedDiplomacyCountry] || selectedDiplomacyCountry;
                             dipRelationsVal.textContent = diplomaticRelations[playerCountry][selectedDiplomacyCountry] || 0;
                             dipStatusVal.textContent = warStatus[playerCountry][selectedDiplomacyCountry] ? "🚨 ВІЙНА" : (allianceStatus[playerCountry][selectedDiplomacyCountry] ? "🤝 АЛЬЯНС" : "Нейтралітет");
+                            return;
+                        }
+
+                        // Якщо клікнули на власну провінцію з дивізією — вибираємо її для атаки
+                        if (province.hasDivision) {
+                            selectedProvinceId = provinceId;
+                            showNotification("🎯 Підрозділ обрано! Клікніть по ворожій сусідній провінції для штурму.");
                             return;
                         }
 
@@ -645,27 +819,34 @@
             });
 
         function getProvinceCenter(id) {
+            if (!provinceData[id] || !provinceData[id].elementRef) return null;
             const rect = provinceData[id].elementRef.getBoundingClientRect();
             const containerRect = container.getBoundingClientRect();
-            return { x: (rect.left - containerRect.left) / zoomScale + (rect.width / (2 * zoomScale)), y: (rect.top - containerRect.top) / zoomScale + (rect.height / (2 * zoomScale)) };
+            return { 
+                x: (rect.left - containerRect.left) / zoomScale + (rect.width / (2 * zoomScale)), 
+                y: (rect.top - containerRect.top) / zoomScale + (rect.height / (2 * zoomScale)) 
+            };
         }
 
         function spawnDivisionVisual(id, countryCode, type) {
-            const center = getProvinceCenter(id); const divEl = document.createElement('div');
+            const center = getProvinceCenter(id); if (!center) return;
+            const divEl = document.createElement('div');
             divEl.className = type.includes('tank') ? 'division-indicator tank' : 'division-indicator';
             divEl.style.left = `${center.x}px`; divEl.style.top = `${center.y}px`; container.appendChild(divEl);
             provinceData[id].hasDivision = true; provinceData[id].domDivisionRef = divEl;
         }
 
         function createFactoryVisual(id, type, index) {
-            const center = getProvinceCenter(id); const factory = document.createElement('div');
+            const center = getProvinceCenter(id); if (!center) return;
+            const factory = document.createElement('div');
             factory.className = `factory-indicator ${type}`;
             factory.style.left = `${center.x + (index - 1.5) * 4}px`; factory.style.top = `${center.y + 6}px`;
             container.appendChild(factory);
         }
 
         function createOilVisualMark(id) {
-            const center = getProvinceCenter(id); const mark = document.createElement('div');
+            const center = getProvinceCenter(id); if (!center) return;
+            const mark = document.createElement('div');
             mark.className = 'oil-deposit-mark'; mark.textContent = '💧';
             mark.style.left = `${center.x}px`; mark.style.top = `${center.y - 4}px`; container.appendChild(mark);
         }

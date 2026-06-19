@@ -128,25 +128,26 @@
         }
         svg path:hover, svg polygon:hover, svg rect:hover { opacity: 0.85; stroke: #ffffff; }
 
-        .factory-indicator { position: absolute; width: 8px; height: 8px; border: 1px solid #ffffff; border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); }
-        .factory-indicator.civ { background-color: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
-        .factory-indicator.mil { background-color: #64748b; box-shadow: 0 0 6px #64748b; border-radius: 2px; }
-        .factory-indicator.oil { background-color: #38bdf8; box-shadow: 0 0 6px #38bdf8; border-radius: 0; width: 6px; height: 10px; }
-        .factory-indicator.bunker { background-color: #4b5563; border-radius: 2px; width: 8px; height: 8px; box-shadow: 0 0 6px #9ca3af; display: flex; align-items: center; justify-content: center; }
-        .factory-indicator.bunker::after { content: ''; width: 2px; height: 2px; background: white; border-radius: 50%; }
+        /* ОПТИМІЗАЦІЯ ІКОНОК: Розміри зменшено на 40-50% */
+        .factory-indicator { position: absolute; width: 5px; height: 5px; border: 0.5px solid #ffffff; border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); }
+        .factory-indicator.civ { background-color: #f59e0b; box-shadow: 0 0 3px #f59e0b; }
+        .factory-indicator.mil { background-color: #64748b; box-shadow: 0 0 3px #64748b; border-radius: 1px; }
+        .factory-indicator.oil { background-color: #38bdf8; box-shadow: 0 0 3px #38bdf8; border-radius: 0; width: 4px; height: 6px; }
+        .factory-indicator.bunker { background-color: #4b5563; border-radius: 1px; width: 5px; height: 5px; box-shadow: 0 0 3px #9ca3af; display: flex; align-items: center; justify-content: center; }
+        .factory-indicator.bunker::after { content: ''; width: 1px; height: 1px; background: white; border-radius: 50%; }
 
-        .oil-deposit-mark { position: absolute; font-size: 11px; pointer-events: none; transform: translate(-50%, -50%); color: #38bdf8; font-weight: bold; }
+        .oil-deposit-mark { position: absolute; font-size: 7px; pointer-events: none; transform: translate(-50%, -50%); color: #38bdf8; font-weight: bold; }
 
-        .division-indicator { position: absolute; width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-bottom: 14px solid #10b981; filter: drop-shadow(0 0 4px #10b981); pointer-events: none; transform: translate(-50%, -50%); z-index: 5; }
-        .division-indicator.selected { border-bottom-color: #ffff00; filter: drop-shadow(0 0 6px #ffff00); }
-        .division-indicator.ai-unit { border-bottom-color: #ef4444; filter: drop-shadow(0 0 4px #ef4444); }
+        .division-indicator { position: absolute; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 9px solid #10b981; filter: drop-shadow(0 0 2px #10b981); pointer-events: none; transform: translate(-50%, -50%); z-index: 5; }
+        .division-indicator.selected { border-bottom-color: #ffff00; filter: drop-shadow(0 0 4px #ffff00); }
+        .division-indicator.ai-unit { border-bottom-color: #ef4444; filter: drop-shadow(0 0 2px #ef4444); }
         
-        .division-indicator.tank { width: 12px; height: 12px; background-color: #10b981; border: 1px solid #fff; border-radius: 2px; transform: translate(-50%, -50%) rotate(45deg); border-left:none; border-right:none; border-bottom:none; }
-        .division-indicator.tank.selected { background-color: #ffff00; filter: drop-shadow(0 0 6px #ffff00); }
-        .division-indicator.tank.ai-unit { background-color: #ef4444; filter: drop-shadow(0 0 4px #ef4444); }
+        .division-indicator.tank { width: 8px; height: 8px; background-color: #10b981; border: 0.5px solid #fff; border-radius: 1px; transform: translate(-50%, -50%) rotate(45deg); border-left:none; border-right:none; border-bottom:none; }
+        .division-indicator.tank.selected { background-color: #ffff00; filter: drop-shadow(0 0 4px #ffff00); }
+        .division-indicator.tank.ai-unit { background-color: #ef4444; filter: drop-shadow(0 0 2px #ef4444); }
 
         .arrows-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
-        .battle-indicator { position: absolute; background: rgba(239, 68, 68, 0.95); color: #fff; padding: 3px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; border: 1px solid #ffffff; transform: translate(-50%, -160%); pointer-events: none; z-index: 8; box-shadow: 0 0 8px #ef4444; white-space: nowrap; }
+        .battle-indicator { position: absolute; background: rgba(239, 68, 68, 0.95); color: #fff; padding: 2px 5px; font-size: 9px; font-weight: bold; border-radius: 3px; border: 1px solid #ffffff; transform: translate(-50%, -160%); pointer-events: none; z-index: 8; box-shadow: 0 0 5px #ef4444; white-space: nowrap; }
 
         .alerts-wrapper { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
         .war-warning { background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; border-left: 4px solid #ffff00; padding: 8px; border-radius: 4px; color: white; font-size: 11px; font-weight: bold; }
@@ -503,6 +504,36 @@
             { id: 2, activeTech: null, timer: 0, maxTime: 15 }
         ];
 
+        // Хелпери для виявлення найкращих доступних юнітів гравця
+        function getBestAvailableInfantryType() {
+            if (playerTechs['mechanized'].status === 'done') return 'mechanized';
+            if (playerTechs['motorized'].status === 'done') return 'motorized';
+            if (playerTechs['assault'].status === 'done') return 'assault';
+            return 'infantry';
+        }
+
+        function getBestAvailableTankType() {
+            if (playerTechs['modern_tank'].status === 'done') return 'modern_tank';
+            if (playerTechs['heavy_tank'].status === 'done') return 'heavy_tank';
+            if (playerTechs['medium_tank'].status === 'done') return 'medium_tank';
+            return 'tank';
+        }
+
+        function updateActionButtonsText() {
+            // Оновлюємо назву кнопок на панелі залежно від відкритих наук
+            const infType = getBestAvailableInfantryType();
+            if (infType === 'infantry') btnArmy.textContent = `⚔️ Стрільці (50💰)`;
+            else if (infType === 'assault') btnArmy.textContent = `🪖 Штурмовики (50💰)`;
+            else if (infType === 'motorized') btnArmy.textContent = `🚚 Мотопіхота (50💰)`;
+            else if (infType === 'mechanized') btnArmy.textContent = `🦾 Мехводії (50💰)`;
+
+            const tankType = getBestAvailableTankType();
+            if (tankType === 'tank') btnTank.textContent = `🚜 Легкі Танки (120💰)`;
+            else if (tankType === 'medium_tank') btnTank.textContent = `🚜 Середні Танки (120💰)`;
+            else if (tankType === 'heavy_tank') btnTank.textContent = `🛡️ Важкі Танки (120💰)`;
+            else if (tankType === 'modern_tank') btnTank.textContent = `⚡ Сучасні Танки (120💰)`;
+        }
+
         // --- ГЕОГРАФІЧНІ ХЕЛПЕРИ ДЛЯ ФОКУСІВ ---
         function getEasternmostProvinces(countryCode, count = 2) {
             let provs = Object.keys(provinceData).filter(id => provinceData[id].country === countryCode);
@@ -602,7 +633,6 @@
             completedFocusesGlobal[country][focusKey] = true;
             if (country === playerCountry) alert(`🎯 Фокус завершено: ${focusTrees[focusTrees[country] ? country : 'GENERIC'][focusKey].name}!`);
 
-            // УКРАЇНА
             if (focusKey === 'ua_zsu') {
                 if(country === playerCountry) infantryAttackBonus = 1.15; 
                 let eastProvs = getEasternmostProvinces('UA', 2);
@@ -636,8 +666,6 @@
                     onNo: () => { declareWar('UA', 'SOV'); }
                 });
             }
-
-            // РОСІЯ
             else if (focusKey === 'sov_alliance_by') {
                 changeRelations('SOV', 'BY', 40);
             }
@@ -672,8 +700,6 @@
                     onNo: () => { declareWar('SOV', 'UA'); }
                 });
             }
-
-            // РУМУНІЯ
             else if (focusKey === 'ro_sov_md') {
                 changeRelations('RO', 'MD', 40);
             }
@@ -690,8 +716,6 @@
             else if (focusKey === 'ro_join_eu') {
                 euBloc.forEach(c => changeRelations('RO', c, 25));
             }
-
-            // УНІВЕРСАЛЬНІ (ДЛЯ ІНШИХ КРАЇН)
             else if (focusKey === 'gen_ind') {
                 let mines = Object.keys(provinceData).filter(id => provinceData[id].country === country);
                 if (mines.length > 0) {
@@ -772,7 +796,6 @@
                     allElements.forEach(element => {
                         if (!element.id) element.id = 'prov_' + Math.random().toString(36).substr(2, 5);
                         
-                        // Покращений парсинг назви країни з ID (враховуючи підкреслення та спецсимволи)
                         const idUpper = element.id.toUpperCase();
                         let detectedCountry = 'NEUTRAL';
 
@@ -825,17 +848,11 @@
                                 } else if (!province.hasDivision) {
                                     if (currentMode === 'army' && coins >= 50) {
                                         coins -= 50; 
-                                        let pType = 'infantry';
-                                        if (playerTechs['mechanized'].status === 'done') pType = 'mechanized';
-                                        else if (playerTechs['motorized'].status === 'done') pType = 'motorized';
-                                        else if (playerTechs['assault'].status === 'done') pType = 'assault';
+                                        let pType = getBestAvailableInfantryType();
                                         spawnDivisionVisual(provinceId, playerCountry, pType); updateEconomyDisplay();
                                     } else if (currentMode === 'tank' && coins >= 120) {
                                         coins -= 120; 
-                                        let tType = 'tank';
-                                        if (playerTechs['modern_tank'].status === 'done') tType = 'modern_tank';
-                                        else if (playerTechs['heavy_tank'].status === 'done') tType = 'heavy_tank';
-                                        else if (playerTechs['medium_tank'].status === 'done') tType = 'medium_tank';
+                                        let tType = getBestAvailableTankType();
                                         spawnDivisionVisual(provinceId, playerCountry, tType); updateEconomyDisplay();
                                     }
                                 }
@@ -924,7 +941,7 @@
             const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
             marker.setAttribute("id", "arrowhead"); marker.setAttribute("viewBox", "0 0 10 10");
             marker.setAttribute("refX", "5"); marker.setAttribute("refY", "5");
-            marker.setAttribute("markerWidth", "6"); marker.setAttribute("markerHeight", "6");
+            marker.setAttribute("markerWidth", "4"); marker.setAttribute("markerHeight", "4");
             marker.setAttribute("orient", "auto-start-reverse");
             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
             path.setAttribute("d", "M 0 0 L 10 5 L 0 10 z"); path.setAttribute("fill", "#f59e0b");
@@ -974,13 +991,13 @@
             const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
             const bgLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
             bgLine.setAttribute("x1", start.x); bgLine.setAttribute("y1", start.y); bgLine.setAttribute("x2", end.x); bgLine.setAttribute("y2", end.y);
-            bgLine.setAttribute("stroke", "rgba(245, 158, 11, 0.2)"); bgLine.setAttribute("stroke-width", "4");
+            bgLine.setAttribute("stroke", "rgba(245, 158, 11, 0.2)"); bgLine.setAttribute("stroke-width", "2.5");
 
             const progressLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
             progressLine.setAttribute("x1", start.x); progressLine.setAttribute("y1", start.y);
             progressLine.setAttribute("x2", start.x); progressLine.setAttribute("y2", start.y);
             progressLine.setAttribute("stroke", countryCode === playerCountry ? "#f59e0b" : "#ef4444");
-            progressLine.setAttribute("stroke-width", "4"); progressLine.setAttribute("marker-end", "url(#arrowhead)");
+            progressLine.setAttribute("stroke-width", "2.5"); progressLine.setAttribute("marker-end", "url(#arrowhead)");
 
             g.appendChild(bgLine); g.appendChild(progressLine); arrowsLayer.appendChild(g);
 
@@ -1071,7 +1088,8 @@
             const center = getProvinceCenter(id); const factory = document.createElement('div');
             let idx = countIndex !== undefined ? countIndex : (provinceData[id].civFactories + provinceData[id].milFactories + provinceData[id].oilWells + provinceData[id].bunkers);
             factory.className = `factory-indicator ${type} prov-building-${id}`;
-            factory.style.left = `${center.x + (idx - 2.5) * 10}px`; factory.style.top = `${center.y + 14}px`; container.appendChild(factory);
+            // Щільніший крок розташування (6px замість 10px) для мініатюрних споруд
+            factory.style.left = `${center.x + (idx - 2.5) * 6}px`; factory.style.top = `${center.y + 10}px`; container.appendChild(factory);
         }
 
         function redrawProvinceBuildings(id) {
@@ -1086,7 +1104,7 @@
         function createOilVisualMark(svgElement, id) {
             const center = getProvinceCenter(id); const mark = document.createElement('div');
             mark.className = 'oil-deposit-mark'; mark.textContent = '💧';
-            mark.style.left = `${center.x}px`; mark.style.top = `${center.y - 10}px`; container.appendChild(mark);
+            mark.style.left = `${center.x}px`; mark.style.top = `${center.y - 6}px`; container.appendChild(mark);
         }
 
         function cancelSelection() { selectedProvinceId = null; document.querySelectorAll('.division-indicator').forEach(el => el.classList.remove('selected')); }
@@ -1119,6 +1137,9 @@
             
             window.currentCalculatedIncome = finalIncome; window.currentOilIncome = tWells * oilPerWell;
             coinsDisplay.textContent = coins; oilDisplay.textContent = playerOil;
+            
+            // Динамічний апгрейд тексту кнопок під час кожної зміни стану
+            updateActionButtonsText();
         }
 
         // --- СИСТЕМА НАУКОВИХ ДОСЛІДЖЕНЬ (РЕНДЕР ТА ОНОВЛЕННЯ) ---
@@ -1185,7 +1206,7 @@
             updateFocusTick();
         }, 1000);
 
-        // КІНЕТИЧНИЙ ШІ + ШІ АВТО-ФОКУСИ (НАЛАШТОВАНО ПІД СТИЛЬ АоН3)
+        // КІНЕТИЧНИЙ ШІ + ШІ АВТО-ФОКУСИ
         const activeAiJustifications = {};
         const aiCurrentFocus = {};
 
@@ -1220,7 +1241,7 @@
                     }
                 }
 
-                // Економічний розвиток ШІ (будує частіше, ніж воює)
+                // Економічний розвиток ШІ
                 if (botCash >= 30 && Math.random() > 0.4) {
                     const rProvId = sample(botProvinces); const prov = provinceData[rProvId];
                     if ((prov.civFactories + prov.milFactories + prov.oilWells + prov.bunkers) < 4) {
@@ -1236,7 +1257,7 @@
                     }
                 }
 
-                // Військове будівництво
+                // Військове будівництво ШІ
                 if (botCash >= 120 && Math.random() > 0.7) {
                     const rp = sample(botProvinces);
                     if (!provinceData[rp].hasDivision && !provinceData[rp].isMoving) { spawnDivisionVisual(rp, bot, 'tank'); countryBudgets[bot] -= 120; }
@@ -1245,8 +1266,7 @@
                     if (!provinceData[rp].hasDivision && !provinceData[rp].isMoving) { spawnDivisionVisual(rp, bot, 'infantry'); countryBudgets[bot] -= 50; }
                 }
 
-                // 🕊️ ЗНИЖЕНА АГРЕСИВНІСТЬ (AoH3 стиль: війни переважно через фокуси)
-                // Випадкова атака або фабрикація тепер трапляється вкрай рідко (шанс знижено з 0.35 до 0.02)
+                // ЗНИЖЕНА АГРЕСИВНІСТЬ
                 if (Math.random() < 0.02) {
                     const armed = botProvinces.filter(pId => provinceData[pId].hasDivision && provinceData[pId].divisionOwner === bot && !provinceData[pId].isMoving);
                     if (armed.length > 0) {
@@ -1264,7 +1284,6 @@
                             if (warStatus[bot][enemy]) { 
                                 tryMoveOrAttack(fromP, toP, bot); 
                             } else {
-                                // Повільна та виважена фабрикація претензій (45 секунд замість 10)
                                 const jKey = `${bot}_vs_${enemy}`;
                                 if (!activeAiJustifications[jKey]) {
                                     activeAiJustifications[jKey] = true;

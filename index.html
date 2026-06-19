@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2D HOI4 Mini Strategy - Ultimate Edition</title>
+    <title>2D HOI4 Mini Strategy - Historical Tech Line</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
@@ -89,7 +89,7 @@
         .tech-slot-box { background: #25252e; border: 1px dashed #4b4b5e; border-radius: 4px; padding: 4px; font-size: 10px; flex: 1; }
         .tech-progress-bar { width: 100%; height: 4px; background: #111; border-radius: 2px; overflow: hidden; margin-top: 3px; }
         .tech-progress-fill { width: 0%; height: 100%; background: #a855f7; transition: width 0.2s; }
-        .tech-select-grid { display: grid; grid-template-columns: 1fr; gap: 4px; max-height: 110px; overflow-y: auto; }
+        .tech-select-grid { display: grid; grid-template-columns: 1fr; gap: 4px; max-height: 120px; overflow-y: auto; }
         .tech-card { background: #272730; border: 1px solid #3f3f4e; border-radius: 4px; padding: 6px; font-size: 11px; cursor: pointer; }
         .tech-card.locked { border-color: #444; background: #1a1a22; color: #555; cursor: not-allowed; }
         .tech-card.done { border-color: #22c55e; background: rgba(34, 197, 94, 0.1); cursor: default; }
@@ -118,10 +118,7 @@
             position: absolute; font-size: 14px; pointer-events: none; 
             transform: translate(-50%, -50%); filter: drop-shadow(0 1px 2px #000);
         }
-        /* Сховати нафту в редакторі */
-        body.editor-active .oil-deposit-mark {
-            display: none !important;
-        }
+        body.editor-active .oil-deposit-mark { display: none !important; }
 
         /* Великі квадратні оригінальні дивізії */
         .division-indicator { 
@@ -430,14 +427,20 @@
             }
         };
 
-        // ПРОДОВЖЕНЕ ДЕРЕВЦЕ НАУКИ (З ЛОКОВАНИМИ ТЕХНОЛОГІЯМИ)
+        // 🔬 ПРАВИЛЬНЕ ІСТОРИЧНЕ ДЕРЕВО ДОСЛІДЖЕНЬ
         const playerTechs = {
             'standardization': { name: '🏗️ Стандартизація', cat: 'ind', status: 'avail', req: null, desc: 'Заводи коштують 20💰.' },
             'oil_extraction': { name: '🛢️ Екстракція нафти', cat: 'ind', status: 'avail', req: null, desc: 'Вишки дають +2 нафти.' },
+            
+            // Гілка Танків: Легкий (старт) -> Середній -> Важкий -> Сучасний
             'medium_tank': { name: '🚜 Середній Танк', cat: 'tech', status: 'avail', req: null, desc: 'Відкриває танки середнього класу.' },
-            'heavy_tank': { name: '🦾 Важкий Танк "Мамонт"', cat: 'tech', status: 'locked', req: 'medium_tank', desc: 'Найпотужніший броньований юніт.' },
+            'heavy_tank': { name: '🚂 Важкий Танк', cat: 'tech', status: 'locked', req: 'medium_tank', desc: 'Важка проривна бронетехніка.' },
+            'modern_tank': { name: '⚡ Сучасний Танк', cat: 'tech', status: 'locked', req: 'heavy_tank', desc: 'Найдосконаліші бойові машини.' },
+            
+            // Гілка Піхоти: Стрілець (старт) -> Штурмовик -> Моторизована -> Механізована
             'assault': { name: '🪖 Штурмовики', cat: 'inf', status: 'avail', req: null, desc: 'Покращена штурмова піхота.' },
-            'guards_inf': { name: '⭐ Гвардія (Спецназ)', cat: 'inf', status: 'locked', req: 'assault', desc: 'Елітні загони спецпризначення.' }
+            'motorized_inf': { name: '🛞 Моторизована піхота', cat: 'inf', status: 'locked', req: 'assault', desc: 'Піхота на вантажівках та джипах.' },
+            'mechanized_inf': { name: '🛡️ Механізована піхота', cat: 'inf', status: 'locked', req: 'motorized_inf', desc: 'Бронетранспортери та БМП.' }
         };
         
         const scienceSlots = [
@@ -446,11 +449,13 @@
         ];
 
         function getBestAvailableInfantryType() { 
-            if (playerTechs['guards_inf'].status === 'done') return 'guards';
+            if (playerTechs['mechanized_inf'].status === 'done') return 'mechanized';
+            if (playerTechs['motorized_inf'].status === 'done') return 'motorized';
             if (playerTechs['assault'].status === 'done') return 'assault';
             return 'infantry'; 
         }
         function getBestAvailableTankType() { 
+            if (playerTechs['modern_tank'].status === 'done') return 'modern_tank';
             if (playerTechs['heavy_tank'].status === 'done') return 'heavy_tank';
             if (playerTechs['medium_tank'].status === 'done') return 'medium_tank';
             return 'tank'; 
@@ -461,11 +466,13 @@
             const infType = getBestAvailableInfantryType();
             const tankType = getBestAvailableTankType();
             
-            if (infType === 'guards') btnArmy.textContent = `⭐ Гвардія (50💰)`;
+            if (infType === 'mechanized') btnArmy.textContent = `🛡️ Механізована (50💰)`;
+            else if (infType === 'motorized') btnArmy.textContent = `🛞 Моторизована (50💰)`;
             else if (infType === 'assault') btnArmy.textContent = `🪖 Штурмовики (50💰)`;
             else btnArmy.textContent = `🪖 Стрільці (50💰)`;
 
-            if (tankType === 'heavy_tank') btnTank.textContent = `🦾 Важкий Танк (120💰)`;
+            if (tankType === 'modern_tank') btnTank.textContent = `⚡ Сучасний Танк (120💰)`;
+            else if (tankType === 'heavy_tank') btnTank.textContent = `🚂 Важкий Танк (120💰)`;
             else if (tankType === 'medium_tank') btnTank.textContent = `🚜 Середній Танк (120💰)`;
             else btnTank.textContent = `🚜 Легкі Танки (120💰)`;
 
@@ -553,7 +560,7 @@
                 }
                 countryBudgets[bot] += (botCivs * 5) + 5;
 
-                // 📉 ЗНИЖЕНО АГРЕСИВНІСТЬ ШІ: Шанс війни тепер 0.01 замість 0.04
+                // 📉 Знижений шанс війни (0.01)
                 if (Math.random() < 0.01 && botProvs.length > 0) {
                     let targets = Object.keys(countryNames).filter(c => c !== 'NEUTRAL' && c !== bot);
                     let randomTarget = targets[Math.floor(Math.random() * targets.length)];
@@ -582,7 +589,7 @@
                     if (provinceData[pId].hasDivision) {
                         let neighbors = findNeighborProvinces(pId);
                         let enemyNeighbors = neighbors.filter(nId => warStatus[bot][provinceData[nId].country] === true);
-                        // 📉 ЗНИЖЕНО ШАНС АТАКИ ВІЙСЬК ШІ з 0.3 до 0.12 для стабільності
+                        // 📉 Знижений шанс атаки ботів (0.12)
                         if (enemyNeighbors.length > 0 && Math.random() < 0.12) {
                             let targetAttack = enemyNeighbors[Math.floor(Math.random() * enemyNeighbors.length)];
                             executeBattleCombat(pId, targetAttack);
@@ -617,7 +624,7 @@
 
             if (!warStatus[attackerCountry][defenderCountry]) {
                 if (attackerCountry === playerCountry) {
-                    alert("Вам необхідно спочатку оголосити війну цій країні через дипломатичну панель!");
+                    alert("Вам необхідно спочатку оголосити війну цій країні через дипломатичную панель!");
                 }
                 return;
             }
@@ -836,17 +843,19 @@
             };
         }
 
-        // 🎨 ВІДПОВІДНІСТЬ ЖИВИХ ІКОНОК ЗАМІСТЬ БУКВ ДЛЯ ДИВІЗІЙ
+        // 🎨 ГРАФІЧНІ ЕМОДЗІ-ІКОНКИ ДЛЯ ДИВІЗІЙ ЗАМІСТЬ ТЕКСТУ INF
         function spawnDivisionVisual(id, countryCode, type) {
             const center = getProvinceCenter(id); if (!center) return;
             const divEl = document.createElement('div');
-            divEl.className = (type.includes('tank') || type.includes('heavy')) ? 'division-indicator tank' : 'division-indicator';
+            divEl.className = (type.includes('tank') || type.includes('heavy') || type.includes('modern')) ? 'division-indicator tank' : 'division-indicator';
             divEl.style.left = `${center.x}px`; divEl.style.top = `${center.y}px`;
             
-            // Заміна букв на емодзі-значки
-            if (type === 'heavy_tank') divEl.textContent = '🦾';
+            // Динамічні іконки під кожен відкритий тир
+            if (type === 'modern_tank') divEl.textContent = '⚡';
+            else if (type === 'heavy_tank') divEl.textContent = '🚂';
             else if (type === 'medium_tank' || type === 'tank') divEl.textContent = '🚜';
-            else if (type === 'guards') divEl.textContent = '⭐';
+            else if (type === 'mechanized') divEl.textContent = '🛡️';
+            else if (type === 'motorized') divEl.textContent = '🛞';
             else divEl.textContent = '🪖';
 
             container.appendChild(divEl);
@@ -898,14 +907,13 @@
             showNotification(`🔥 Оголошено війну державі ${countryNames[selectedDiplomacyCountry]}!`);
         });
 
-        // 🔬 ЛОГІКА ТЕХНОЛОГІЙ ТА ВІДДКРИТТЯ НАСТУПНИХ ТИРІВ
+        // 🔬 КОРЕКТНЕ ВІДКРИТТЯ НАСТУПНИХ ТИРІВ ТЕХНОЛОГІЙ
         function updateTechListUI() {
             if(isSandboxEditorMode) return;
             techListContainer.innerHTML = '';
             for (const key in playerTechs) {
                 const t = playerTechs[key];
                 
-                // Перевірка залежностей технологій (якщо батьківська тех не вивчена, закриваємо)
                 if (t.req && playerTechs[t.req].status !== 'done') {
                     t.status = 'locked';
                 } else if (t.status === 'locked' && playerTechs[t.req].status === 'done') {

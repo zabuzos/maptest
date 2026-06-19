@@ -224,7 +224,6 @@
     <div class="start-screen" id="start-screen">
         <h2>Оберіть свою націю (Велика стратегічна карта)</h2>
         <div class="country-grid" id="start-country-grid"></div>
-        <button id="skip-to-editor-btn" style="background:#eab308; border:none; color:black; font-weight:bold; padding:10px 20px; border-radius:6px; cursor:pointer; margin-top:10px;">🛠️ Зайти відразу в Редактор Кордонів</button>
     </div>
 
     <div class="modal-overlay" id="focus-modal-overlay">
@@ -256,7 +255,7 @@
 
             <div class="panel-section">
                 <label>Ваша нація</label>
-                <div id="player-flag-badge" class="player-badge" style="background:#2e2e35;">-- Редактор --</div>
+                <div id="player-flag-badge" class="player-badge">--</div>
             </div>
 
             <div class="panel-section" style="border-color: #eab308; background: #1c1912;">
@@ -317,8 +316,7 @@
                     
                     <button id="btn-editor" class="mode-btn editor-mode" style="border: 1px dashed #eab308;">🛠️ Редактор кордонів (Firebase)</button>
                     <div id="editor-subpanel" style="display:none; flex-direction:column; gap:4px; margin-top:2px;">
-                        <label style="font-size:9px; color:#eab308;">Якій країні віддати регіон:</label>
-                        <select id="editor-country-select" style="background:#272730; color:white; border:1px solid #eab308; padding:5px; font-size:11px; border-radius:4px;"></select>
+                        <select id="editor-country-select" style="background:#272730; color:white; border:1px solid #eab308; padding:4px; font-size:11px; border-radius:4px;"></select>
                     </div>
                 </div>
             </div>
@@ -353,18 +351,14 @@
         appId: "YOUR_APP_ID"
     };
     
-    // Ініціалізація з безпечною перевіркою
-    let database = null;
-    if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
-        firebase.initializeApp(firebaseConfig);
-        database = firebase.database();
-    }
+    // Ініціалізація
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
     // ==========================================
 
     document.addEventListener("DOMContentLoaded", function() {
         const startScreen = document.getElementById('start-screen');
         const startGrid = document.getElementById('start-country-grid');
-        const skipToEditorBtn = document.getElementById('skip-to-editor-btn');
         const playerBadge = document.getElementById('player-flag-badge');
         
         const mapArea = document.getElementById('map-area');
@@ -442,7 +436,7 @@
         };
 
         const countryNames = {
-            'UA': '🇺🇦 Україна', 'PL': '🇵🇱 Польща', 'DE': '🇩🇪 Німеньчина', 'FR': '🇫🇷 Франція',
+            'UA': '🇺🇦 Україна', 'PL': '🇵🇱 Польща', 'DE': '🇩🇪 Німеччина', 'FR': '🇫🇷 Франція',
             'GB': '🇬🇧 Велика Британія', 'IT': '🇮🇹 Італія', 'SOV': '🇷🇺 СРСР', 'ES': '🇪🇸 Іспанія', 
             'RO': '🇷🇴 Румунія', 'TR': '🇹🇷 Туреччина', 'US': '🇺🇸 США', 'JP': '🇯🇵 Японія', 
             'FI': '🇫🇮 Фінляндія', 'SE': '🇸🇪 Швеція', 'NO': '🇳🇴 Норвегія', 'DK': '🇩𝕜 Данія', 
@@ -582,12 +576,27 @@
             provs.sort((a, b) => getProvinceCenter(b).x - getProvinceCenter(a).x);
             return provs.slice(0, count);
         }
+        function getSouthernmostProvince(countryCode) {
+            let provs = Object.keys(provinceData).filter(id => provinceData[id].country === countryCode);
+            provs.sort((a, b) => getProvinceCenter(b).y - getProvinceCenter(a).y);
+            return provs[0];
+        }
+        function getClosestEnemyProvince(fromProvId, enemyCountryCode) {
+            let targetCenter = getProvinceCenter(fromProvId);
+            let provs = Object.keys(provinceData).filter(id => provinceData[id].country === enemyCountryCode);
+            if(provs.length === 0) return null;
+            provs.sort((a, b) => {
+                let distA = Math.hypot(getProvinceCenter(a).x - targetCenter.x, getProvinceCenter(a).y - targetCenter.y);
+                let distB = Math.hypot(getProvinceCenter(b).x - targetCenter.x, getProvinceCenter(b).y - targetCenter.y);
+                return distA - distB;
+            });
+            return provs[0];
+        }
 
         btnOpenFocus.addEventListener('click', () => { renderFocusTree(); focusModal.style.display = 'flex'; });
         btnCloseFocus.addEventListener('click', () => { focusModal.style.display = 'none'; });
 
         function renderFocusTree() {
-            if (!playerCountry) return;
             focusRenderArea.innerHTML = '';
             let treeKey = focusTrees[playerCountry] ? playerCountry : 'GENERIC';
             let tree = focusTrees[treeKey];
@@ -673,7 +682,37 @@
                 if (country === playerCountry) { coins += 300; updateEconomyDisplay(); } 
                 else countryBudgets[country] += 300;
             }
+            else if (focusKey === 'ua_kuban') {
+                triggerUltimatumEvent({
+                    title: "🌾 Ультиматум щодо Кубані",
+                    desc: "Україна вимагає повернення етнічних теритолів Кубані під свій контроль.",
+                    targetCountry: 'SOV',
+                    onYes: () => {
+                        let eastUA = getEasternmostProvinces('UA', 1)[0];
+                        let kubanProv = getClosestEnemyProvince(eastUA, 'SOV');
+                        if (kubanProv) {
+                            provinceData[kubanProv].country = 'UA';
+                            provinceData[kubanProv].elementRef.style.fill = countryColors['UA'];
+                            redrawProvinceBuildings(kubanProv);
+                            alert("Кубань мирно перейшла під контроль України.");
+                        }
+                    },
+                    onNo: () => { declareWar('UA', 'SOV'); }
+                });
+            }
             updateEconomyDisplay();
+        }
+
+        function triggerUltimatumEvent(cfg) {
+            if (cfg.targetCountry === playerCountry) {
+                eventModal.style.display = 'flex';
+                eventTitle.textContent = cfg.title; eventDesc.textContent = cfg.desc;
+                eventBtnYes.onclick = () => { eventModal.style.display = 'none'; cfg.onYes(); };
+                eventBtnNo.onclick = () => { eventModal.style.display = 'none'; cfg.onNo(); };
+            } else {
+                let rel = diplomaticRelations[playerCountry][cfg.targetCountry] || 0;
+                if (rel >= 40 && Math.random() > 0.4) cfg.onYes(); else cfg.onNo();
+            }
         }
 
         function updateMapTransform() { container.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomScale})`; }
@@ -706,6 +745,7 @@
         btnMil.addEventListener('click', () => { currentMode = 'build_mil'; resetActiveButtons(); btnMil.classList.add('active'); cancelSelection(); });
         btnBunker.addEventListener('click', () => { currentMode = 'build_bunker'; resetActiveButtons(); btnBunker.classList.add('active'); cancelSelection(); });
         
+        // Перемикач Редактора Кордонів
         btnEditor.addEventListener('click', () => { 
             currentMode = 'editor'; 
             resetActiveButtons(); 
@@ -718,7 +758,7 @@
             editorSubpanel.style.display = (currentMode === 'editor') ? 'flex' : 'none';
         }
 
-        // ЗАВАНТАЖЕННЯ SVG ТА СИНХРОНІЗАЦІЯ КОРДОНІВ
+        // ЗАВАНТАЖЕННЯ SVG ТА СИНХРОНІЗАЦІЯ КОРДОНІВ З FIREBASE
         fetch('map.svg')
             .then(response => response.text())
             .then(svgData => {
@@ -756,49 +796,39 @@
                         if (hasOilDeposit) createOilVisualMark(element, element.id);
                     });
 
+                    // ===================================================
                     // 🔥 СЛУХАЧ FIREBASE: Оновлення кордонів в реальному часі
-                    if (database) {
-                        database.ref('global_map/provinces').on('value', (snapshot) => {
-                            const data = snapshot.val();
-                            if (data) {
-                                for (const provId in data) {
-                                    if (provinceData[provId]) {
-                                        const newCountry = data[provId];
-                                        provinceData[provId].country = newCountry;
-                                        provinceData[provId].elementRef.style.fill = countryColors[newCountry] || '#2e2e35';
-                                    }
+                    // ===================================================
+                    database.ref('global_map/provinces').on('value', (snapshot) => {
+                        const data = snapshot.val();
+                        if (data) {
+                            for (const provId in data) {
+                                if (provinceData[provId]) {
+                                    const newCountry = data[provId];
+                                    provinceData[provId].country = newCountry;
+                                    provinceData[provId].elementRef.style.fill = countryColors[newCountry] || '#2e2e35';
                                 }
                             }
-                        });
-                    }
+                        }
+                    });
+                    // ===================================================
 
-                    // Обробик кліків по карті (ПОВНІСТЮ ВИПРАВЛЕНО БЛОКУВАННЯ)
                     mapLayer.addEventListener('click', function(event) {
-                        if (hasMovedMouse) return; 
-                        
+                        if (hasMovedMouse) return;
                         const target = event.target;
                         if (!['path', 'polygon', 'polyline', 'rect', 'ellipse'].includes(target.tagName.toLowerCase())) return;
                         
-                        const provinceId = target.id; 
-                        const province = provinceData[provinceId];
+                        const provinceId = target.id; const province = provinceData[provinceId];
                         if (!province || province.isMoving) return;
 
-                        // ✨ ЛОГІКА РЕДАКТОРА КОРДОНІВ (ПРАЦЮЄ ЗАВЖДИ)
+                        // --- ФІКС: ЛОГІКА РЕДАКТОРА КОРДОНІВ ПРАЦЮЄ ЗАВЖДИ ДЛЯ БУДЬ-ЯКОЇ ПРОВІНЦІЇ ---
                         if (currentMode === 'editor') {
                             const selectedTargetCountry = editorCountrySelect.value;
-                            
-                            // 1. Локальне оновлення кольору карти
-                            province.country = selectedTargetCountry;
-                            target.style.fill = countryColors[selectedTargetCountry] || '#2e2e35';
-                            
-                            // 2. Спроба зберегти в базу (якщо вона ініціалізована)
-                            if (database) {
-                                database.ref('global_map/provinces/' + provinceId).set(selectedTargetCountry);
-                            }
+                            database.ref('global_map/provinces/' + provinceId).set(selectedTargetCountry);
                             return; 
                         }
 
-                        // Нормальна логіка гри, якщо вибрано країну
+                        // Вся інша ігрова логіка потребує старту гри
                         if (!isGameStarted) return;
 
                         if (currentMode.startsWith('build_')) {
@@ -838,8 +868,8 @@
                 }
             });
 
+        // Дипломатія та інший функціонал...
         function openDiplomacyWith(countryCode) {
-            if (!playerCountry) return;
             selectedDiplomacyCountry = countryCode; dipCountryName.textContent = countryNames[countryCode] || countryCode;
             let rel = diplomaticRelations[playerCountry][countryCode]; dipRelationsVal.textContent = rel;
             if (warStatus[playerCountry][countryCode]) dipStatusVal.textContent = "ВІЙНА 🚨";
@@ -849,14 +879,18 @@
         }
 
         dipBtnGift.addEventListener('click', function() {
-            if (!selectedDiplomacyCountry || coins < 50 || !playerCountry) return;
+            if (!selectedDiplomacyCountry || coins < 50) return;
             coins -= 50; changeRelations(playerCountry, selectedDiplomacyCountry, 25); openDiplomacyWith(selectedDiplomacyCountry); updateEconomyDisplay();
         });
 
         function changeRelations(from, to, amount) {
-            if (!diplomaticRelations[from]) return;
             diplomaticRelations[from][to] = Math.max(-100, Math.min(100, diplomaticRelations[from][to] + amount));
             diplomaticRelations[to][from] = Math.max(-100, Math.min(100, diplomaticRelations[to][from] + amount));
+        }
+
+        function declareWar(attacker, defender) {
+            warStatus[attacker][defender] = true; warStatus[defender][attacker] = true;
+            if (defender === playerCountry) alert(`🚨 ${countryNames[attacker]} ОГОЛОСИЛА ВАМ ВІЙНУ!`);
         }
 
         function setupArrowMarker() {
@@ -934,10 +968,11 @@
             factory.style.left = `${center.x + (idx - 2.5) * 6}px`; factory.style.top = `${center.y + 10}px`; container.appendChild(factory);
         }
 
+        function redrawProvinceBuildings(id) { document.querySelectorAll(`.prov-building-${id}`).forEach(el => el.remove()); }
+        function createOilVisualMark(svgElement, id) { const center = getProvinceCenter(id); const mark = document.createElement('div'); mark.className = 'oil-deposit-mark'; mark.textContent = '💧'; mark.style.left = `${center.x}px`; mark.style.top = `${center.y - 6}px`; container.appendChild(mark); }
         function cancelSelection() { selectedProvinceId = null; document.querySelectorAll('.division-indicator').forEach(el => el.classList.remove('selected')); }
 
         function updateEconomyDisplay() {
-            if (!isGameStarted || !playerCountry) return;
             let tCiv = 0;
             for (const id in provinceData) {
                 if (provinceData[id].country === playerCountry) {
@@ -949,8 +984,8 @@
             updateActionButtonsText();
         }
 
+        // Науковий цикл
         function updateTechListUI() {
-            if (!playerCountry) return;
             techListContainer.innerHTML = '';
             for (const key in playerTechs) {
                 const t = playerTechs[key]; const card = document.createElement('div');
@@ -985,8 +1020,7 @@
             updateScienceTick(); updateFocusTick();
         }, 1000);
 
-        // Обробник вибору країни на старті
-        startGrid.addEventListener('click', function(e) {
+        document.body.onclick = function(e) {
             let btn = e.target.closest('.country-select-btn');
             if(btn) {
                 playerCountry = btn.getAttribute('data-code');
@@ -995,15 +1029,7 @@
                 startScreen.style.display = 'none'; isGameStarted = true;
                 updateTechListUI(); updateEconomyDisplay();
             }
-        });
-
-        // Кнопка пропуску відразу в Редактор
-        skipToEditorBtn.addEventListener('click', () => {
-            startScreen.style.display = 'none';
-            currentMode = 'editor';
-            resetActiveButtons();
-            btnEditor.classList.add('active');
-        });
+        };
     });
 </script>
 </body>

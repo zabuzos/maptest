@@ -816,70 +816,56 @@
                     });
                     // ===================================================
 
-                  mapLayer.addEventListener('click', function(event) {
-    // 1. Видалено жорстку перевірку isGameStarted для редактора, щоб можна було правити карту навіть зі стартового екрану
-    if (hasMovedMouse  !isFirebaseMapLoaded) return;
-    
-    const target = event.target;
-    if (!['path', 'polygon', 'polyline', 'rect', 'ellipse'].includes(target.tagName.toLowerCase())) return;
-    
-    const provinceId = target.id; 
-    const province = provinceData[provinceId];
-    if (!province  province.isMoving) return;
+                    mapLayer.addEventListener('click', function(event) {
+                        if (!isGameStarted || hasMovedMouse || !isFirebaseMapLoaded) return;
+                        const target = event.target;
+                        if (!['path', 'polygon', 'polyline', 'rect', 'ellipse'].includes(target.tagName.toLowerCase())) return;
+                        
+                        const provinceId = target.id; const province = provinceData[provinceId];
+                        if (!province || province.isMoving) return;
 
-    // --- ЛОГІКА РЕДАКТОРА КОРДОНІВ (ПРАЦЮЄ ДЛЯ ВСІХ КРАЇН І ЗАВЖДИ) ---
-    if (currentMode === 'editor') {
-        const selectedTargetCountry = editorCountrySelect.value;
-        
-        // Оновлюємо локально для миттєвого візуального ефекту
-        province.country = selectedTargetCountry;
-        province.elementRef.style.fill = countryColors[selectedTargetCountry] || '#2e2e35';
-        redrawProvinceBuildings(provinceId); // очищуємо старі будівлі, якщо треба
-        
-        // Надсилаємо в Firebase
-        database.ref('global_map/provinces/' + provinceId).set(selectedTargetCountry)
-            .catch(err => console.error("Помилка запису в Firebase: ", err));
-            
-        return; // Виходимо, щоб не спрацьовувала звичайна ігрова логіка юнітів/будівництва
-    }
+                        // --- ЛОГІКА РЕДАКТОРА КОРДОНІВ ---
+                        if (currentMode === 'editor') {
+                            const selectedTargetCountry = editorCountrySelect.value;
+                            // Миттєво зберігаємо нову країну-власника в Firebase назавжди
+                            database.ref('global_map/provinces/' + provinceId).set(selectedTargetCountry);
+                            return; 
+                        }
 
-    // --- ЗВИЧАЙНА ІГРОВА ЛОГІКА (вимагає старту гри) ---
-    if (!isGameStarted) return; 
+                        if (currentMode.startsWith('build_')) {
+                            if (province.country !== playerCountry) return alert("Будувати можна лише на своїй території!");
+                            if (coins < buildingPrice) return alert(`Недостатньо монет!`);
+                            if ((province.civFactories + province.milFactories + province.oilWells + province.bunkers) >= 4) return alert("Всі слоти зайняті!");
 
-    if (currentMode.startsWith('build_')) {
-        if (province.country !== playerCountry) return alert("Будувати можна лише на своїй території!");
-        if (coins < buildingPrice) return alert(Недостатньо монет!);
-        if ((province.civFactories + province.milFactories + province.oilWells + province.bunkers) >= 4) return alert("Всі слоти зайняті!");
-
-        coins -= buildingPrice; coinsDisplay.textContent = coins;
-        if (currentMode === 'build_civ') { province.civFactories++; createFactoryVisual(target, provinceId, 'civ'); } 
-        else if (currentMode === 'build_mil') {
-            if (province.hasOilDeposit) { province.oilWells++; createFactoryVisual(target, provinceId, 'oil'); } 
-            else { province.milFactories++; createFactoryVisual(target, provinceId, 'mil'); }
-        } else if (currentMode === 'build_bunker') { province.bunkers++; createFactoryVisual(target, provinceId, 'bunker'); }
-        updateEconomyDisplay();
-    } 
-    else {
-        if (province.country === playerCountry) {
-            dipPanel.style.display = 'none';
-            if (province.hasDivision && province.divisionOwner === playerCountry) {
-                cancelSelection(); selectedProvinceId = provinceId;
-                province.domDivisionRef.classList.add('selected');
-            } else if (!province.hasDivision && selectedProvinceId && selectedProvinceId !== provinceId) {
-                tryMoveOrAttack(selectedProvinceId, provinceId, playerCountry);
-            } else if (!province.hasDivision) {
-                if (currentMode === 'army' && coins >= 50) {
-                    coins -= 50; spawnDivisionVisual(provinceId, playerCountry, getBestAvailableInfantryType()); updateEconomyDisplay();
-                } else if (currentMode === 'tank' && coins >= 120) {
-                    coins -= 120; spawnDivisionVisual(provinceId, playerCountry, getBestAvailableTankType()); updateEconomyDisplay();
-                }
-            }
-        } else {
-            if (province.country !== 'NEUTRAL') openDiplomacyWith(province.country);
-            if (selectedProvinceId) tryMoveOrAttack(selectedProvinceId, provinceId, playerCountry);
-        }
-    }
-});
+                            coins -= buildingPrice; coinsDisplay.textContent = coins;
+                            if (currentMode === 'build_civ') { province.civFactories++; createFactoryVisual(target, provinceId, 'civ'); } 
+                            else if (currentMode === 'build_mil') {
+                                if (province.hasOilDeposit) { province.oilWells++; createFactoryVisual(target, provinceId, 'oil'); } 
+                                else { province.milFactories++; createFactoryVisual(target, provinceId, 'mil'); }
+                            } else if (currentMode === 'build_bunker') { province.bunkers++; createFactoryVisual(target, provinceId, 'bunker'); }
+                            updateEconomyDisplay();
+                        } 
+                        else {
+                            if (province.country === playerCountry) {
+                                dipPanel.style.display = 'none';
+                                if (province.hasDivision && province.divisionOwner === playerCountry) {
+                                    cancelSelection(); selectedProvinceId = provinceId;
+                                    province.domDivisionRef.classList.add('selected');
+                                } else if (!province.hasDivision && selectedProvinceId && selectedProvinceId !== provinceId) {
+                                    tryMoveOrAttack(selectedProvinceId, provinceId, playerCountry);
+                                } else if (!province.hasDivision) {
+                                    if (currentMode === 'army' && coins >= 50) {
+                                        coins -= 50; spawnDivisionVisual(provinceId, playerCountry, getBestAvailableInfantryType()); updateEconomyDisplay();
+                                    } else if (currentMode === 'tank' && coins >= 120) {
+                                        coins -= 120; spawnDivisionVisual(provinceId, playerCountry, getBestAvailableTankType()); updateEconomyDisplay();
+                                    }
+                                }
+                            } else {
+                                if (province.country !== 'NEUTRAL') openDiplomacyWith(province.country);
+                                if (selectedProvinceId) tryMoveOrAttack(selectedProvinceId, provinceId, playerCountry);
+                            }
+                        }
+                    });
                 }
             });
 

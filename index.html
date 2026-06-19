@@ -91,6 +91,7 @@
         .tech-progress-fill { width: 0%; height: 100%; background: #a855f7; transition: width 0.2s; }
         .tech-select-grid { display: grid; grid-template-columns: 1fr; gap: 4px; max-height: 110px; overflow-y: auto; }
         .tech-card { background: #272730; border: 1px solid #3f3f4e; border-radius: 4px; padding: 6px; font-size: 11px; cursor: pointer; }
+        .tech-card.locked { border-color: #444; background: #1a1a22; color: #555; cursor: not-allowed; }
         .tech-card.done { border-color: #22c55e; background: rgba(34, 197, 94, 0.1); cursor: default; }
 
         /* Мапа та керування камерою */
@@ -106,13 +107,11 @@
         svg path, svg polygon, svg polyline, svg rect, svg ellipse { cursor: pointer; stroke: #111113; stroke-width: 0.5px; transition: opacity 0.1s; }
         svg path:hover, svg polygon:hover { opacity: 0.85; stroke: #fff; }
 
-        /* ==========================================
-           🎯 ОРИГІНАЛЬНИЙ СТАРИЙ ВИГЛЯД ТА ВЕЛИКІ ІКОНКИ
-           ========================================== */
+        /* Іконки фабрик та міст */
         .factory-indicator { 
-            position: absolute; width: 20px; height: 20px; 
+            position: absolute; width: 22px; height: 22px; 
             pointer-events: none; transform: translate(-50%, -50%); 
-            display: flex; align-items: center; justify-content: center; font-size: 12px;
+            display: flex; align-items: center; justify-content: center; font-size: 14px;
         }
 
         .oil-deposit-mark { 
@@ -124,12 +123,13 @@
             display: none !important;
         }
 
+        /* Великі квадратні оригінальні дивізії */
         .division-indicator { 
-            position: absolute; width: 24px; height: 24px; 
+            position: absolute; width: 26px; height: 26px; 
             background-color: #15803d; border: 2px solid #ffffff;
             border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.8);
             pointer-events: none; transform: translate(-50%, -50%); z-index: 5; 
-            display: flex; align-items: center; justify-content: center; font-size: 11px;
+            display: flex; align-items: center; justify-content: center; font-size: 14px;
             font-weight: bold; color: white;
         }
         .division-indicator.tank { 
@@ -142,7 +142,7 @@
 
         .arrows-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
 
-        /* Модальні вікна (Фокуси, Івенти, Дипломатія) */
+        /* Модальні вікна */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 10, 12, 0.85); z-index: 10000; display: none; align-items: center; justify-content: center; }
         .focus-tree-window { background: #141419; border: 2px solid #a855f7; border-radius: 10px; width: 90%; max-width: 800px; height: 80vh; display: flex; flex-direction: column; overflow: hidden; }
         .focus-header { background: #1c1c24; padding: 12px; border-bottom: 1px solid #2d2d38; display: flex; justify-content: space-between; align-items: center; }
@@ -253,9 +253,9 @@
             <div class="panel-section">
                 <label>Панель Дій / Режими Кліку</label>
                 <div class="actions-grid">
-                    <button id="btn-army" class="mode-btn active">⚔️ Стрільці (50💰)</button>
+                    <button id="btn-army" class="mode-btn active">🪖 Стрільці (50💰)</button>
                     <button id="btn-tank" class="mode-btn tank-mode">🚜 Легкі Танки (120💰)</button>
-                    <button id="btn-civ" class="mode-btn civ-mode">🏗️ Цивільна ф-ка (<span id="price-civ">30</span>💰)</button>
+                    <button id="btn-civ" class="mode-btn civ-mode">🏢 Цивільна ф-ка (<span id="price-civ">30</span>💰)</button>
                     <button id="btn-mil" class="mode-btn mil-mode">🏭 Військ/Нафта (<span id="price-mil">30</span>💰)</button>
                     <button id="btn-bunker" class="mode-btn bunker-mode">🛡️ Бункер (<span id="price-bunker">30</span>💰)</button>
                     
@@ -285,14 +285,14 @@
     // 🔥 ВСТАВ СЮДИ ДАНІ СВОГО НОВОГО ДОДАТКУ З FIREBASE CONSOLE
     // =================================================================
     const firebaseConfig = {
-    apiKey: "AIzaSyBG54L-ISILxa5RajGY99P7cBOlHvqsLgI",
-    authDomain: "the-animals-wars-1.firebaseapp.com",
-    databaseURL: "https://the-animals-wars-1-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "the-animals-wars-1",
-    storageBucket: "the-animals-wars-1.firebasestorage.app",
-    messagingSenderId: "861315182995",
-    appId: "1:861315182995:web:926ca3ec63b9a0d4b6f866"
-  };
+        apiKey: "YOUR_NEW_API_KEY",
+        authDomain: "YOUR_NEW_PROJECT_ID.firebaseapp.com",
+        databaseURL: "https://YOUR_NEW_PROJECT_ID-default-rtdb.firebaseio.com",
+        projectId: "YOUR_NEW_PROJECT_ID",
+        storageBucket: "YOUR_NEW_PROJECT_ID.appspot.com",
+        messagingSenderId: "YOUR_NEW_MESSAGING_ID",
+        appId: "YOUR_NEW_APP_ID"
+    };
     
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
@@ -342,7 +342,6 @@
         const eventBtnYes = document.getElementById('event-btn-yes');
         const eventBtnNo = document.getElementById('event-btn-no');
 
-        // Ігрові режими та параметри логіки
         let coins = 150; let playerOil = 10; let currentMode = 'army'; 
         let playerCountry = null; let isGameStarted = false; let isSandboxEditorMode = false;
         let selectedProvinceId = null; let selectedDiplomacyCountry = null;
@@ -404,7 +403,6 @@
             });
         });
 
-        // Побудова списків вибору націй
         Object.keys(countryNames).forEach(code => {
             if (code === 'NEUTRAL') return;
             const btn = document.createElement('button');
@@ -415,13 +413,11 @@
             const opt = document.createElement('option'); opt.value = code; opt.textContent = countryNames[code];
             editorCountrySelect.appendChild(opt);
         });
-        // Додамо нейтралів у список редактора
         const neutralOpt = document.createElement('option'); neutralOpt.value = 'NEUTRAL'; neutralOpt.textContent = countryNames['NEUTRAL'];
         editorCountrySelect.appendChild(neutralOpt);
 
         const provinceData = {}; 
 
-        // ОРИГІНАЛЬНЕ ДЕРЕВО ФОКУСІВ ТА НАУКИ
         const focusTrees = {
             'UA': {
                 'ua_zsu': { name: '🪖 Створити ЗСУ', time: 15, req: null, excl: null, desc: '+15% до атаки піхоти назавжди.' },
@@ -434,24 +430,45 @@
             }
         };
 
+        // ПРОДОВЖЕНЕ ДЕРЕВЦЕ НАУКИ (З ЛОКОВАНИМИ ТЕХНОЛОГІЯМИ)
         const playerTechs = {
             'standardization': { name: '🏗️ Стандартизація', cat: 'ind', status: 'avail', req: null, desc: 'Заводи коштують 20💰.' },
             'oil_extraction': { name: '🛢️ Екстракція нафти', cat: 'ind', status: 'avail', req: null, desc: 'Вишки дають +2 нафти.' },
-            'medium_tank': { name: '🚜 Середній Танк', cat: 'tech', status: 'avail', req: null, desc: 'Танки стають сильнішими.' },
-            'assault': { name: '🪖 Штурмовики', cat: 'inf', status: 'avail', req: null, desc: 'Піхота отримує 130 HP.' }
+            'medium_tank': { name: '🚜 Середній Танк', cat: 'tech', status: 'avail', req: null, desc: 'Відкриває танки середнього класу.' },
+            'heavy_tank': { name: '🦾 Важкий Танк "Мамонт"', cat: 'tech', status: 'locked', req: 'medium_tank', desc: 'Найпотужніший броньований юніт.' },
+            'assault': { name: '🪖 Штурмовики', cat: 'inf', status: 'avail', req: null, desc: 'Покращена штурмова піхота.' },
+            'guards_inf': { name: '⭐ Гвардія (Спецназ)', cat: 'inf', status: 'locked', req: 'assault', desc: 'Елітні загони спецпризначення.' }
         };
+        
         const scienceSlots = [
             { id: 1, activeTech: null, timer: 0, maxTime: 15 },
             { id: 2, activeTech: null, timer: 0, maxTime: 15 }
         ];
 
-        function getBestAvailableInfantryType() { return playerTechs['assault'].status === 'done' ? 'assault' : 'infantry'; }
-        function getBestAvailableTankType() { return playerTechs['medium_tank'].status === 'done' ? 'medium_tank' : 'tank'; }
+        function getBestAvailableInfantryType() { 
+            if (playerTechs['guards_inf'].status === 'done') return 'guards';
+            if (playerTechs['assault'].status === 'done') return 'assault';
+            return 'infantry'; 
+        }
+        function getBestAvailableTankType() { 
+            if (playerTechs['heavy_tank'].status === 'done') return 'heavy_tank';
+            if (playerTechs['medium_tank'].status === 'done') return 'medium_tank';
+            return 'tank'; 
+        }
 
         function updateActionButtonsText() {
             if (playerTechs['standardization'].status === 'done') buildingPrice = 20;
             const infType = getBestAvailableInfantryType();
-            btnArmy.textContent = infType === 'assault' ? `🪖 Штурмовики (50💰)` : `⚔️ Стрільці (50💰)`;
+            const tankType = getBestAvailableTankType();
+            
+            if (infType === 'guards') btnArmy.textContent = `⭐ Гвардія (50💰)`;
+            else if (infType === 'assault') btnArmy.textContent = `🪖 Штурмовики (50💰)`;
+            else btnArmy.textContent = `🪖 Стрільці (50💰)`;
+
+            if (tankType === 'heavy_tank') btnTank.textContent = `🦾 Важкий Танк (120💰)`;
+            else if (tankType === 'medium_tank') btnTank.textContent = `🚜 Середній Танк (120💰)`;
+            else btnTank.textContent = `🚜 Легкі Танки (120💰)`;
+
             document.getElementById('price-civ').textContent = buildingPrice;
             document.getElementById('price-mil').textContent = buildingPrice;
             document.getElementById('price-bunker').textContent = buildingPrice;
@@ -522,7 +539,6 @@
             return { incMoney: incomePerSecond, incOil: oilPerSecond };
         }
 
-        // Логіка ШІ ботів (працює лише у звичайній грі)
         function runAICampaignLogic() {
             if (isSandboxEditorMode) return;
             Object.keys(countryNames).forEach(bot => {
@@ -537,13 +553,14 @@
                 }
                 countryBudgets[bot] += (botCivs * 5) + 5;
 
-                if (Math.random() < 0.04 && botProvs.length > 0) {
+                // 📉 ЗНИЖЕНО АГРЕСИВНІСТЬ ШІ: Шанс війни тепер 0.01 замість 0.04
+                if (Math.random() < 0.01 && botProvs.length > 0) {
                     let targets = Object.keys(countryNames).filter(c => c !== 'NEUTRAL' && c !== bot);
                     let randomTarget = targets[Math.floor(Math.random() * targets.length)];
                     
                     if (!warStatus[bot][randomTarget]) {
                         let isSameBloc = (euBloc.includes(bot) && euBloc.includes(randomTarget)) || (cisBloc.includes(bot) && cisBloc.includes(randomTarget));
-                        if (!isSameBloc || Math.random() < 0.1) {
+                        if (!isSameBloc || Math.random() < 0.05) {
                             warStatus[bot][randomTarget] = true;
                             warStatus[randomTarget][bot] = true;
                             if(randomTarget === playerCountry) {
@@ -564,9 +581,9 @@
                 botProvs.forEach(pId => {
                     if (provinceData[pId].hasDivision) {
                         let neighbors = findNeighborProvinces(pId);
-                        // ШІ МОЖЕ АТАКУВАТИ ТІЛЬКИ СЕРЕД ТИХ СУСІДІВ, З ЯКИМИ СУВОРО Є СТАТУС ВІЙНИ
                         let enemyNeighbors = neighbors.filter(nId => warStatus[bot][provinceData[nId].country] === true);
-                        if (enemyNeighbors.length > 0 && Math.random() < 0.3) {
+                        // 📉 ЗНИЖЕНО ШАНС АТАКИ ВІЙСЬК ШІ з 0.3 до 0.12 для стабільності
+                        if (enemyNeighbors.length > 0 && Math.random() < 0.12) {
                             let targetAttack = enemyNeighbors[Math.floor(Math.random() * enemyNeighbors.length)];
                             executeBattleCombat(pId, targetAttack);
                         }
@@ -594,12 +611,10 @@
             return neighbors;
         }
 
-        // СИСТЕМА БОЮ З ОБОВ'ЯЗКОВОЮ ВІЙНОЮ
         function executeBattleCombat(fromId, toId) {
             let attackerCountry = provinceData[fromId].country;
             let defenderCountry = provinceData[toId].country;
 
-            // СУВОРА ПЕРЕВІРКА: Має бути війна як для гравця, так і для ШІ!
             if (!warStatus[attackerCountry][defenderCountry]) {
                 if (attackerCountry === playerCountry) {
                     alert("Вам необхідно спочатку оголосити війну цій країні через дипломатичну панель!");
@@ -623,7 +638,7 @@
                     provinceData[fromId].domDivisionRef.remove();
                     provinceData[fromId].hasDivision = false;
                 }
-                spawnDivisionVisual(toId, attackerCountry, 'infantry');
+                spawnDivisionVisual(toId, attackerCountry, attackerCountry === playerCountry ? getBestAvailableInfantryType() : 'infantry');
                 
                 if (attackerCountry === playerCountry) {
                     showNotification(`⚔️ Ми захопили провінцію у ${countryNames[defenderCountry]}!`);
@@ -668,7 +683,7 @@
             updateFocusTick();
             runAICampaignLogic();
 
-            if (Math.random() < 0.015) triggerRandomPoliticalEvent();
+            if (Math.random() < 0.01) triggerRandomPoliticalEvent();
         }
 
         function triggerRandomPoliticalEvent() {
@@ -684,7 +699,6 @@
             eventBtnNo.onclick = function() { eventModal.style.display = "none"; };
         }
 
-        // Трансформації камери
         function updateMapTransform() { container.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomScale})`; }
         mapArea.addEventListener('mousedown', function(e) { isDragging = true; hasMovedMouse = false; startX = e.clientX - panX; startY = e.clientY - panY; });
         window.addEventListener('mousemove', function(e) { if (!isDragging) return; hasMovedMouse = true; panX = e.clientX - startX; panY = e.clientY - startY; updateMapTransform(); });
@@ -703,7 +717,6 @@
             btnArmy.classList.remove('active'); btnTank.classList.remove('active'); btnCiv.classList.remove('active'); btnMil.classList.remove('active'); btnBunker.classList.remove('active'); 
         }
 
-        // Завантаження мапи та слухачі
         fetch('map.svg')
             .then(response => response.text())
             .then(svgData => {
@@ -729,7 +742,6 @@
                         if (provinceData[element.id].hasOilDeposit) createOilVisualMark(element.id);
                     });
 
-                    // ЗАВАНТАЖЕННЯ СТАРТОВОЇ МАПИ З FIREBASE (Працює завжди на старті)
                     database.ref('global_map/start_template').on('value', (snapshot) => {
                         const data = snapshot.val();
                         if (data) {
@@ -750,26 +762,20 @@
                         const province = provinceData[provinceId];
                         if (!province) return;
 
-                        // РЕЖИМ РЕДАКТОРА СТАРТОВОЇ МАПИ (Збереження шаблону)
                         if (isSandboxEditorMode) {
                             const selectedTargetCountry = editorCountrySelect.value;
                             province.country = selectedTargetCountry;
                             target.style.fill = countryColors[selectedTargetCountry] || '#2e2e35';
-                            
-                            // Записуємо у Firebase саме у гілку шаблону стартової мапи
                             database.ref('global_map/start_template').child(provinceId).set(selectedTargetCountry);
                             return; 
                         }
 
                         if (!isGameStarted) return;
 
-                        // Кліки у звичайній грі
                         if (province.country !== playerCountry) {
-                            // Рух та Атака (тільки якщо провінцію було вибрано раніше)
                             if (selectedProvinceId && provinceData[selectedProvinceId].hasDivision) {
                                 let pathNeighbors = findNeighborProvinces(selectedProvinceId);
                                 if (pathNeighbors.includes(provinceId)) {
-                                    // Знімаємо підсвітку
                                     if(provinceData[selectedProvinceId].domDivisionRef) {
                                         provinceData[selectedProvinceId].domDivisionRef.classList.remove('selected-unit');
                                     }
@@ -786,7 +792,6 @@
                             return;
                         }
 
-                        // Клік по власній провінції з підрозділом
                         if (province.hasDivision) {
                             if (selectedProvinceId && provinceData[selectedProvinceId].domDivisionRef) {
                                 provinceData[selectedProvinceId].domDivisionRef.classList.remove('selected-unit');
@@ -797,17 +802,16 @@
                             return;
                         }
 
-                        // Будівництво
                         if (currentMode.startsWith('build_')) {
                             if (coins < buildingPrice) return;
                             let slotIndex = (province.civFactories + province.milFactories + province.oilWells + province.bunkers);
                             if (slotIndex >= 4) return alert("Провінція повністю забудована!");
 
-                            if (currentMode === 'build_civ') { province.civFactories++; createFactoryVisual(provinceId, 'civ', ' Civ '); }
+                            if (currentMode === 'build_civ') { province.civFactories++; createFactoryVisual(provinceId, 'civ', '🏢'); }
                             else if (currentMode === 'build_mil') {
-                                if (province.hasOilDeposit) { province.oilWells++; createFactoryVisual(provinceId, 'oil', ' Oil '); } 
-                                else { province.milFactories++; createFactoryVisual(provinceId, 'mil', ' Mil '); }
-                            } else if (currentMode === 'build_bunker') { province.bunkers++; createFactoryVisual(provinceId, 'bunker', ' Bun '); }
+                                if (province.hasOilDeposit) { province.oilWells++; createFactoryVisual(provinceId, 'oil', '🛢️'); } 
+                                else { province.milFactories++; createFactoryVisual(provinceId, 'mil', '🏭'); }
+                            } else if (currentMode === 'build_bunker') { province.bunkers++; createFactoryVisual(provinceId, 'bunker', '🛡️'); }
                             
                             coins -= buildingPrice;
                             updateEconomyDisplay();
@@ -832,23 +836,30 @@
             };
         }
 
+        // 🎨 ВІДПОВІДНІСТЬ ЖИВИХ ІКОНОК ЗАМІСТЬ БУКВ ДЛЯ ДИВІЗІЙ
         function spawnDivisionVisual(id, countryCode, type) {
             const center = getProvinceCenter(id); if (!center) return;
             const divEl = document.createElement('div');
-            divEl.className = type.includes('tank') ? 'division-indicator tank' : 'division-indicator';
+            divEl.className = (type.includes('tank') || type.includes('heavy')) ? 'division-indicator tank' : 'division-indicator';
             divEl.style.left = `${center.x}px`; divEl.style.top = `${center.y}px`;
-            divEl.textContent = type.includes('tank') ? ' Tanks ' : ' Inf ';
+            
+            // Заміна букв на емодзі-значки
+            if (type === 'heavy_tank') divEl.textContent = '🦾';
+            else if (type === 'medium_tank' || type === 'tank') divEl.textContent = '🚜';
+            else if (type === 'guards') divEl.textContent = '⭐';
+            else divEl.textContent = '🪖';
+
             container.appendChild(divEl);
             provinceData[id].hasDivision = true; provinceData[id].domDivisionRef = divEl;
         }
 
-        function createFactoryVisual(id, type, char) {
+        function createFactoryVisual(id, type, icon) {
             const center = getProvinceCenter(id); if (!center) return;
             const factory = document.createElement('div');
             factory.className = `factory-indicator ${type}`;
             let slotIndex = (provinceData[id].civFactories + provinceData[id].milFactories + provinceData[id].oilWells + provinceData[id].bunkers);
             factory.style.left = `${center.x + (slotIndex - 2.5) * 24}px`; factory.style.top = `${center.y + 14}px`;
-            factory.textContent = char;
+            factory.textContent = icon;
             container.appendChild(factory);
         }
 
@@ -887,13 +898,24 @@
             showNotification(`🔥 Оголошено війну державі ${countryNames[selectedDiplomacyCountry]}!`);
         });
 
-        // Наука
+        // 🔬 ЛОГІКА ТЕХНОЛОГІЙ ТА ВІДДКРИТТЯ НАСТУПНИХ ТИРІВ
         function updateTechListUI() {
             if(isSandboxEditorMode) return;
             techListContainer.innerHTML = '';
             for (const key in playerTechs) {
-                const t = playerTechs[key]; const card = document.createElement('div');
-                card.className = `tech-card ${t.status}`; card.innerHTML = `<div><b>${t.name}</b></div><div style="font-size:9px;color:#999;">${t.desc}</div>`;
+                const t = playerTechs[key];
+                
+                // Перевірка залежностей технологій (якщо батьківська тех не вивчена, закриваємо)
+                if (t.req && playerTechs[t.req].status !== 'done') {
+                    t.status = 'locked';
+                } else if (t.status === 'locked' && playerTechs[t.req].status === 'done') {
+                    t.status = 'avail';
+                }
+
+                const card = document.createElement('div');
+                card.className = `tech-card ${t.status}`; 
+                card.innerHTML = `<div><b>${t.name}</b></div><div style="font-size:9px;color:#999;">${t.desc}</div>`;
+                
                 if (t.status === 'avail') {
                     card.addEventListener('click', () => {
                         let freeSlot = scienceSlots.find(s => s.activeTech === null);
@@ -928,30 +950,20 @@
 
         setInterval(runGameTick, 1000);
 
-        // ОБРОБКА СТАРТОВОГО МЕНЮ
         btnGlobalEditorMode.onclick = function() {
-            isSandboxEditorMode = true;
-            isGameStarted = false;
-            
-            // Активуємо CSS-клас редактора для приховування значків нафти
+            isSandboxEditorMode = true; isGameStarted = false;
             document.body.classList.add('editor-active');
-            
-            // Налаштування інтерфейсу для редактора
             document.getElementById('main-game-title').textContent = "🛠️ РЕДАКТОР СТАРТУ";
             document.getElementById('main-game-subtitle').textContent = "Клік по провінції малює її власника назавжди";
-            playerBadge.textContent = "Режим редактора";
-            playerBadge.style.backgroundColor = "#eab308";
-            playerBadge.style.color = "#000";
+            playerBadge.textContent = "Режим редактора"; playerBadge.style.backgroundColor = "#eab308"; playerBadge.style.color = "#000";
             
-            // Приховуємо непотрібні панелі гри
             document.getElementById('focus-sidebar-section').style.display = 'none';
             document.getElementById('economy-sidebar-section').style.display = 'none';
             document.getElementById('military-sidebar-section').style.display = 'none';
             document.getElementById('science-sidebar-section').style.display = 'none';
             dipPanel.style.display = 'none';
             
-            editorSubpanel.style.display = 'block';
-            startScreen.style.display = 'none';
+            editorSubpanel.style.display = 'block'; startScreen.style.display = 'none';
             showNotification("🛠️ Запущено режим розмальовки стартової карти! Нафту тимчасово приховано.");
         };
 
@@ -962,12 +974,8 @@
                 playerBadge.textContent = countryNames[playerCountry];
                 playerBadge.style.backgroundColor = countryColors[playerCountry];
                 startScreen.style.display = 'none'; 
-                isGameStarted = true;
-                isSandboxEditorMode = false;
-                
-                // Переконуємося, що в ігровому режимі нафта видима
+                isGameStarted = true; isSandboxEditorMode = false;
                 document.body.classList.remove('editor-active');
-                
                 updateTechListUI(); updateEconomyDisplay();
             }
         };

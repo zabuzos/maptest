@@ -414,6 +414,7 @@
         let selectedProvinceId = null;
         let selectedDiplomacyCountry = null;
         let buildingPrice = 30;
+        let isFirebaseMapLoaded = false;
 
         let infantryAttackBonus = 1.0; 
 
@@ -685,7 +686,7 @@
             else if (focusKey === 'ua_kuban') {
                 triggerUltimatumEvent({
                     title: "🌾 Ультиматум щодо Кубані",
-                    desc: "Україна вимагає повернення етнічних теритолів Кубані під свій контроль.",
+                    desc: "Україна вимагає повернення етнічних територій Кубані під свій контроль.",
                     targetCountry: 'SOV',
                     onYes: () => {
                         let eastUA = getEasternmostProvinces('UA', 1)[0];
@@ -700,6 +701,7 @@
                     onNo: () => { declareWar('UA', 'SOV'); }
                 });
             }
+            // (Інші умови фокусів залишаються ідентичними)...
             updateEconomyDisplay();
         }
 
@@ -718,7 +720,7 @@
         function updateMapTransform() { container.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomScale})`; }
 
         mapArea.addEventListener('mousedown', function(e) {
-            if (e.target.closest('.zoom-controls') || e.target.closest('#diplomacy-panel') || e.target.closest('.modal-overlay')) return;
+            if (!isGameStarted || e.target.closest('.zoom-controls') || e.target.closest('#diplomacy-panel') || e.target.closest('.modal-overlay')) return;
             isDragging = true; hasMovedMouse = false; startX = e.clientX - panX; startY = e.clientY - panY;
         });
         window.addEventListener('mousemove', function(e) {
@@ -727,7 +729,7 @@
         window.addEventListener('mouseup', function() { isDragging = false; });
 
         mapArea.addEventListener('wheel', function(e) {
-            e.preventDefault();
+            if (!isGameStarted) return; e.preventDefault();
             const rect = mapArea.getBoundingClientRect();
             const mX = e.clientX - rect.left; const mY = e.clientY - rect.top;
             const mapX = (mX - panX) / zoomScale; const mapY = (mY - panY) / zoomScale;
@@ -810,26 +812,25 @@
                                 }
                             }
                         }
+                        isFirebaseMapLoaded = true;
                     });
                     // ===================================================
 
                     mapLayer.addEventListener('click', function(event) {
-                        if (hasMovedMouse) return;
+                        if (!isGameStarted || hasMovedMouse || !isFirebaseMapLoaded) return;
                         const target = event.target;
                         if (!['path', 'polygon', 'polyline', 'rect', 'ellipse'].includes(target.tagName.toLowerCase())) return;
                         
                         const provinceId = target.id; const province = provinceData[provinceId];
                         if (!province || province.isMoving) return;
 
-                        // --- ФІКС: ЛОГІКА РЕДАКТОРА КОРДОНІВ ПРАЦЮЄ ЗАВЖДИ ДЛЯ БУДЬ-ЯКОЇ ПРОВІНЦІЇ ---
+                        // --- ЛОГІКА РЕДАКТОРА КОРДОНІВ ---
                         if (currentMode === 'editor') {
                             const selectedTargetCountry = editorCountrySelect.value;
+                            // Миттєво зберігаємо нову країну-власника в Firebase назавжди
                             database.ref('global_map/provinces/' + provinceId).set(selectedTargetCountry);
                             return; 
                         }
-
-                        // Вся інша ігрова логіка потребує старту гри
-                        if (!isGameStarted) return;
 
                         if (currentMode.startsWith('build_')) {
                             if (province.country !== playerCountry) return alert("Будувати можна лише на своїй території!");
@@ -973,10 +974,12 @@
         function cancelSelection() { selectedProvinceId = null; document.querySelectorAll('.division-indicator').forEach(el => el.classList.remove('selected')); }
 
         function updateEconomyDisplay() {
-            let tCiv = 0;
+            if (!isGameStarted) return;
+            let tCiv = 0, tMil = 0, tWells = 0, tDivs = 0;
             for (const id in provinceData) {
                 if (provinceData[id].country === playerCountry) {
                     tCiv += provinceData[id].civFactories;
+                    if (provinceData[id].hasDivision && provinceData[id].divisionOwner === playerCountry) tDivs++;
                 }
             }
             incomeDisplay.textContent = `+${tCiv * 5}`;
@@ -1017,6 +1020,7 @@
 
         setInterval(function() {
             if (!isGameStarted) return;
+            coins += (window.currentCalculatedIncome || 0);
             updateScienceTick(); updateFocusTick();
         }, 1000);
 

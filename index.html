@@ -1324,8 +1324,7 @@
         };
     });
 
-    // ==========================================
-// // ==========================================
+  // ==========================================
 // FIREBASE CONFIGURATION & MAP EDITOR LOGIC
 // ==========================================
 
@@ -1339,8 +1338,10 @@ const firebaseConfig = {
   messagingSenderId: "861315182995",
   appId: "1:861315182995:web:926ca3ec63b9a0d4b6f866"
 };
+
 // Ініціалізація Firebase
 firebase.initializeApp(firebaseConfig);
+
 const db = firebase.database();
 const mapRef = db.ref("global_start_map");
 
@@ -1351,84 +1352,105 @@ const countryCodesList = Object.keys(countryNames).concat(['NEUTRAL']);
 
 // 2. Клікнули на кнопку редактора в меню
 document.getElementById('firebase-editor-btn').onclick = function() {
+
     isEditorMode = true;
     playerCountry = 'UA'; // Тимчасовий тэг для уникнення помилок інтерфейсу
-    
+
     // Приховуємо стартовий екран
-    startScreen.style.display = 'none'; 
+    startScreen.style.display = 'none';
     isGameStarted = true;
-    
+
     // Візуально повідомляємо, що це режим редактора
     playerBadge.textContent = "🛠 РЕЖИМ РЕДАКТОРА";
     playerBadge.style.backgroundColor = "#eab308";
     playerBadge.style.color = "black";
-    
+
     // Видаляємо всі ігрові елементи, які заважають редагуванню
-    document.querySelectorAll('.division-indicator, .factory-indicator, .oil-deposit-mark, .battle-indicator').forEach(el => el.remove());
-    if(milPanel) milPanel.style.display = 'none';
-    if(dipPanel) dipPanel.style.display = 'none';
-    
+    document.querySelectorAll(
+        '.division-indicator, .factory-indicator, .oil-deposit-mark, .battle-indicator'
+    ).forEach(el => el.remove());
+
+    if (milPanel) milPanel.style.display = 'none';
+    if (dipPanel) dipPanel.style.display = 'none';
+
     // Вимикаємо інтервальні процеси штучного інтелекту, атак та економіки
-    // Перезаписуємо глобальні функції, щоб боти не ходили та події не генерувались
     window.updateEconomyDisplay = function() {};
     window.declareWar = function() {};
-    
-    alertContainer.innerHTML = <div class="war-warning" style="border-color:#eab308; background: rgba(234,179,8,0.1);">🛠 Режим редагування мапи активовано. Клікніть на будь-яку провінцію, щоб змінити її стартову приналежність. Дані зберігаються в реальному часі для всіх!</div>;
+
+    alertContainer.innerHTML = `
+        <div class="war-warning"
+             style="border-color:#eab308; background:rgba(234,179,8,0.1);">
+            🛠 Режим редагування мапи активовано.
+            Клікніть на будь-яку провінцію, щоб змінити її стартову приналежність.
+            Дані зберігаються в реальному часі для всіх!
+        </div>
+    `;
 };
+
 // 3. Перехоплення кліку на провінцію для редактора
-// Код вбудовується перед стандартною ігровою логікою кліку на SVG елементи
 document.getElementById('map-container').addEventListener('click', function(e) {
+
     if (!isEditorMode) return;
-    
+
     let path = e.target.closest('path, polygon, rect');
     if (!path) return;
-    
-    // Знаходимо ID провінції (зазвичай атрибут id або data-id)
-    let provId = path.getAttribute('id')  path.getAttribute('data-id');
+
+    // Знаходимо ID провінції
+    let provId = path.getAttribute('id') || path.getAttribute('data-id');
     if (!provId) return;
-    
+
     let currentData = provinceData[provId];
     if (!currentData) return;
-    
-    // Визначаємо поточний індекс країни та перемикаємо на наступну зі списку
-    let currentCountry = currentData.country  'NEUTRAL';
-    let nextIndex = (countryCodesList.indexOf(currentCountry) + 1) % countryCodesList.length;
+
+    // Поточна країна
+    let currentCountry = currentData.country || 'NEUTRAL';
+
+    // Наступна країна зі списку
+    let nextIndex =
+        (countryCodesList.indexOf(currentCountry) + 1) %
+        countryCodesList.length;
+
     let nextCountry = countryCodesList[nextIndex];
-    
-    // Оновлюємо локально для миттєвого візуального ефекту
+
+    // Оновлюємо локально
     currentData.country = nextCountry;
-    path.style.fill = countryColors[nextCountry]  '#2e2e35';
-    
+
+    path.style.fill =
+        countryColors[nextCountry] || '#2e2e35';
+
     // Відправляємо зміни у Firebase
     mapRef.child(provId).set({
         country: nextCountry
     });
-}, true); // Використовуємо true (capturing phase), щоб перехопити клік до обробки грою
 
-// 4. Слухач Firebase для завантаження та оновлення мапи на старті гри у всіх клієнтів
+}, true);
+
+// 4. Слухач Firebase для завантаження та оновлення мапи
 mapRef.on('value', function(snapshot) {
+
     const firebaseMapData = snapshot.val();
     if (!firebaseMapData) return;
-    
-    // Проходимо по отриманих з бази даних провінціях
+
     Object.keys(firebaseMapData).forEach(provId => {
+
         const fv = firebaseMapData[provId];
-        
-        // Якщо гра вже йде (і ми не в редакторі), ігноруємо стартові зміни Firebase, 
-        // щоб захоплені під час війни території не скидалися!
+
+        // Якщо гра вже йде і ми не в редакторі — ігноруємо
         if (isGameStarted && !isEditorMode) return;
-        
-        // Оновлюємо об'єкт провінції в пам'яті гри
+
         if (provinceData[provId]) {
+
             provinceData[provId].country = fv.country;
-            
-            // Оновлюємо колір на SVG карті
+
             let path = document.getElementById(provId);
+
             if (path) {
-                path.style.fill = countryColors[fv.country]  '#2e2e35';
+                path.style.fill =
+                    countryColors[fv.country] || '#2e2e35';
             }
         }
     });
+
 });
 </script>
 </body>

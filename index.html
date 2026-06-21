@@ -222,12 +222,26 @@
 <body>
 
 
-    <div class="start-screen" id="start-screen">
+   <div class="start-screen" id="start-screen">
     <h2>Оберіть свою націю (Велика стратегічна карта)</h2>
-    <button id="firebase-editor-btn" style="background: #eab308; color: black; border: none; padding: 10px 20px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-bottom: 10px; font-size: 14px; transition: 0.2s;">
-        🛠 Увійти в Редактор Стартової Мапи (Firebase)
+    
+    <button id="firebase-editor-btn" style="background: #eab308; color: black; border: none; padding: 12px 24px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-bottom: 15px; font-size: 14px; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+        🛠 Відкрити Редактор Стартової Мапи (Firebase)
     </button>
+
     <div class="country-grid" id="start-country-grid"></div>
+</div>
+
+<div id="editor-tools-panel" style="display: none; position: fixed; top: 10px; left: 50%; transform: translateX(-50%); background: #18181b; border: 2px solid #eab308; padding: 15px; border-radius: 8px; z-index: 99999; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 80%; max-width: 700px; text-align: center;">
+    <h3 style="margin: 0 0 10px 0; color: #eab308; font-size: 16px;">🛠 РЕДАКТОР СТАРТОВОЇ МАПИ</h3>
+    <p style="margin: 0 0 10px 0; font-size: 12px; color: #a1a1aa;">Оберіть країну зі списку нижче, а потім натискайте на провінції на мапі, щоб змінити їх власника:</p>
+    
+    <div id="editor-countries-selector" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 15px;"></div>
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #27272a; padding-top: 10px;">
+        <span style="font-size: 13px;">Поточний інструмент: <strong id="active-editor-brush" style="color: #fff; background: #27272a; padding: 3px 8px; border-radius: 4px;">Не обрано</strong></span>
+        <button onclick="location.reload()" style="background: #ef4444; color: white; border: none; padding: 6px 12px; font-size: 12px; font-weight: bold; border-radius: 4px; cursor: pointer;">Вийти з редактора (Перезавантажити)</button>
+    </div>
 </div>
 
     <div class="modal-overlay" id="focus-modal-overlay">
@@ -1324,119 +1338,189 @@
                 updateEconomyDisplay();
             }
         };
-          // ==========================================
-// FIREBASE CONFIGURATION & MAP EDITOR LOGIC
-// ==========================================
+    // ========================================================
+// ПРАВИЛЬНИЙ FIREBASE РЕДАКТОР СТАРТОВОЇ МАПИ БЕЗ НАПАДІВ
+// ========================================================
 
-// 1. Сюди вставте свій Firebase Config, який надає консоль Firebase:
 const firebaseConfig = {
-  apiKey: "AIzaSyBG54L-ISILxa5RajGY99P7cBOlHvqsLgI",
-  authDomain: "the-animals-wars-1.firebaseapp.com",
-  databaseURL: "https://the-animals-wars-1-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "the-animals-wars-1",
-  storageBucket: "the-animals-wars-1.firebasestorage.app",
-  messagingSenderId: "861315182995",
-  appId: "1:861315182995:web:926ca3ec63b9a0d4b6f866"
+    apiKey: "AIzaSyBG54L-ISILxa5RajGY99P7cBOlHvqsLgI",
+    authDomain: "the-animals-wars-1.firebaseapp.com",
+    databaseURL: "https://the-animals-wars-1-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "the-animals-wars-1",
+    storageBucket: "the-animals-wars-1.firebasestorage.app",
+    messagingSenderId: "861315182995",
+    appId: "1:861315182995:web:926ca3ec63b9a0d4b6f866"
 };
 
 // Ініціалізація Firebase
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 
 const db = firebase.database();
 const mapRef = db.ref("global_start_map");
 
 let isEditorMode = false;
+let selectedEditorCountry = null;
 
-// Отримання списку всіх кодів країн для перемикання по кліку
-const countryCodesList = Object.keys(countryNames).concat(['NEUTRAL']);
-
-// 2. Клікнули на кнопку редактора в меню
+// Функція увімкнення редактора
 document.getElementById('firebase-editor-btn').onclick = function() {
 
     isEditorMode = true;
-    playerCountry = 'UA'; // Тимчасовий тэг для уникнення помилок інтерфейсу
-
-    // Приховуємо стартовий екран
-    startScreen.style.display = 'none';
     isGameStarted = true;
+    playerCountry = 'NEUTRAL';
 
-    // Візуально повідомляємо, що це режим редактора
-    playerBadge.textContent = "🛠 РЕЖИМ РЕДАКТОРА";
-    playerBadge.style.backgroundColor = "#eab308";
-    playerBadge.style.color = "black";
+    document.getElementById('start-screen').style.display = 'none';
 
-    // Видаляємо всі ігрові елементи, які заважають редагуванню
+    const toolsPanel = document.getElementById('editor-tools-panel');
+    toolsPanel.style.display = 'block';
+
+    // Блокуємо війну та AI
+    window.declareWar = function() {
+        return false;
+    };
+
+    window.updateEconomyDisplay = function() {};
+
+    // Прибираємо ігрові іконки
     document.querySelectorAll(
         '.division-indicator, .factory-indicator, .oil-deposit-mark, .battle-indicator'
     ).forEach(el => el.remove());
 
-    if (milPanel) milPanel.style.display = 'none';
-    if (dipPanel) dipPanel.style.display = 'none';
+    // Ховаємо панелі
+    if (typeof milPanel !== 'undefined' && milPanel) {
+        milPanel.style.display = 'none';
+    }
 
-    // Вимикаємо інтервальні процеси штучного інтелекту, атак та економіки
-    window.updateEconomyDisplay = function() {};
-    window.declareWar = function() {};
+    if (typeof dipPanel !== 'undefined' && dipPanel) {
+        dipPanel.style.display = 'none';
+    }
 
-    alertContainer.innerHTML = `
-        <div class="war-warning"
-             style="border-color:#eab308; background:rgba(234,179,8,0.1);">
-            🛠 Режим редагування мапи активовано.
-            Клікніть на будь-яку провінцію, щоб змінити її стартову приналежність.
-            Дані зберігаються в реальному часі для всіх!
-        </div>
-    `;
-};
+    // Оновлюємо бейдж
+    if (playerBadge) {
+        playerBadge.textContent = "🛠 РЕЖИМ РЕДАКТОРА";
+        playerBadge.style.backgroundColor = "#eab308";
+        playerBadge.style.color = "black";
+    }
 
-// 3. Перехоплення кліку на провінцію для редактора
-document.getElementById('map-container').addEventListener('click', function(e) {
+    // Генеруємо список країн
+    const container =
+        document.getElementById('editor-countries-selector');
 
-    if (!isEditorMode) return;
+    container.innerHTML = '';
 
-    let path = e.target.closest('path, polygon, rect');
-    if (!path) return;
-
-    // Знаходимо ID провінції
-    let provId = path.getAttribute('id') || path.getAttribute('data-id');
-    if (!provId) return;
-
-    let currentData = provinceData[provId];
-    if (!currentData) return;
-
-    // Поточна країна
-    let currentCountry = currentData.country || 'NEUTRAL';
-
-    // Наступна країна зі списку
-    let nextIndex =
-        (countryCodesList.indexOf(currentCountry) + 1) %
-        countryCodesList.length;
-
-    let nextCountry = countryCodesList[nextIndex];
-
-    // Оновлюємо локально
-    currentData.country = nextCountry;
-
-    path.style.fill =
-        countryColors[nextCountry] || '#2e2e35';
-
-    // Відправляємо зміни у Firebase
-    mapRef.child(provId).set({
-        country: nextCountry
+    Object.keys(countryNames).forEach(code => {
+        createEditorBrushButton(
+            container,
+            code,
+            countryNames[code],
+            countryColors[code]
+        );
     });
 
-}, true);
+    createEditorBrushButton(
+        container,
+        'NEUTRAL',
+        'Нейтральні',
+        '#2e2e35'
+    );
+};
 
-// 4. Слухач Firebase для завантаження та оновлення мапи
+// Створення кнопки країни
+function createEditorBrushButton(container, code, name, color) {
+
+    const btn = document.createElement('button');
+
+    btn.textContent = name;
+
+    btn.style.cssText = `
+        background: ${color};
+        color: #fff;
+        border: 2px solid transparent;
+        padding: 6px 12px;
+        font-weight: bold;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        text-shadow: 1px 1px 2px #000;
+    `;
+
+    btn.onclick = function() {
+
+        document
+            .querySelectorAll('#editor-countries-selector button')
+            .forEach(b => b.style.borderColor = 'transparent');
+
+        btn.style.borderColor = '#ffffff';
+
+        selectedEditorCountry = code;
+
+        const brushStatus =
+            document.getElementById('active-editor-brush');
+
+        brushStatus.textContent = name;
+        brushStatus.style.background = color;
+    };
+
+    container.appendChild(btn);
+}
+
+// Малювання по карті
+document.getElementById('map-container').addEventListener(
+    'click',
+    function(e) {
+
+        if (!isEditorMode) return;
+
+        if (!selectedEditorCountry) {
+            alert('Спочатку оберіть країну на верхній панелі редактора!');
+            return;
+        }
+
+        let path = e.target.closest('path, polygon, rect');
+
+        if (!path) return;
+
+        let provId =
+            path.getAttribute('id') ||
+            path.getAttribute('data-id');
+
+        if (!provId) return;
+
+        let currentData = provinceData[provId];
+
+        if (!currentData) return;
+
+        // Локально оновлюємо
+        currentData.country = selectedEditorCountry;
+
+        path.style.fill =
+            countryColors[selectedEditorCountry] ||
+            '#2e2e35';
+
+        // Зберігаємо у Firebase
+        mapRef.child(provId).set({
+            country: selectedEditorCountry
+        });
+
+    },
+    true
+);
+
+// Завантаження стартової мапи з Firebase
 mapRef.on('value', function(snapshot) {
 
     const firebaseMapData = snapshot.val();
+
     if (!firebaseMapData) return;
 
     Object.keys(firebaseMapData).forEach(provId => {
 
         const fv = firebaseMapData[provId];
 
-        // Якщо гра вже йде і ми не в редакторі — ігноруємо
-        if (isGameStarted && !isEditorMode) return;
+        if (isGameStarted && !isEditorMode) {
+            return;
+        }
 
         if (provinceData[provId]) {
 
@@ -1446,11 +1530,11 @@ mapRef.on('value', function(snapshot) {
 
             if (path) {
                 path.style.fill =
-                    countryColors[fv.country] || '#2e2e35';
+                    countryColors[fv.country] ||
+                    '#2e2e35';
             }
         }
     });
-
 });
     });
 

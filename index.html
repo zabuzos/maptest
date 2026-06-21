@@ -1325,6 +1325,7 @@
     });
 
     // ==========================================
+// // ==========================================
 // FIREBASE CONFIGURATION & MAP EDITOR LOGIC
 // ==========================================
 
@@ -1372,7 +1373,8 @@ document.getElementById('firebase-editor-btn').onclick = function() {
     window.updateEconomyDisplay = function() {};
     window.declareWar = function() {};
     
-alertContainer.innerHTML = '<div class="war-warning" style="border-color:#eab308; background: rgba(234,179,8,0.1);">🛠 Режим редагування мапи активовано. Клікніть на будь-яку провінцію, щоб змінити її стартову приналежність. Дані зберігаються в реальному часі для всіх!</div>';};
+    alertContainer.innerHTML = <div class="war-warning" style="border-color:#eab308; background: rgba(234,179,8,0.1);">🛠 Режим редагування мапи активовано. Клікніть на будь-яку провінцію, щоб змінити її стартову приналежність. Дані зберігаються в реальному часі для всіх!</div>;
+};
 // 3. Перехоплення кліку на провінцію для редактора
 // Код вбудовується перед стандартною ігровою логікою кліку на SVG елементи
 document.getElementById('map-container').addEventListener('click', function(e) {

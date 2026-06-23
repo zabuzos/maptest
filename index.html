@@ -484,258 +484,49 @@
         const provinceData = {}; 
 
         // --- БАЗА ДАНИХ НАЦІОНАЛЬНИХ ФОКУСІВ ---
-        const focusTrees = {
-            'UA': {
-                'ua_zsu': { name: '🪖 Створити ЗСУ', time: 15, req: null, excl: null, desc: '+15% до атаки піхоти назавжди, створює 2 моторизовані піхоти на сході.' },
-                'ua_eu': { name: '🇪🇺 Союз із ЄС', time: 25, req: 'ua_zsu', excl: 'ua_cis', desc: 'Підвищує відносини з країнами ЄС на +20. Відкриває претензії на Кубань.' },
-                'ua_cis': { name: '🤝 Союз із СНД', time: 25, req: 'ua_zsu', excl: 'ua_eu', desc: 'Підвищує відносини з країнами СНД на +20. Миттєво виділяє грант +300 монет.' },
-                'ua_kuban': { name: '🌾 Атака на Кубань', time: 35, req: 'ua_eu', excl: null, desc: 'Надсилає Росії ультиматум з вимогою передати Кубань. Відмова означає війну!' }
-            },
-            'SOV': {
-                'sov_alliance_by': { name: '🇧🇾 Союз із Білоруссю', time: 20, req: null, excl: null, desc: 'Покращує дипломатичні відносини з Білоруссю.' },
-                'sov_union_by': { name: '🏰 Унія з Білоруссю', time: 30, req: 'sov_alliance_by', excl: null, desc: 'Повного поглинання та анексія Білорусі.' },
-                'sov_ultimatum': { name: '🚨 Ультиматум Україні', time: 40, req: 'sov_union_by', excl: null, desc: 'Вимога передати Крим та Донбас. Якщо Україна відмовляється — почнеться війна.' }
-            },
-            'RO': {
-                'ro_sov_md': { name: '🇲🇩 Союз з Молдовою', time: 20, req: null, excl: null, desc: 'Покращує дипломатичні відносини з Молдовою.' },
-                'ro_annex_md': { name: '🍇 Приєднання Молдови', time: 30, req: 'ro_sov_md', excl: null, desc: 'Мирне включення територій Молдови до Румунії.' },
-                'ro_join_eu': { name: '🇪🇺 Вступ до ЄС', time: 25, req: null, excl: null, desc: 'Підвищує дипломатичні відносини з усіма країнами ЄС на +25.' }
-            },
-            'GENERIC': {
-                'gen_ind': { name: '🏗️ Індустріалізація', time: 20, req: null, excl: null, desc: 'Будує 1 безкоштовну цивільну фабрику у випадковому регіоні.' },
-                'gen_mil': { name: '🏭 Мілітаризація', time: 20, req: 'gen_ind', excl: null, desc: 'Будує 1 військову фабрику та дає субсидію +100 монет.' },
-                'gen_doc': { name: '⚔️ Військова доктрина', time: 30, req: 'gen_mil', excl: null, desc: 'Покращує бойовий виучок армії (+10% бойової сили).' }
-            }
-           
-    // ... ваші старі фокуси для інших країн (не видаляйте їх) ...
-
-    // СРСР / Росія
-    "SOV": [
-        {
-            id: "sov_ultimatum_fin",
-            title: "Ультиматум Фінляндії",
-            desc: "Надіслати ультиматум Фінляндії. У разі згоди ми отримаємо 100 монет, інакше — війна!",
-            cost: 35,
-            effect: function() {
-                // Перевіряємо, чи є гравець Фінляндією, чи це ШІ
-                let finPlayer = (playerCountry === "FIN");
-                let accept = false;
-
-                if (finPlayer) {
-                    accept = confirm("СРСР висуває нам ультиматум! Віддати 100 монет в обмін на мир?");
-                } else {
-                    // ШІ Фінляндія погоджується з шансом 30%, або якщо має гроші
-                    accept = (countryData["FIN"] && countryData["FIN"].money >= 100 && Math.random() < 0.3);
-                }
-
-                if (accept) {
-                    if (countryData["FIN"]) {
-                        countryData["FIN"].money = Math.max(0, countryData["FIN"].money - 100);
-                    }
-                    countryData["SOV"].money += 100;
-                    alert("Фінляндія прийняла ультиматум та виплатила 100 монет СРСР.");
-                } else {
-                    alert("Фінляндія відхилила ультиматум! Починається війна!");
-                    // Логіка оголошення війни (якщо у вас є масив воєн або дипломатії)
-                    // Наприклад: declareWar("SOV", "FIN"); 
-                    // Або просто сповіщення, якщо війна ведеться через механіку кліків
-                }
-                updateUI();
-            }
+     const focusTrees = {
+        'UA': {
+            'ua_zsu': { name: '🪖 Створити ЗСУ', time: 15, req: null, excl: null, desc: '+15% до атаки піхоти назавжди, створює 2 моторизовані піхоти на сході.' },
+            'ua_eu': { name: '🇪🇺 Союз із ЄС', time: 25, req: 'ua_zsu', excl: 'ua_cis', desc: 'Підвищує відносини з країнами ЄС на +20. Відкриває претензії на Кубань.' },
+            'ua_cis': { name: '🤝 Союз із СНД', time: 25, req: 'ua_zsu', excl: 'ua_eu', desc: 'Підвищує відносини з країнами СНД на +20. Миттєво виділяє грант +300 монет.' },
+            'ua_kuban': { name: '🌾 Атака на Кубань', time: 35, req: 'ua_eu', excl: null, desc: 'Надсилає Росії ультиматум з вимогою передати Кубань. Відмова означає війну!' }
+        },
+        'SOV': {
+            'sov_alliance_by': { name: '🇧🇾 Союз із Білоруссю', time: 20, req: null, excl: null, desc: 'Покращує дипломатичні відносини з Білоруссю.' },
+            'sov_union_by': { name: '🏰 Унія з Білоруссю', time: 30, req: 'sov_alliance_by', excl: null, desc: 'Повного поглинання та анексія Білорусі.' },
+            'sov_ultimatum': { name: '🚨 Ультиматум Україні', time: 40, req: 'sov_union_by', excl: null, desc: 'Вимога передати Крим та Донбас. Якщо Україна відмовляється — почнеться війна.' },
+            
+            // ДОДАЄМО СЮДИ (СРСР):
+            'sov_ultimatum_fin': { name: '🇫🇮 Ультиматум Фінляндії', time: 35, req: null, excl: null, desc: 'Надсилає ультиматум Фінляндії. Згода принесе 100 монет, відмова — війна.' }
+        },
+        'RO': {
+            'ro_sov_md': { name: '🇲🇩 Союз з Молдовою', time: 20, req: null, excl: null, desc: 'Покращує дипломатичні відносини з Молдовою.' },
+            'ro_annex_md': { name: '🍇 Приєднання Молдови', time: 30, req: 'ro_sov_md', excl: null, desc: 'Мирне включення територій Молдови до Румунії.' },
+            'ro_join_eu': { name: '🇪🇺 Вступ до ЄС', time: 25, req: null, excl: null, desc: 'Підвищує дипломатичні відносини з усіма країнами ЄС на +25.' }
+        },
+        'GENERIC': {
+            'gen_ind': { name: '🏗️ Індустріалізація', time: 20, req: null, excl: null, desc: 'Будує 1 безкоштовну цивільну фабрику у випадковому регіоні.' },
+            'gen_mil': { name: '🏭 Мілітаризація', time: 20, req: 'gen_ind', excl: null, desc: 'Будує 1 війську фабрику та дає субсидію +100 монет.' },
+            'gen_doc': { name: '⚔️ Військова доктрина', time: 30, req: 'gen_mil', excl: null, desc: 'Покращує бойовий виучок армії (+10% бойової сили).' }
+        },
+        
+        // ДОДАЄМО НОВІ КРАЇНИ НИЖЧЕ:
+        'FIN': {
+            'fin_mobilization': { name: '🪖 Мобілізаційні методи', time: 25, req: null, excl: null, desc: 'Створює 1 штурмовика випадково в одній із провінцій.' },
+            'fin_estonia_union': { name: '🇪🇪 Унія з Естонією', time: 30, req: null, excl: null, desc: 'Об\'єднується з Естонією, щоб разом протистояти ворогам.' },
+            'fin_infrastructure': { name: '🏗️ Розвиток Інфраструктури', time: 20, req: null, excl: null, desc: 'Будує +3 цивільних заводи у випадкових провінціях.' }
+        },
+        'GER': {
+            'ger_eco_leadership': { name: '🪙 Економічне лідерство', time: 30, req: null, excl: null, desc: 'Надає +235 монет та +1 завод у випадковій провінції.' },
+            'ger_german_nations': { name: '⛰️ Німецькомовні народи', time: 35, req: null, excl: null, desc: 'Мирна унія з Швейцарією та Австрією.' },
+            'ger_prep_sov_war': { name: '🪖 Підготовка до війни', time: 40, req: 'ger_eco_leadership', excl: null, desc: 'Дає +2 військових заводи та 1 сучасний танк у випадкових провінціях.' }
+        },
+        'GRE': {
+            'gre_big_ports': { name: '⚓ Великі порти', time: 20, req: null, excl: null, desc: 'Розширення портів приносить +400 монет з торгівлі.' },
+            'gre_ultimatum_turkey': { name: '🚨 Ультиматум Туреччині', time: 40, req: null, excl: null, desc: 'Якщо Туреччина приймає — вона анексована, якщо ні — війна.' },
+            'gre_albania_conspiracy': { name: '🤫 Змова над Албанією', time: 30, req: null, excl: null, desc: 'Албанія ділиться та анексується Італією та Грецією.' }
         }
-    ],
-
-    // Фінляндія
-    "FIN": [
-        {
-            id: "fin_mobilization",
-            title: "Масштабніші методи мобілізації",
-            desc: "Створює 1 штурмовика в рандомній фінській провінції.",
-            cost: 25,
-            effect: function() {
-                let finProvinces = Object.keys(provinceData).filter(id => provinceData[id].country === "FIN");
-                if (finProvinces.length > 0) {
-                    let randProv = finProvinces[Math.floor(Math.random() * finProvinces.length)];
-                    // Створюємо штурмовика (припускаємо тип 'stormtrooper' або схожий за вашою логікою юнітів)
-                    createUnit(randProv, 'stormtrooper'); 
-                    alert("У провінції " + randProv + " мобілізовано штурмовика!");
-                } else {
-                    alert("Немає провінцій для мобілізації!");
-                }
-            }
-        },
-        {
-            id: "fin_estonia_union",
-            title: "Унія з Естонією",
-            desc: "Об'єднання з Естонією (EST) для спільного протистояння ворогам.",
-            cost: 40,
-            effect: function() {
-                // Всі провінції Естонії (EST) переходять до Фінляндії
-                Object.keys(provinceData).forEach(id => {
-                    if (provinceData[id].country === "EST") {
-                        provinceData[id].country = "FIN";
-                        let path = document.getElementById(id);
-                        if (path) path.style.fill = countryColors["FIN"] || "#2e2e35";
-                        // Якщо використовується Firebase, оновлюємо також там:
-                        if (typeof mapRef !== 'undefined') mapRef.child(id).set({ country: "FIN" });
-                    }
-                });
-                alert("Естонія увійшла до складу Фінляндії!");
-                updateUI();
-            }
-        },
-        {
-            id: "fin_infrastructure",
-            title: "Розвиток Інфраструктури",
-            desc: "Будує +3 цивільних заводи в рандомних фінських провінціях.",
-            cost: 30,
-            effect: function() {
-                let finProvinces = Object.keys(provinceData).filter(id => provinceData[id].country === "FIN");
-                if (finProvinces.length > 0) {
-                    for (let i = 0; i < 3; i++) {
-                        let randProv = finProvinces[Math.floor(Math.random() * finProvinces.length)];
-                        if (!provinceData[randProv].factories) provinceData[randProv].factories = 0;
-                        provinceData[randProv].factories += 1; // або civ_factories залежно від вашої бази даних
-                    }
-                    alert("Побудовано 3 цивільних заводи у Фінляндії!");
-                }
-                updateUI();
-            }
-        }
-    ],
-
-    // Німеччина
-    "GER": [
-        {
-            id: "ger_eco_leadership",
-            title: "Економічне лідерство",
-            desc: "Отримуємо +235 монет та +1 завод у випадковій провінції.",
-            cost: 30,
-            effect: function() {
-                countryData["GER"].money += 235;
-                let gerProvinces = Object.keys(provinceData).filter(id => provinceData[id].country === "GER");
-                if (gerProvinces.length > 0) {
-                    let randProv = gerProvinces[Math.floor(Math.random() * gerProvinces.length)];
-                    if (!provinceData[randProv].factories) provinceData[randProv].factories = 0;
-                    provinceData[randProv].factories += 1;
-                }
-                alert("Німеччина здобула економічне лідерство! (+235 монет, +1 завод)");
-                updateUI();
-            }
-        },
-        {
-            id: "ger_german_nations",
-            title: "Німецькомовні народи",
-            desc: "Мирна унія та аншлюс Швейцарії (CHE) та Австрії (AUT).",
-            cost: 50,
-            effect: function() {
-                let targets = ["CHE", "AUT"];
-                Object.keys(provinceData).forEach(id => {
-                    if (targets.includes(provinceData[id].country)) {
-                        provinceData[id].country = "GER";
-                        let path = document.getElementById(id);
-                        if (path) path.style.fill = countryColors["GER"] || "#2e2e35";
-                        if (typeof mapRef !== 'undefined') mapRef.child(id).set({ country: "GER" });
-                    }
-                });
-                alert("Швейцарія та Австрія добровільно об'єдналися з Німеччиною!");
-                updateUI();
-            }
-        },
-        {
-            id: "ger_prep_sov_war",
-            title: "Підготовка до війни з Росією",
-            desc: "+2 військових заводи та +1 сучасний танк у рандомних провінціях.",
-            cost: 45,
-            effect: function() {
-                let gerProvinces = Object.keys(provinceData).filter(id => provinceData[id].country === "GER");
-                if (gerProvinces.length > 0) {
-                    // +2 заводи
-                    for (let i = 0; i < 2; i++) {
-                        let randProv = gerProvinces[Math.floor(Math.random() * gerProvinces.length)];
-                        if (!provinceData[randProv].military_factories) provinceData[randProv].military_factories = 0;
-                        provinceData[randProv].military_factories += 1;
-                    }
-                    // +1 сучасний танк
-                    let tankProv = gerProvinces[Math.floor(Math.random() * gerProvinces.length)];
-                    createUnit(tankProv, 'modern_tank'); // Адаптуйте тип юніта під ваш код ('tank' / 'modern_tank')
-                    
-                    alert("Німеччина готова до протистояння на Сході! Створено заводи та танк.");
-                }
-                updateUI();
-            }
-        }
-    ],
-
-    // Греція
-    "GRE": [
-        {
-            id: "gre_big_ports",
-            title: "Великі порти",
-            desc: "Розвиток морської торгівлі приносить +400 монет.",
-            cost: 20,
-            effect: function() {
-                countryData["GRE"].money += 400;
-                alert("Греція розширила свої порти й отримала +400 монет від торгівлі!");
-                updateUI();
-            }
-        },
-        {
-            id: "gre_ultimatum_turkey",
-            title: "Ультиматум Туреччині",
-            desc: "Вимога капітуляції Туреччини (TUR). Якщо ні — війна.",
-            cost: 50,
-            effect: function() {
-                let turPlayer = (playerCountry === "TUR");
-                let accept = false;
-
-                if (turPlayer) {
-                    accept = confirm("Греція висуває нам ультиматум з вимогою повної анексії! Прийняти (гра буде закінчена) чи воювати?");
-                } else {
-                    // ШІ Туреччина майже завжди відмовляється (наприклад, 90% шанс війни)
-                    accept = (Math.random() < 0.1);
-                }
-
-                if (accept) {
-                    Object.keys(provinceData).forEach(id => {
-                        if (provinceData[id].country === "TUR") {
-                            provinceData[id].country = "GRE";
-                            let path = document.getElementById(id);
-                            if (path) path.style.fill = countryColors["GRE"] || "#2e2e35";
-                            if (typeof mapRef !== 'undefined') mapRef.child(id).set({ country: "GRE" });
-                        }
-                    });
-                    alert("Туреччина злякалася ультиматуму та була повністю анексована Грецією!");
-                } else {
-                    alert("Туреччина відкинула ультиматум! Почалася греко-турецька війна!");
-                }
-                updateUI();
-            }
-        },
-        {
-            id: "gre_albania_conspiracy",
-            title: "Змова над Албанією",
-            desc: "Таємна угода з Італією (ITA). Албанія (ALB) буде розділена та анексована порівну.",
-            cost: 35,
-            effect: function() {
-                let albanianProvinces = Object.keys(provinceData).filter(id => provinceData[id].country === "ALB");
-                
-                albanianProvinces.forEach((id, index) => {
-                    // Ділимо провінції Албанії: парні віддаємо Греції, непарні — Італії
-                    let newOwner = (index % 2 === 0) ? "GRE" : "ITA";
-                    provinceData[id].country = newOwner;
-                    let path = document.getElementById(id);
-                    if (path) path.style.fill = countryColors[newOwner] || "#2e2e35";
-                    if (typeof mapRef !== 'undefined') mapRef.child(id).set({ country: newOwner });
-                });
-
-                alert("Албанію було таємно розділено та анексовано між Грецією та Італією!");
-                updateUI();
-            }
-        }
-    ]
-};
-        };
+    };
 
         // НАУКА
         const playerTechs = {
@@ -980,8 +771,149 @@
                 }
                 if (country === playerCountry) coins += 100; else countryBudgets[country] += 100;
             }
+           // --- НОВІ ФОКУСИ ДЛЯ СРСР, ФІНЛЯНДІЇ, НІМЕЧЧИНИ ТА ГРЕЦІЇ ---
+            
+            // СРСР
+            else if (focusKey === 'sov_ultimatum_fin') {
+                triggerUltimatumEvent({
+                    title: "🇫🇮 Ультиматум Фінляндії",
+                    desc: "СРСР висуває категоричну вимогу виплатити 100 монет репарацій в обмін на гарантії миру.",
+                    targetCountry: 'FIN',
+                    onYes: () => {
+                        if (playerCountry === 'FIN') {
+                            coins = Math.max(0, coins - 100);
+                        } else {
+                            if (countryBudgets['FIN']) countryBudgets['FIN'] = Math.max(0, countryBudgets['FIN'] - 100);
+                        }
+                        
+                        if (country === playerCountry) coins += 100; 
+                        else countryBudgets[country] += 100;
+
+                        alert("Фінляндія прийняла умови ультиматуму та перерахувала 100 монет.");
+                    },
+                    onNo: () => { declareWar('SOV', 'FIN'); }
+                });
+            }
+            
+            // Фінляндія
+            else if (focusKey === 'fin_mobilization') {
+                let finProves = Object.keys(provinceData).filter(id => provinceData[id].country === 'FIN');
+                if (finProves.length > 0) {
+                    let rp = sample(finProves);
+                    // Використовуємо вашу функцію створення дивізій
+                    if (typeof spawnDivisionVisual === 'function') {
+                        spawnDivisionVisual(rp, 'FIN', 'stormtrooper'); 
+                    }
+                }
+            }
+            else if (focusKey === 'fin_estonia_union') {
+                Object.keys(provinceData).forEach(id => {
+                    if (provinceData[id].country === 'EST') {
+                        provinceData[id].country = 'FIN';
+                        if (provinceData[id].elementRef) {
+                            provinceData[id].elementRef.style.fill = countryColors['FIN'];
+                        }
+                        if (typeof redrawProvinceBuildings === 'function') redrawProvinceBuildings(id);
+                    }
+                });
+                alert("🇪🇪 Естонія увійшла до складу Фінляндії в рамках оборонної унії!");
+            }
+            else if (focusKey === 'fin_infrastructure') {
+                let finProves = Object.keys(provinceData).filter(id => provinceData[id].country === 'FIN');
+                if (finProves.length > 0) {
+                    for (let i = 0; i < 3; i++) {
+                        let rp = sample(finProves);
+                        if (provinceData[rp]) {
+                            provinceData[rp].civFactories++;
+                            if (typeof createFactoryVisual === 'function') {
+                                createFactoryVisual(provinceData[rp].elementRef, rp, 'civ');
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Німеччина
+            else if (focusKey === 'ger_eco_leadership') {
+                if (country === playerCountry) coins += 235; else countryBudgets[country] += 235;
+                let gerProves = Object.keys(provinceData).filter(id => provinceData[id].country === 'GER');
+                if (gerProves.length > 0) {
+                    let rp = sample(gerProves);
+                    provinceData[rp].civFactories++;
+                    if (typeof createFactoryVisual === 'function') {
+                        createFactoryVisual(provinceData[rp].elementRef, rp, 'civ');
+                    }
+                }
+            }
+            else if (focusKey === 'ger_german_nations') {
+                Object.keys(provinceData).forEach(id => {
+                    if (provinceData[id].country === 'CHE' || provinceData[id].country === 'AUT') {
+                        provinceData[id].country = 'GER';
+                        if (provinceData[id].elementRef) {
+                            provinceData[id].elementRef.style.fill = countryColors['GER'];
+                        }
+                        if (typeof redrawProvinceBuildings === 'function') redrawProvinceBuildings(id);
+                    }
+                });
+                alert("⛰️ Швейцарія та Австрія мирно об'єдналися з Німеччиною!");
+            }
+            else if (focusKey === 'ger_prep_sov_war') {
+                let gerProves = Object.keys(provinceData).filter(id => provinceData[id].country === 'GER');
+                if (gerProves.length > 0) {
+                    for (let i = 0; i < 2; i++) {
+                        let rp = sample(gerProves);
+                        provinceData[rp].milFactories++;
+                        if (typeof createFactoryVisual === 'function') {
+                            createFactoryVisual(provinceData[rp].elementRef, rp, 'mil');
+                        }
+                    }
+                    let tankProv = sample(gerProves);
+                    if (typeof spawnDivisionVisual === 'function') {
+                        spawnDivisionVisual(tankProv, 'GER', 'modern_tank');
+                    }
+                }
+            }
+            
+            // Греція
+            else if (focusKey === 'gre_big_ports') {
+                if (country === playerCountry) coins += 400; else countryBudgets[country] += 400;
+            }
+            else if (focusKey === 'gre_ultimatum_turkey') {
+                triggerUltimatumEvent({
+                    title: "🚨 Грецький ультиматум",
+                    desc: "Греція висуває Туреччині вимогу повної капітуляції та входження до складу Грецької держави. Згода або війна?",
+                    targetCountry: 'TUR',
+                    onYes: () => {
+                        Object.keys(provinceData).forEach(id => {
+                            if (provinceData[id].country === 'TUR') {
+                                provinceData[id].country = 'GRE';
+                                if (provinceData[id].elementRef) {
+                                    provinceData[id].elementRef.style.fill = countryColors['GRE'];
+                                }
+                                if (typeof redrawProvinceBuildings === 'function') redrawProvinceBuildings(id);
+                            }
+                        });
+                        alert("Туреччина прийняла ультиматум і була повністю анексована Грецією.");
+                    },
+                    onNo: () => { declareWar('GRE', 'TUR'); }
+                });
+            }
+            else if (focusKey === 'gre_albania_conspiracy') {
+                let albProves = Object.keys(provinceData).filter(id => provinceData[id].country === 'ALB');
+                albProves.forEach((id, index) => {
+                    let newOwner = (index % 2 === 0) ? 'GRE' : 'ITA';
+                    provinceData[id].country = newOwner;
+                    if (provinceData[id].elementRef) {
+                        provinceData[id].elementRef.style.fill = countryColors[newOwner];
+                    }
+                    if (typeof redrawProvinceBuildings === 'function') redrawProvinceBuildings(id);
+                });
+                alert("🤫 Албанію було таємно розділено та анексовано між Грецією та Італією!");
+            }
+
             updateEconomyDisplay();
         }
+       
 
         function triggerUltimatumEvent(cfg) {
             if (cfg.targetCountry === playerCountry) {

@@ -394,9 +394,19 @@
         const eventModal = document.getElementById('event-decision-modal');
         const eventTitle = document.getElementById('event-modal-title');
         const eventDesc = document.getElementById('event-modal-desc');
-        const eventBtnYes = document.getElementById('event-btn-yes');
-        const eventBtnNo = document.getElementById('event-btn-no');
+        eventBtnYes.addEventListener('click', function() {
+    // ... ваш існуючий код фокусу (передача провінцій чи грошей) ...
+    
+    // ДОДАЙТЕ ЦЕЙ РЯДОК, ЩОБ СХОВАТИ ВІКНО:
+    document.getElementById('event-decision-modal').style.display = 'none';
+});
 
+eventBtnNo.addEventListener('click', function() {
+    // ... ваш існуючий код фокусу (оголошення війни) ...
+    
+    // ДОДАЙТЕ ЦЕЙ РЯДОК, ЩОБ СХОВАТИ ВІКНО:
+    document.getElementById('event-decision-modal').style.display = 'none';
+});
         let coins = 150;
         let playerOil = 10;
         let currentMode = 'army'; 

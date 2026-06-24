@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2D HOI4 Mini Strategy - Глобальна Мапа + Фокуси</title>
+    <title>2D HOI4 Mini Strategy - Глобальна Мапа + Фокуси1</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
@@ -778,12 +778,12 @@
                 triggerUltimatumEvent({
                     title: "🇫🇮 Ультиматум Фінляндії",
                     desc: "СРСР висуває категоричну вимогу виплатити 100 монет репарацій в обмін на гарантії миру.",
-                    targetCountry: 'FIN',
+                    targetCountry: 'FI',
                     onYes: () => {
-                        if (playerCountry === 'FIN') {
+                        if (playerCountry === 'FI') {
                             coins = Math.max(0, coins - 100);
                         } else {
-                            if (countryBudgets['FIN']) countryBudgets['FIN'] = Math.max(0, countryBudgets['FIN'] - 100);
+                            if (countryBudgets['FI']) countryBudgets['FI'] = Math.max(0, countryBudgets['FI'] - 100);
                         }
                         
                         if (country === playerCountry) coins += 100; 
@@ -791,27 +791,27 @@
 
                         alert("Фінляндія прийняла умови ультиматуму та перерахувала 100 монет.");
                     },
-                    onNo: () => { declareWar('SOV', 'FIN'); }
+                    onNo: () => { declareWar('SOV', 'FI'); }
                 });
             }
             
             // Фінляндія
             else if (focusKey === 'fin_mobilization') {
-                let finProves = Object.keys(provinceData).filter(id => provinceData[id].country === 'FIN');
+                let finProves = Object.keys(provinceData).filter(id => provinceData[id].country === 'FI');
                 if (finProves.length > 0) {
                     let rp = sample(finProves);
                     // Використовуємо вашу функцію створення дивізій
                     if (typeof spawnDivisionVisual === 'function') {
-                        spawnDivisionVisual(rp, 'FIN', 'stormtrooper'); 
+                        spawnDivisionVisual(rp, 'FI', 'stormtrooper'); 
                     }
                 }
             }
             else if (focusKey === 'fin_estonia_union') {
                 Object.keys(provinceData).forEach(id => {
                     if (provinceData[id].country === 'EST') {
-                        provinceData[id].country = 'FIN';
+                        provinceData[id].country = 'FI';
                         if (provinceData[id].elementRef) {
-                            provinceData[id].elementRef.style.fill = countryColors['FIN'];
+                            provinceData[id].elementRef.style.fill = countryColors['FI'];
                         }
                         if (typeof redrawProvinceBuildings === 'function') redrawProvinceBuildings(id);
                     }
@@ -819,7 +819,7 @@
                 alert("🇪🇪 Естонія увійшла до складу Фінляндії в рамках оборонної унії!");
             }
             else if (focusKey === 'fin_infrastructure') {
-                let finProves = Object.keys(provinceData).filter(id => provinceData[id].country === 'FIN');
+                let finProves = Object.keys(provinceData).filter(id => provinceData[id].country === 'FI');
                 if (finProves.length > 0) {
                     for (let i = 0; i < 3; i++) {
                         let rp = sample(finProves);

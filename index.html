@@ -775,48 +775,25 @@
             
             // СРСР
             else if (focusKey === 'sov_ultimatum_fin') {
-                function triggerUltimatumEvent(options) {
-    // Якщо ультиматум стосується штучного інтелекту, а не гравця — AI вирішує автоматично
-    if (options.targetCountry !== playerCountry) {
-        // AI з ймовірністю 70% погоджується, інакше — війна
-        if (Math.random() < 0.7) {
-            if (typeof options.onYes === 'function') options.onYes();
-        } else {
-            if (typeof options.onNo === 'function') options.onNo();
-        }
-        return; // Виходимо, не показуючи вікно гравцю
-    }
+                triggerUltimatumEvent({
+                    title: "🇫🇮 Ультиматум Фінляндії",
+                    desc: "СРСР висуває категоричну вимогу виплатити 100 монет репарацій в обмін на гарантії миру.",
+                    targetCountry: 'FIN',
+                    onYes: () => {
+                        if (playerCountry === 'FIN') {
+                            coins = Math.max(0, coins - 100);
+                        } else {
+                            if (countryBudgets['FIN']) countryBudgets['FIN'] = Math.max(0, countryBudgets['FIN'] - 100);
+                        }
+                        
+                        if (country === playerCountry) coins += 100; 
+                        else countryBudgets[country] += 100;
 
-    // Якщо це гравець — показуємо модальне вікно
-    const eventModal = document.getElementById('event-decision-modal');
-    const eventTitle = document.getElementById('event-modal-title');
-    const eventDesc = document.getElementById('event-modal-desc');
-    const eventBtnYes = document.getElementById('event-btn-yes');
-    const eventBtnNo = document.getElementById('event-btn-no');
-
-    if (!eventModal || !eventTitle || !eventDesc || !eventBtnYes || !eventBtnNo) return;
-
-    eventTitle.textContent = options.title || "🚨 ГЕОПОЛІТИЧНИЙ УЛЬТИМАТУМ";
-    eventDesc.textContent = options.desc || "";
-
-    // ОЧИЩЕННЯ СТАРИХ СЛУХАЧІВ (запобігає нескінченному циклу при натисканні ОК)
-    eventBtnYes.onclick = null;
-    eventBtnNo.onclick = null;
-
-    // Призначаємо нові дії на кнопки
-    eventBtnYes.onclick = function() {
-        eventModal.style.display = 'none';
-        if (typeof options.onYes === 'function') options.onYes();
-    };
-
-    eventBtnNo.onclick = function() {
-        eventModal.style.display = 'none';
-        if (typeof options.onNo === 'function') options.onNo();
-    };
-
-    // Відображаємо вікно гравцю
-    eventModal.style.display = 'flex';
-}
+                        alert("Фінляндія прийняла умови ультиматуму та перерахувала 100 монет.");
+                    },
+                    onNo: () => { declareWar('SOV', 'FIN'); }
+                });
+            }
             
             // Фінляндія
             else if (focusKey === 'fin_mobilization') {

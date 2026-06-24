@@ -951,6 +951,16 @@
         document.getElementById('zoom-in').addEventListener('click', () => { zoomScale = Math.min(zoomScale * 1.25, 5); updateMapTransform(); });
         document.getElementById('zoom-out').addEventListener('click', () => { zoomScale = Math.max(zoomScale / 1.25, 0.3); updateMapTransform(); });
         document.getElementById('zoom-reset').addEventListener('click', () => { zoomScale = 1.0; panX = 0; panY = 0; updateMapTransform(); });
+        const enemyIconsBtn = document.getElementById('toggle-enemy-icons');
+
+enemyIconsBtn.addEventListener('click', () => {
+    hideEnemyIcons = !hideEnemyIcons;
+
+    enemyIconsBtn.textContent =
+        hideEnemyIcons ? '🚫 Вор.' : '👁 Вор.';
+
+    updateEnemyIconVisibility();
+});
 
         btnArmy.addEventListener('click', () => { currentMode = 'army'; resetActiveButtons(); btnArmy.classList.add('active'); cancelSelection(); });
         btnTank.addEventListener('click', () => { currentMode = 'tank'; resetActiveButtons(); btnTank.classList.add('active'); cancelSelection(); });

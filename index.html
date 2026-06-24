@@ -808,7 +808,7 @@
             }
             else if (focusKey === 'fin_estonia_union') {
                 Object.keys(provinceData).forEach(id => {
-                    if (provinceData[id].country === 'EST') {
+                    if (provinceData[id].country === 'EE') {
                         provinceData[id].country = 'FI';
                         if (provinceData[id].elementRef) {
                             provinceData[id].elementRef.style.fill = countryColors['FI'];
@@ -836,7 +836,7 @@
             // Німеччина
             else if (focusKey === 'ger_eco_leadership') {
                 if (country === playerCountry) coins += 235; else countryBudgets[country] += 235;
-                let gerProves = Object.keys(provinceData).filter(id => provinceData[id].country === 'GER');
+                let gerProves = Object.keys(provinceData).filter(id => provinceData[id].country === 'DE');
                 if (gerProves.length > 0) {
                     let rp = sample(gerProves);
                     provinceData[rp].civFactories++;
@@ -847,10 +847,10 @@
             }
             else if (focusKey === 'ger_german_nations') {
                 Object.keys(provinceData).forEach(id => {
-                    if (provinceData[id].country === 'CHE' || provinceData[id].country === 'AUT') {
-                        provinceData[id].country = 'GER';
+                    if (provinceData[id].country === 'CH' || provinceData[id].country === 'AT') {
+                        provinceData[id].country = 'DE';
                         if (provinceData[id].elementRef) {
-                            provinceData[id].elementRef.style.fill = countryColors['GER'];
+                            provinceData[id].elementRef.style.fill = countryColors['DE'];
                         }
                         if (typeof redrawProvinceBuildings === 'function') redrawProvinceBuildings(id);
                     }
@@ -858,7 +858,7 @@
                 alert("⛰️ Швейцарія та Австрія мирно об'єдналися з Німеччиною!");
             }
             else if (focusKey === 'ger_prep_sov_war') {
-                let gerProves = Object.keys(provinceData).filter(id => provinceData[id].country === 'GER');
+                let gerProves = Object.keys(provinceData).filter(id => provinceData[id].country === 'DE');
                 if (gerProves.length > 0) {
                     for (let i = 0; i < 2; i++) {
                         let rp = sample(gerProves);
@@ -869,7 +869,7 @@
                     }
                     let tankProv = sample(gerProves);
                     if (typeof spawnDivisionVisual === 'function') {
-                        spawnDivisionVisual(tankProv, 'GER', 'modern_tank');
+                        spawnDivisionVisual(tankProv, 'DE', 'modern_tank');
                     }
                 }
             }
@@ -882,26 +882,26 @@
                 triggerUltimatumEvent({
                     title: "🚨 Грецький ультиматум",
                     desc: "Греція висуває Туреччині вимогу повної капітуляції та входження до складу Грецької держави. Згода або війна?",
-                    targetCountry: 'TUR',
+                    targetCountry: 'TR',
                     onYes: () => {
                         Object.keys(provinceData).forEach(id => {
-                            if (provinceData[id].country === 'TUR') {
-                                provinceData[id].country = 'GRE';
+                            if (provinceData[id].country === 'TR') {
+                                provinceData[id].country = 'GR';
                                 if (provinceData[id].elementRef) {
-                                    provinceData[id].elementRef.style.fill = countryColors['GRE'];
+                                    provinceData[id].elementRef.style.fill = countryColors['GR'];
                                 }
                                 if (typeof redrawProvinceBuildings === 'function') redrawProvinceBuildings(id);
                             }
                         });
                         alert("Туреччина прийняла ультиматум і була повністю анексована Грецією.");
                     },
-                    onNo: () => { declareWar('GRE', 'TUR'); }
+                    onNo: () => { declareWar('GR', 'TR'); }
                 });
             }
             else if (focusKey === 'gre_albania_conspiracy') {
-                let albProves = Object.keys(provinceData).filter(id => provinceData[id].country === 'ALB');
+                let albProves = Object.keys(provinceData).filter(id => provinceData[id].country === 'AL');
                 albProves.forEach((id, index) => {
-                    let newOwner = (index % 2 === 0) ? 'GRE' : 'ITA';
+                    let newOwner = (index % 2 === 0) ? 'GR' : 'ITA';
                     provinceData[id].country = newOwner;
                     if (provinceData[id].elementRef) {
                         provinceData[id].elementRef.style.fill = countryColors[newOwner];

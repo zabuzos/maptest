@@ -405,6 +405,7 @@
         let selectedProvinceId = null;
         let selectedDiplomacyCountry = null;
         let buildingPrice = 30;
+        let hideEnemyIcons = false;
 
         let infantryAttackBonus = 1.0; 
 
@@ -642,6 +643,29 @@
                 focusRenderArea.appendChild(node);
             }
         }
+        function updateEnemyIconVisibility() {
+
+    document.querySelectorAll('.division-indicator').forEach(icon => {
+
+        const provinceId = icon.dataset.province;
+        if (!provinceId || !provinceData[provinceId]) return;
+
+        const owner = provinceData[provinceId].country;
+
+        if (!hideEnemyIcons) {
+            icon.style.display = '';
+            return;
+        }
+
+        // свої війська завжди видно
+        if (owner === playerCountry) {
+            icon.style.display = '';
+        } else {
+            icon.style.display = 'none';
+        }
+    });
+
+}
 
         function startNationalFocus(country, focusKey, time) {
             if (country === playerCountry) {
@@ -1262,18 +1286,43 @@ enemyIconsBtn.addEventListener('click', () => {
 
         function sample(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
-        function spawnDivisionVisual(id, countryCode, type) {
-            const center = getProvinceCenter(id); const divEl = document.createElement('div');
-            divEl.className = type.includes('tank') ? 'division-indicator tank' : 'division-indicator';
-            if (countryCode !== playerCountry) divEl.classList.add('ai-unit');
-            divEl.style.left = `${center.x}px`; divEl.style.top = `${center.y}px`; container.appendChild(divEl);
-            
-            let mHp = 100;
-            if (type === 'assault') mHp = 130; else if (type === 'motorized') mHp = 165; else if (type === 'mechanized') mHp = 210;
-            else if (type === 'tank') mHp = 150; else if (type === 'medium_tank') mHp = 220; else if (type === 'heavy_tank') mHp = 350; else if (type === 'modern_tank') mHp = 500;
+function spawnDivisionVisual(id, countryCode, type) {
+    const center = getProvinceCenter(id);
+    const divEl = document.createElement('div');
 
-            provinceData[id].hasDivision = true; provinceData[id].divisionHp = mHp; provinceData[id].divisionOwner = countryCode; provinceData[id].divisionType = type; provinceData[id].domDivisionRef = divEl;
-        }
+    divEl.className = type.includes('tank')
+        ? 'division-indicator tank'
+        : 'division-indicator';
+
+    if (countryCode !== playerCountry)
+        divEl.classList.add('ai-unit');
+
+    divEl.dataset.province = id;
+    divEl.dataset.owner = countryCode;
+
+    divEl.style.left = `${center.x}px`;
+    divEl.style.top = `${center.y}px`;
+
+    container.appendChild(divEl);
+
+    let mHp = 100;
+
+    if (type === 'assault') mHp = 130;
+    else if (type === 'motorized') mHp = 165;
+    else if (type === 'mechanized') mHp = 210;
+    else if (type === 'tank') mHp = 150;
+    else if (type === 'medium_tank') mHp = 220;
+    else if (type === 'heavy_tank') mHp = 350;
+    else if (type === 'modern_tank') mHp = 500;
+
+    provinceData[id].hasDivision = true;
+    provinceData[id].divisionHp = mHp;
+    provinceData[id].divisionOwner = countryCode;
+    provinceData[id].divisionType = type;
+    provinceData[id].domDivisionRef = divEl;
+
+    updateEnemyIconVisibility();
+}
 
         function createFactoryVisual(svgElement, id, type, countIndex) {
             const center = getProvinceCenter(id); const factory = document.createElement('div');

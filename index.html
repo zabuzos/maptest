@@ -774,104 +774,26 @@
            // --- НОВІ ФОКУСИ ДЛЯ СРСР, ФІНЛЯНДІЇ, НІМЕЧЧИНИ ТА ГРЕЦІЇ ---
             
             // СРСР
-// --- СРСР, ФІНЛЯНДІЇ, НІМЕЧЧИНИ ТА ГРЕЦІЇ (ВИПРАВЛЕНО) ---
-// --- СРСР, ФІНЛЯНДІЇ, НІМЕЧЧИНИ ТА ГРЕЦІЇ (ВИПРАВЛЕНО) ---
-else if (focusKey === 'sov_ultimatum_fin') {
-    triggerUltimatumEvent({
-        title: "🇫🇮 Ультиматум Фінляндії",
-        desc: "СРСР висуває категоричну вимогу виплатити 100 монет репарацій в обмін на гарантії миру.",
-        targetCountry: 'FIN',
-        onYes: () => {
-            eventModal.style.display = 'none'; // Миттєво закриваємо вікно події
-            if (playerCountry === 'FIN') {
-                coins = Math.max(0, coins - 100);
-                updateEconomyDisplay();
-            } else {
-                if (countryBudgets['FIN']) countryBudgets['FIN'] = Math.max(0, countryBudgets['FIN'] - 100);
+            else if (focusKey === 'sov_ultimatum_fin') {
+                triggerUltimatumEvent({
+                    title: "🇫🇮 Ультиматум Фінляндії",
+                    desc: "СРСР висуває категоричну вимогу виплатити 100 монет репарацій в обмін на гарантії миру.",
+                    targetCountry: 'FIN',
+                    onYes: () => {
+                        if (playerCountry === 'FIN') {
+                            coins = Math.max(0, coins - 100);
+                        } else {
+                            if (countryBudgets['FIN']) countryBudgets['FIN'] = Math.max(0, countryBudgets['FIN'] - 100);
+                        }
+                        
+                        if (country === playerCountry) coins += 100; 
+                        else countryBudgets[country] += 100;
+
+                        alert("Фінляндія прийняла умови ультиматуму та перерахувала 100 монет.");
+                    },
+                    onNo: () => { declareWar('SOV', 'FIN'); }
+                });
             }
-            if (country === playerCountry) {
-                coins += 100;
-                updateEconomyDisplay();
-            } else {
-                countryBudgets[country] += 100;
-            }
-            // Замість блокуючого alert використовуємо setTimeout, щоб не ламати чергу подій браузера
-            setTimeout(() => { alert("Фінляндія прийняла умови ультиматуму та перерахувала 100 монет."); }, 100);
-        },
-        onNo: () => {
-            eventModal.style.display = 'none';
-            declareWar('SOV', 'FIN');
-        }
-    });
-} 
-// Фінляндія
-else if (focusKey === 'fin_mobilization') {
-    let finProves = Object.keys(provinceData).filter(id => provinceData[id].country === 'FIN');
-    if (finProves.length > 0) {
-        let rp = finProves[Math.floor(Math.random() * finProves.length)];
-        if (typeof spawnDivisionVisual === 'function') {
-            spawnDivisionVisual(rp, 'FIN', 'stormtrooper');
-        }
-    }
-} else if (focusKey === 'fin_estonia_union') {
-    Object.keys(provinceData).forEach(id => {
-        if (provinceData[id].country === 'EST') {
-            provinceData[id].country = 'FIN';
-            if (provinceData[id].elementRef) {
-                provinceData[id].elementRef.style.fill = countryColors['FIN'] || '#67e8f9';
-            }
-            if (typeof redrawProvinceBuildings === 'function') redrawProvinceBuildings(id);
-        }
-    });
-    setTimeout(() => { alert("🇪🇪 Естонія увійшла до складу Фінляндії в рамках оборонної унії!"); }, 100);
-}
-// Німеччина
-else if (focusKey === 'ger_industrial_boom') {
-    let gerProves = Object.keys(provinceData).filter(id => provinceData[id].country === 'GER' || provinceData[id].country === 'DE');
-    if (gerProves.length > 0) {
-        let rp = gerProves[Math.floor(Math.random() * gerProves.length)];
-        if (typeof createFactoryVisual === 'function') {
-            createFactoryVisual(provinceData[rp].elementRef, rp, 'mil');
-        }
-        let tankProv = gerProves[Math.floor(Math.random() * gerProves.length)];
-        if (typeof spawnDivisionVisual === 'function') {
-            spawnDivisionVisual(tankProv, 'DE', 'modern_tank');
-        }
-    }
-}
-// Греція
-else if (focusKey === 'gre_big_ports') {
-    if (country === playerCountry) {
-        coins += 400;
-        updateEconomyDisplay();
-    } else {
-        countryBudgets[country] += 400;
-    }
-} else if (focusKey === 'gre_ultimatum_turkey') {
-    triggerUltimatumEvent({
-        title: "🚨 Грецький ультиматум",
-        desc: "Греція висуває Туреччині вимогу повної капітуляції та входження до складу Грецької держави. Згода або війна?",
-        targetCountry: 'TUR',
-        onYes: () => {
-            eventModal.style.display = 'none';
-            Object.keys(provinceData).forEach(id => {
-                if (provinceData[id].country === 'TUR') {
-                    provinceData[id].country = 'GR'; // Виправлено з GRE на GR, відповідно до вашої таблиці countryColors
-                    if (provinceData[id].elementRef) {
-                        provinceData[id].elementRef.style.fill = countryColors['GR'] || '#06b6d4';
-                    }
-                    if (typeof redrawProvinceBuildings === 'function') redrawProvinceBuildings(id);
-                }
-            });
-            setTimeout(() => { alert("🇹🇷 Туреччина задовольнила ультиматум Греції та капітулювала!"); }, 100);
-        },
-        onNo: () => {
-            eventModal.style.display = 'none';
-            declareWar('GR', 'TUR'); // Виправлено з GRE на GR
-        }
-    });
-}
-}
             
             // Фінляндія
             else if (focusKey === 'fin_mobilization') {

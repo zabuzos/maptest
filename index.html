@@ -902,23 +902,38 @@ else if (focusKey === 'ro_annex_md') {
                     }
                 }
             }
-            else if (focusKey === 'fin_estonia_union') {
-    triggerUnionEvent('FI', 'EE', 0.75);
-}
-    () => { /* анексія */ },
-    () => { alert("❌ Естонія відмовилася."); }
-);
-                Object.keys(provinceData).forEach(id => {
-                    if (provinceData[id].country === 'EE') {
-                        provinceData[id].country = 'FI';
-                        if (provinceData[id].elementRef) {
-                            provinceData[id].elementRef.style.fill = countryColors['FI'];
-                        }
-                        if (typeof redrawProvinceBuildings === 'function') redrawProvinceBuildings(id);
+        else if (focusKey === 'fin_estonia_union') {
+
+    triggerUnionEvent(
+        'FI',
+        'EE',
+        0.75,
+
+        () => {
+
+            Object.keys(provinceData).forEach(id => {
+                if (provinceData[id].country === 'EE') {
+
+                    provinceData[id].country = 'FI';
+
+                    if (provinceData[id].elementRef) {
+                        provinceData[id].elementRef.style.fill = countryColors['FI'];
                     }
-                });
-                alert("🇪🇪 Естонія увійшла до складу Фінляндії в рамках оборонної унії!");
-            }
+
+                    if (typeof redrawProvinceBuildings === 'function') {
+                        redrawProvinceBuildings(id);
+                    }
+                }
+            });
+
+            alert("🇪🇪 Естонія увійшла до складу Фінляндії в рамках оборонної унії!");
+        },
+
+        () => {
+            alert("❌ Естонія відмовилася.");
+        }
+    );
+}
             else if (focusKey === 'fin_infrastructure') {
                 let finProves = Object.keys(provinceData).filter(id => provinceData[id].country === 'FI');
                 if (finProves.length > 0) {

@@ -708,6 +708,28 @@ const secs = truceTime % 60;
         }
 
         // --- ОБРОБКА ЗАВЕРШЕННЯ ФОКУСІВ ---
+        function triggerUnionEvent(initiator, target, successChance, onAccept, onReject) {
+
+    // Якщо ціль - гравець
+    if (target === playerCountry) {
+
+        const accepted = confirm(
+            `${countryNames[initiator]} пропонує державну унію.\n\nПрийняти пропозицію?`
+        );
+
+        if (accepted) onAccept();
+        else onReject();
+
+        return;
+    }
+
+    // Якщо ціль - ШІ
+    if (Math.random() < successChance) {
+        onAccept();
+    } else {
+        onReject();
+    }
+}
         function completeNationalFocus(country, focusKey) {
             completedFocusesGlobal[country][focusKey] = true;
             if (country === playerCountry) alert(`🎯 Фокус завершено: ${focusTrees[focusTrees[country] ? country : 'GENERIC'][focusKey].name}!`);
@@ -748,16 +770,34 @@ const secs = truceTime % 60;
             else if (focusKey === 'sov_alliance_by') {
                 changeRelations('SOV', 'BY', 40);
             }
-            else if (focusKey === 'sov_union_by') {
-                Object.keys(provinceData).forEach(id => {
-                    if (provinceData[id].country === 'BY') {
-                        provinceData[id].country = 'SOV';
-                        provinceData[id].elementRef.style.fill = countryColors['SOV'];
-                        redrawProvinceBuildings(id);
-                    }
-                });
-                alert("🏰 Росія підписала унію та повністю анексувала Білорусь!");
-            }
+else if (focusKey === 'sov_union_by') {
+
+    triggerUnionEvent(
+        'SOV',
+        'BY',
+        0.75,
+
+        () => {
+
+            Object.keys(provinceData).forEach(id => {
+                if (provinceData[id].country === 'BY') {
+
+                    provinceData[id].country = 'SOV';
+                    provinceData[id].elementRef.style.fill = countryColors['SOV'];
+                    redrawProvinceBuildings(id);
+
+                }
+            });
+
+            alert("🏰 Білорусь погодилася на союзну державу!");
+        },
+
+        () => {
+            alert("❌ Білорусь відмовилася від унії.");
+        }
+    );
+}
+            
             else if (focusKey === 'sov_ultimatum') {
                 triggerUltimatumEvent({
                     title: "🚨 Ультиматум Кремля",
@@ -782,16 +822,33 @@ const secs = truceTime % 60;
             else if (focusKey === 'ro_sov_md') {
                 changeRelations('RO', 'MD', 40);
             }
-            else if (focusKey === 'ro_annex_md') {
-                Object.keys(provinceData).forEach(id => {
-                    if (provinceData[id].country === 'MD') {
-                        provinceData[id].country = 'RO';
-                        provinceData[id].elementRef.style.fill = countryColors['RO'];
-                        redrawProvinceBuildings(id);
-                    }
-                });
-                alert("🍇 Молдова мирно об'єдналася з Румунією!");
-            }
+else if (focusKey === 'ro_annex_md') {
+
+    triggerUnionEvent(
+        'RO',
+        'MD',
+        0.75,
+
+        () => {
+
+            Object.keys(provinceData).forEach(id => {
+                if (provinceData[id].country === 'MD') {
+
+                    provinceData[id].country = 'RO';
+                    provinceData[id].elementRef.style.fill = countryColors['RO'];
+                    redrawProvinceBuildings(id);
+
+                }
+            });
+
+            alert("🍇 Молдова погодилася на об'єднання!");
+        },
+
+        () => {
+            alert("❌ Молдова відмовилася від об'єднання.");
+        }
+    );
+}
             else if (focusKey === 'ro_join_eu') {
                 euBloc.forEach(c => changeRelations('RO', c, 25));
             }
@@ -845,7 +902,13 @@ const secs = truceTime % 60;
                     }
                 }
             }
-            else if (focusKey === 'fin_estonia_union') {
+            triggerUnionEvent(
+    'FI',
+    'EE',
+    0.75,
+    () => { /* анексія */ },
+    () => { alert("❌ Естонія відмовилася."); }
+);
                 Object.keys(provinceData).forEach(id => {
                     if (provinceData[id].country === 'EE') {
                         provinceData[id].country = 'FI';

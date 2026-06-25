@@ -406,14 +406,14 @@
         const eventBtnYes = document.getElementById('event-btn-yes');
         const eventBtnNo = document.getElementById('event-btn-no');
 
-        let coins = 150;
+        let coins = 300;
         let playerOil = 10;
         let currentMode = 'army'; 
         let playerCountry = null; 
         let isGameStarted = false;
         let selectedProvinceId = null;
         let selectedDiplomacyCountry = null;
-        let buildingPrice = 30;
+        let buildingPrice = 50;
         let hideEnemyIcons = false;
         let truceTime = 150;
 let gameTruceActive = true;
@@ -424,7 +424,7 @@ const secs = truceTime % 60;
 
         let infantryAttackBonus = 1.0; 
 
-        const MAX_NEIGHBOR_DISTANCE = 220; 
+        const MAX_NEIGHBOR_DISTANCE = 140; 
         let zoomScale = 1.0;
         let panX = 0; panY = 0;
         let isDragging = false;
@@ -1154,12 +1154,12 @@ enemyIconsBtn.addEventListener('click', () => {
                                 } else if (!province.hasDivision && selectedProvinceId && selectedProvinceId !== provinceId) {
                                     tryMoveOrAttack(selectedProvinceId, provinceId, playerCountry);
                                 } else if (!province.hasDivision) {
-                                    if (currentMode === 'army' && coins >= 50) {
-                                        coins -= 50; 
+                                    if (currentMode === 'army' && coins >= 80) {
+                                        coins -= 80; 
                                         let pType = getBestAvailableInfantryType();
                                         spawnDivisionVisual(provinceId, playerCountry, pType); updateEconomyDisplay();
-                                    } else if (currentMode === 'tank' && coins >= 120) {
-                                        coins -= 120; 
+                                    } else if (currentMode === 'tank' && coins >= 200) {
+                                        coins -= 200; 
                                         let tType = getBestAvailableTankType();
                                         spawnDivisionVisual(provinceId, playerCountry, tType); updateEconomyDisplay();
                                     }
@@ -1654,10 +1654,10 @@ function spawnDivisionVisual(id, countryCode, type) {
                 }
 
                 // Військове будівництво ШІ
-                if (botCash >= 120 && Math.random() > 0.7) {
+                if (botCash >= 200 && Math.random() > 0.7) {
                     const rp = sample(botProvinces);
                     if (!provinceData[rp].hasDivision && !provinceData[rp].isMoving) { spawnDivisionVisual(rp, bot, 'tank'); countryBudgets[bot] -= 120; }
-                } else if (botCash >= 50 && Math.random() > 0.6) {
+                } else if (botCash >= 80 && Math.random() > 0.6) {
                     const rp = sample(botProvinces);
                     if (!provinceData[rp].hasDivision && !provinceData[rp].isMoving) { spawnDivisionVisual(rp, bot, 'infantry'); countryBudgets[bot] -= 50; }
                 }

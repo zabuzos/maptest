@@ -1525,9 +1525,20 @@ function spawnDivisionVisual(id, countryCode, type) {
                             const toP = sample(targets); const enemy = provinceData[toP].country;
                             if (allianceStatus[bot][enemy] || enemy === 'NEUTRAL') return;
 
-                            if (warStatus[bot][enemy]) { 
-                                tryMoveOrAttack(fromP, toP, bot); 
-                            } else {
+if (warStatus[bot][enemy]) {
+
+    tryMoveOrAttack(fromP, toP, bot);
+
+    // Додаткові атаки під час війни
+    if (Math.random() < 0.7) {
+        const extraTargets = targets.filter(p => provinceData[p].country !== bot);
+
+        if (extraTargets.length > 0) {
+            tryMoveOrAttack(fromP, sample(extraTargets), bot);
+        }
+    }
+
+} else {
                                 const jKey = `${bot}_vs_${enemy}`;
                                 if (!activeAiJustifications[jKey]) {
                                     activeAiJustifications[jKey] = true;

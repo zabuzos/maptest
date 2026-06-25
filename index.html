@@ -1560,7 +1560,51 @@ if (warStatus[bot][enemy]) {
                 }
             });
         }, 4000);
+setInterval(function() {
+    if (!isGameStarted) return;
 
+    Object.keys(countryBudgets).forEach(bot => {
+
+        if (bot === playerCountry) return;
+
+        const botProvinces = Object.keys(provinceData).filter(pId =>
+            provinceData[pId].country === bot &&
+            provinceData[pId].hasDivision &&
+            provinceData[pId].divisionOwner === bot &&
+            !provinceData[pId].isMoving
+        );
+
+        if (botProvinces.length === 0) return;
+
+        botProvinces.forEach(fromP => {
+
+            const targets = Object.keys(provinceData).filter(pId => {
+
+                if (pId === fromP) return false;
+
+                const s = getProvinceCenter(fromP);
+                const e = getProvinceCenter(pId);
+
+                return (
+                    Math.sqrt(
+                        Math.pow(e.x - s.x, 2) +
+                        Math.pow(e.y - s.y, 2)
+                    ) <= MAX_NEIGHBOR_DISTANCE &&
+                    provinceData[pId].country !== bot &&
+                    warStatus[bot][provinceData[pId].country]
+                );
+
+            });
+
+            if (targets.length > 0) {
+                tryMoveOrAttack(fromP, sample(targets), bot);
+            }
+
+        });
+
+    });
+
+}, 1000);
         // Вибір країни на старті
         document.body.onclick = function(e) {
             let btn = e.target.closest('.country-select-btn');

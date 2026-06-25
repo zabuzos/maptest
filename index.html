@@ -349,6 +349,7 @@
             </div>
             <div id="map-container" class="map-container">
                 <svg id="arrows-layer" class="arrows-layer"></svg>
+                <div id="truce-timer">🕊️ 2:30</div>
             </div>
         </div>
 
@@ -359,6 +360,7 @@
         const startScreen = document.getElementById('start-screen');
         const startGrid = document.getElementById('start-country-grid');
         const playerBadge = document.getElementById('player-flag-badge');
+
         
         const mapArea = document.getElementById('map-area');
         const container = document.getElementById('map-container');
@@ -394,6 +396,11 @@
         const focusRenderArea = document.getElementById('focus-tree-render-area');
         const sidebarFocusName = document.getElementById('sidebar-focus-name');
         const sidebarFocusBar = document.getElementById('sidebar-focus-bar');
+        const mins = Math.floor(truceTime / 60);
+const secs = truceTime % 60;
+
+document.getElementById('truce-timer').textContent =
+    `🕊️ ${mins}:${secs.toString().padStart(2,'0')}`;
 
         const eventModal = document.getElementById('event-decision-modal');
         const eventTitle = document.getElementById('event-modal-title');
@@ -410,6 +417,8 @@
         let selectedDiplomacyCountry = null;
         let buildingPrice = 30;
         let hideEnemyIcons = false;
+        let truceTime = 150;
+let gameTruceActive = true;
 
         let infantryAttackBonus = 1.0; 
 
@@ -1462,6 +1471,24 @@ function spawnDivisionVisual(id, countryCode, type) {
                 if (botProvinces.length === 0) return;
 
                 let botCash = countryBudgets[bot];
+                setInterval(() => {
+
+    if (!isGameStarted || !gameTruceActive) return;
+
+    truceTime--;
+
+    if (truceTime <= 0) {
+        gameTruceActive = false;
+
+        const msg = document.createElement('div');
+        msg.className = 'war-warning';
+        msg.innerHTML = '⚔️ Стартове перемир\'я закінчилося!';
+        alertContainer.appendChild(msg);
+
+        setTimeout(() => msg.remove(), 8000);
+    }
+
+}, 1000);
 
                 // ШІ Фокуси
                 if (!aiCurrentFocus[bot]) {
@@ -1511,7 +1538,7 @@ function spawnDivisionVisual(id, countryCode, type) {
                 }
 
                 // ЗНИЖЕНА АГРЕСИВНІСТЬ
-                if (Math.random() < 0.02) {
+                if (!gameTruceActive && Math.random() < 0.02) {
                     const armed = botProvinces.filter(pId => provinceData[pId].hasDivision && provinceData[pId].divisionOwner === bot && !provinceData[pId].isMoving);
                     if (armed.length > 0) {
                         const fromP = sample(armed);
@@ -1664,6 +1691,10 @@ document.getElementById('firebase-editor-btn').onclick = function() {
     // Блокуємо війну та AI
     window.declareWar = function() {
         return false;
+        if (gameTruceActive) {
+    alert('Стартове перемир\'я ще триває!');
+    return;
+}
     };
 
     window.updateEconomyDisplay = function() {};
@@ -1688,7 +1719,7 @@ document.getElementById('firebase-editor-btn').onclick = function() {
         playerBadge.style.backgroundColor = "#eab308";
         playerBadge.style.color = "black";
     }
-
+    
     // Генеруємо список країн
     const container =
         document.getElementById('editor-countries-selector');

@@ -398,8 +398,7 @@
         const sidebarFocusBar = document.getElementById('sidebar-focus-bar');
         
 
-document.getElementById('truce-timer').textContent =
-    `🕊️ ${mins}:${secs.toString().padStart(2,'0')}`;
+
 
         const eventModal = document.getElementById('event-decision-modal');
         const eventTitle = document.getElementById('event-modal-title');
@@ -420,6 +419,8 @@ document.getElementById('truce-timer').textContent =
 let gameTruceActive = true;
         const mins = Math.floor(truceTime / 60);
 const secs = truceTime % 60;
+        document.getElementById('truce-timer').textContent =
+    `🕊️ ${mins}:${secs.toString().padStart(2,'0')}`;
 
         let infantryAttackBonus = 1.0; 
 

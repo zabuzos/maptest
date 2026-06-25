@@ -950,49 +950,46 @@ else if (focusKey === 'ro_annex_md') {
             }
             
             // Німеччина
-            else if (focusKey === 'ger_eco_leadership') {
-                if (country === playerCountry) coins += 235; else countryBudgets[country] += 235;
-                let gerProves = Object.keys(provinceData).filter(id => provinceData[id].country === 'DE');
-                if (gerProves.length > 0) {
-                    let rp = sample(gerProves);
-                    provinceData[rp].civFactories++;
-                    if (typeof createFactoryVisual === 'function') {
-                        createFactoryVisual(provinceData[rp].elementRef, rp, 'civ');
+          else if (focusKey === 'ger_german_nations') {
+
+    triggerUnionEvent(
+        'DE',
+        'AT',
+        0.75,
+        () => {
+            Object.keys(provinceData).forEach(id => {
+                if (provinceData[id].country === 'AT') {
+                    provinceData[id].country = 'DE';
+
+                    if (provinceData[id].elementRef) {
+                        provinceData[id].elementRef.style.fill = countryColors['DE'];
                     }
+
+                    redrawProvinceBuildings(id);
                 }
-            }
-            else if (focusKey === 'ger_german_nations') {
+            });
+        }
+    );
 
-    triggerUnionEvent('DE', 'AT', 0.75);
+    triggerUnionEvent(
+        'DE',
+        'CH',
+        0.75,
+        () => {
+            Object.keys(provinceData).forEach(id => {
+                if (provinceData[id].country === 'CH') {
+                    provinceData[id].country = 'DE';
 
-    triggerUnionEvent('DE', 'CH', 0.75);
+                    if (provinceData[id].elementRef) {
+                        provinceData[id].elementRef.style.fill = countryColors['DE'];
+                    }
 
+                    redrawProvinceBuildings(id);
+                }
+            });
+        }
+    );
 }
-                        provinceData[id].country = 'DE';
-                        if (provinceData[id].elementRef) {
-                            provinceData[id].elementRef.style.fill = countryColors['DE'];
-                        }
-                        if (typeof redrawProvinceBuildings === 'function') redrawProvinceBuildings(id);
-                    }
-                });
-                alert("⛰️ Швейцарія та Австрія мирно об'єдналися з Німеччиною!");
-            }
-            else if (focusKey === 'ger_prep_sov_war') {
-                let gerProves = Object.keys(provinceData).filter(id => provinceData[id].country === 'DE');
-                if (gerProves.length > 0) {
-                    for (let i = 0; i < 2; i++) {
-                        let rp = sample(gerProves);
-                        provinceData[rp].milFactories++;
-                        if (typeof createFactoryVisual === 'function') {
-                            createFactoryVisual(provinceData[rp].elementRef, rp, 'mil');
-                        }
-                    }
-                    let tankProv = sample(gerProves);
-                    if (typeof spawnDivisionVisual === 'function') {
-                        spawnDivisionVisual(tankProv, 'DE', 'modern_tank');
-                    }
-                }
-            }
             
             // Греція
             else if (focusKey === 'gre_big_ports') {

@@ -1564,7 +1564,7 @@ function spawnDivisionVisual(id, countryCode, type) {
         function completeResearch(slot) {
             const techKey = slot.activeTech; playerTechs[techKey].status = 'done';
             for (const key in playerTechs) { if (playerTechs[key].req === techKey && playerTechs[key].status === 'locked') playerTechs[key].status = 'avail'; }
-            if (techKey === 'standardization') { buildingPrice = 20; document.getElementById('price-civ').textContent = '40'; document.getElementById('price-mil').textContent = '40'; document.getElementById('price-bunker').textContent = '20'; }
+            if (techKey === 'standardization') { buildingPrice = 20; document.getElementById('price-civ').textContent = '40'; document.getElementById('price-mil').textContent = '40'; document.getElementById('price-bunker').textContent = '40'; }
             alert(`🔬 Дослідження завершено: ${playerTechs[techKey].name}!`);
             slot.activeTech = null; slot.timer = 0;
             document.getElementById(`slot-${slot.id}-ui`).firstElementChild.textContent = `Слот ${slot.id}: Вільний`;

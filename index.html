@@ -1561,22 +1561,30 @@ if (warStatus[bot][enemy]) {
             });
         }, 4000);
 setInterval(function() {
+
     if (!isGameStarted) return;
 
     Object.keys(countryBudgets).forEach(bot => {
 
         if (bot === playerCountry) return;
 
-        const botProvinces = Object.keys(provinceData).filter(pId =>
-            provinceData[pId].country === bot &&
+        const armedUnits = Object.keys(provinceData).filter(pId =>
             provinceData[pId].hasDivision &&
             provinceData[pId].divisionOwner === bot &&
             !provinceData[pId].isMoving
         );
 
-        if (botProvinces.length === 0) return;
+        if (armedUnits.length === 0) return;
 
-        botProvinces.forEach(fromP => {
+        // 1-3 випадкові атаки за секунду
+        const attacksThisTick = Math.min(
+            armedUnits.length,
+            Math.floor(Math.random() * 3) + 1
+        );
+
+        for (let i = 0; i < attacksThisTick; i++) {
+
+            const fromP = sample(armedUnits);
 
             const targets = Object.keys(provinceData).filter(pId => {
 
@@ -1599,8 +1607,7 @@ setInterval(function() {
             if (targets.length > 0) {
                 tryMoveOrAttack(fromP, sample(targets), bot);
             }
-
-        });
+        }
 
     });
 

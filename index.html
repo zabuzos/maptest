@@ -326,11 +326,11 @@
             <div class="panel-section">
                 <label>Режими дій</label>
                 <div class="actions-grid">
-                    <button id="btn-army" class="mode-btn active">⚔️ Стрільці (50💰)</button>
-                    <button id="btn-tank" class="mode-btn tank-mode">🚜 Легкі Танки (120💰)</button>
-                    <button id="btn-civ" class="mode-btn civ-mode">🏗️ Цивільна ф-ка (<span id="price-civ">30</span>💰)</button>
-                    <button id="btn-mil" class="mode-btn mil-mode">🏭 Військ/Нафта (<span id="price-mil">30</span>💰)</button>
-                    <button id="btn-bunker" class="mode-btn bunker-mode">🛡️ Бункер (<span id="price-bunker">30</span>💰)</button>
+                    <button id="btn-army" class="mode-btn active">⚔️ Стрільці (80💰)</button>
+                    <button id="btn-tank" class="mode-btn tank-mode">🚜 Легкі Танки (200💰)</button>
+                    <button id="btn-civ" class="mode-btn civ-mode">🏗️ Цивільна ф-ка (<span id="price-civ">50</span>💰)</button>
+                    <button id="btn-mil" class="mode-btn mil-mode">🏭 Військ/Нафта (<span id="price-mil">50</span>💰)</button>
+                    <button id="btn-bunker" class="mode-btn bunker-mode">🛡️ Бункер (<span id="price-bunker">50</span>💰)</button>
                 </div>
             </div>
 
@@ -546,7 +546,7 @@ const secs = truceTime % 60;
 
         // НАУКА
         const playerTechs = {
-            'standardization': { name: '🏗️ Стандартизація', cat: 'ind', status: 'avail', req: null, desc: 'Заводи та форти коштують 20💰 замість 30.' },
+            'standardization': { name: '🏗️ Стандартизація', cat: 'ind', status: 'avail', req: null, desc: 'Заводи та форти коштують 40💰 замість 50.' },
             'oil_extraction': { name: '🛢️ Екстракція нафти', cat: 'ind', status: 'avail', req: null, desc: 'Нафтові вишки дають +2 нафти/с замість +1.' },
             'medium_tank': { name: '🚜 Середній Танк', cat: 'tech', status: 'avail', req: null, desc: 'Нові танки мають 220 HP та сильнішу атаку.' },
             'heavy_tank': { name: '🛡️ Важкий Танк', cat: 'tech', status: 'locked', req: 'medium_tank', desc: 'Танки мають 350 HP, але без нафти повільні.' },
@@ -578,16 +578,16 @@ const secs = truceTime % 60;
         function updateActionButtonsText() {
             // Оновлюємо назву кнопок на панелі залежно від відкритих наук
             const infType = getBestAvailableInfantryType();
-            if (infType === 'infantry') btnArmy.textContent = `⚔️ Стрільці (50💰)`;
-            else if (infType === 'assault') btnArmy.textContent = `🪖 Штурмовики (50💰)`;
-            else if (infType === 'motorized') btnArmy.textContent = `🚚 Мотопіхота (50💰)`;
-            else if (infType === 'mechanized') btnArmy.textContent = `🦾 Мехводії (50💰)`;
+            if (infType === 'infantry') btnArmy.textContent = `⚔️ Стрільці (80💰)`;
+            else if (infType === 'assault') btnArmy.textContent = `🪖 Штурмовики (80💰)`;
+            else if (infType === 'motorized') btnArmy.textContent = `🚚 Мотопіхота (80💰)`;
+            else if (infType === 'mechanized') btnArmy.textContent = `🦾 Мехводії (80💰)`;
 
             const tankType = getBestAvailableTankType();
-            if (tankType === 'tank') btnTank.textContent = `🚜 Легкі Танки (120💰)`;
-            else if (tankType === 'medium_tank') btnTank.textContent = `🚜 Середні Танки (120💰)`;
-            else if (tankType === 'heavy_tank') btnTank.textContent = `🛡️ Важкі Танки (120💰)`;
-            else if (tankType === 'modern_tank') btnTank.textContent = `⚡ Сучасні Танки (120💰)`;
+            if (tankType === 'tank') btnTank.textContent = `🚜 Легкі Танки (200💰)`;
+            else if (tankType === 'medium_tank') btnTank.textContent = `🚜 Середні Танки (200💰)`;
+            else if (tankType === 'heavy_tank') btnTank.textContent = `🛡️ Важкі Танки (200💰)`;
+            else if (tankType === 'modern_tank') btnTank.textContent = `⚡ Сучасні Танки (200💰)`;
         }
 
         // --- ГЕОГРАФІЧНІ ХЕЛПЕРИ ДЛЯ ФОКУСІВ ---

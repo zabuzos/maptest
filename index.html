@@ -771,7 +771,8 @@ const secs = truceTime % 60;
                 changeRelations('SOV', 'BY', 40);
             }
 else if (focusKey === 'sov_union_by') {
-
+    triggerUnionEvent('SOV', 'BY', 0.75);
+}
     triggerUnionEvent(
         'SOV',
         'BY',
@@ -823,11 +824,8 @@ else if (focusKey === 'sov_union_by') {
                 changeRelations('RO', 'MD', 40);
             }
 else if (focusKey === 'ro_annex_md') {
-
-    triggerUnionEvent(
-        'RO',
-        'MD',
-        0.75,
+    triggerUnionEvent('RO', 'MD', 0.75);
+}
 
         () => {
 
@@ -903,10 +901,8 @@ else if (focusKey === 'ro_annex_md') {
                 }
             }
             else if (focusKey === 'fin_estonia_union') {
-            triggerUnionEvent(
-    'FI',
-    'EE',
-    0.75,
+    triggerUnionEvent('FI', 'EE', 0.75);
+}
     () => { /* анексія */ },
     () => { alert("❌ Естонія відмовилася."); }
 );
@@ -949,8 +945,12 @@ else if (focusKey === 'ro_annex_md') {
                 }
             }
             else if (focusKey === 'ger_german_nations') {
-                Object.keys(provinceData).forEach(id => {
-                    if (provinceData[id].country === 'CH' || provinceData[id].country === 'AT') {
+
+    triggerUnionEvent('DE', 'AT', 0.75);
+
+    triggerUnionEvent('DE', 'CH', 0.75);
+
+}
                         provinceData[id].country = 'DE';
                         if (provinceData[id].elementRef) {
                             provinceData[id].elementRef.style.fill = countryColors['DE'];
@@ -1362,6 +1362,51 @@ enemyIconsBtn.addEventListener('click', () => {
                 }
             }, 500);
         }
+    function annexCountry(winner, loser) {
+    Object.keys(provinceData).forEach(id => {
+        if (provinceData[id].country === loser) {
+            provinceData[id].country = winner;
+            provinceData[id].elementRef.style.fill = countryColors[winner];
+            redrawProvinceBuildings(id);
+        }
+    });
+}
+    function triggerUnionEvent(initiator, target, acceptChance) {
+
+    // Гравець приймає рішення
+    if (target === playerCountry) {
+
+        const accepted = confirm(
+            `${countryNames[initiator]} пропонує державну унію.\n\nПрийняти?`
+        );
+
+        if (accepted) {
+            annexCountry(initiator, target);
+            alert(`${countryNames[target]} погодилася на унію.`);
+        } else {
+            alert(`${countryNames[target]} відмовилася від унії.`);
+        }
+
+        return;
+    }
+
+    // ШІ
+    if (Math.random() < acceptChance) {
+
+        annexCountry(initiator, target);
+
+        if (initiator === playerCountry) {
+            alert(`${countryNames[target]} погодилася на унію.`);
+        }
+
+    } else {
+
+        if (initiator === playerCountry) {
+            alert(`${countryNames[target]} відмовилася від унії.`);
+        }
+
+    }
+}
 
         function sample(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 

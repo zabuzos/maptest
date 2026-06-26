@@ -405,6 +405,49 @@
         const eventDesc = document.getElementById('event-modal-desc');
         const eventBtnYes = document.getElementById('event-btn-yes');
         const eventBtnNo = document.getElementById('event-btn-no');
+        const countryLeaders = {
+
+    UA: {
+        name: "Пес Патрон",
+        portrait: "images/leaders/patron.png", // <-- сюди вставляється шлях до картинки
+        bonus: "division_attack",
+        value: 0.10,
+        description: "+10% атака дивізій"
+    },
+
+    FI: {
+        name: "Петсамо Козлик",
+        portrait: "images/leaders/petsamo.png",
+        bonus: "division_defense",
+        value: 0.10,
+        description: "-10% отриманої шкоди"
+    },
+
+    PL: {
+        name: "Вроцлав Бобровскі",
+        portrait: "images/leaders/bobrowski.png",
+        bonus: "research_speed",
+        value: 5,
+        description: "-5 секунд дослідження"
+    },
+
+    GR: {
+        name: "Пелікантіс III",
+        portrait: "images/leaders/pelikantis.png",
+        bonus: "building_discount",
+        value: 5,
+        description: "-5 монет до ціни будівель"
+    },
+
+    DE: {
+        name: "Карл фон Каракал",
+        portrait: "images/leaders/caracal.png",
+        bonus: "division_speed",
+        value: 0.10,
+        description: "+10% швидкість дивізій"
+    }
+
+};
 
         let coins = 300;
         let playerOil = 10;

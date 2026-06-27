@@ -424,7 +424,7 @@
         let buildingPrice = 50;
         let hideEnemyIcons = false;
         let truceTime = 150;
-        let gameSpeed = 1;
+       
 let gameTruceActive = true;
         const mins = Math.floor(truceTime / 60);
 const secs = truceTime % 60;
@@ -1321,7 +1321,7 @@ speed100Btn.onclick = () => {
                 } else { speedFactor = divType.includes('tank') ? 250 : 180; }
             } else if (divType === 'assault') speedFactor = 85;
 
-            let gameSpeed = 1; // 1 = 100%, 0.75 = 75%, 0.4 = 40%
+          
 
 executeOrderWithArrow(
     fromId,

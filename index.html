@@ -424,6 +424,8 @@
         let buildingPrice = 50;
         let hideEnemyIcons = false;
         let truceTime = 150;
+        let gamePaused = false;
+let gameSpeed = 1;
 let gameTruceActive = true;
         const mins = Math.floor(truceTime / 60);
 const secs = truceTime % 60;
@@ -1078,32 +1080,34 @@ else if (focusKey === 'ro_annex_md') {
         document.getElementById('zoom-reset').addEventListener('click', () => { zoomScale = 1.0; panX = 0; panY = 0; updateMapTransform(); });
         const enemyIconsBtn = document.getElementById('toggle-enemy-icons');
 
-enemyIconsBtn.addEventListener('click', () => {
-    hideEnemyIcons = !hideEnemyIcons;
-
-    enemyIconsBtn.textContent =
-        hideEnemyIcons ? '🚫 Вор.' : '👁 Вор.';
-
-    updateEnemyIconVisibility();
-});
-        let gamePaused = false;
+      let gamePaused = false;
 let gameSpeed = 1;
 
-document.getElementById("pause-btn").onclick = () => {
+// кнопки
+const pauseBtn = document.getElementById("pause-btn");
+const speed40Btn = document.getElementById("speed40-btn");
+const speed75Btn = document.getElementById("speed75-btn");
+const speed100Btn = document.getElementById("speed100-btn");
+
+// пауза
+pauseBtn.onclick = () => {
     gamePaused = !gamePaused;
 };
 
-document.getElementById("speed40-btn").onclick = () => {
+// 40%
+speed40Btn.onclick = () => {
     gamePaused = false;
     gameSpeed = 0.4;
 };
 
-document.getElementById("speed75-btn").onclick = () => {
+// 75%
+speed75Btn.onclick = () => {
     gamePaused = false;
     gameSpeed = 0.75;
 };
 
-document.getElementById("speed100-btn").onclick = () => {
+// 100%
+speed100Btn.onclick = () => {
     gamePaused = false;
     gameSpeed = 1;
 };

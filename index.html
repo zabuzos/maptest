@@ -282,6 +282,7 @@
                 <div class="tech-progress-bar" style="margin-top:3px; background:#222;"><div class="tech-progress-fill" id="sidebar-focus-bar" style="background:#eab308; width:0%;"></div></div>
                 <button id="open-focus-tree-btn" style="background:#a855f7; border:none; color:white; font-size:11px; padding:5px; margin-top:5px; border-radius:4px; font-weight:bold; cursor:pointer;">🎯 Відкрити дерево фокусів</button>
             </div>
+        
 
             <div class="panel-section">
                 <label>Економіка та Ресурси</label>
@@ -347,6 +348,14 @@
         👁️ Вор.
     </button>
             </div>
+            <div class="panel-section">
+    <label>Швидкість</label>
+
+    <button id="pause-btn">⏸ Пауза</button>
+    <button id="speed40-btn">🐢 40%</button>
+    <button id="speed75-btn">▶️ 75%</button>
+    <button id="speed100-btn">⚡ 100%</button>
+</div>
             <div id="map-container" class="map-container">
                 <svg id="arrows-layer" class="arrows-layer"></svg>
                 <div id="truce-timer">🕊️ 2:30</div>
@@ -1078,6 +1087,27 @@ enemyIconsBtn.addEventListener('click', () => {
 
     updateEnemyIconVisibility();
 });
+        let gamePaused = false;
+let gameSpeed = 1;
+
+document.getElementById("pause-btn").onclick = () => {
+    gamePaused = !gamePaused;
+};
+
+document.getElementById("speed40-btn").onclick = () => {
+    gamePaused = false;
+    gameSpeed = 0.4;
+};
+
+document.getElementById("speed75-btn").onclick = () => {
+    gamePaused = false;
+    gameSpeed = 0.75;
+};
+
+document.getElementById("speed100-btn").onclick = () => {
+    gamePaused = false;
+    gameSpeed = 1;
+};
 
         btnArmy.addEventListener('click', () => { currentMode = 'army'; resetActiveButtons(); btnArmy.classList.add('active'); cancelSelection(); });
         btnTank.addEventListener('click', () => { currentMode = 'tank'; resetActiveButtons(); btnTank.classList.add('active'); cancelSelection(); });
@@ -1289,7 +1319,17 @@ enemyIconsBtn.addEventListener('click', () => {
                 } else { speedFactor = divType.includes('tank') ? 250 : 180; }
             } else if (divType === 'assault') speedFactor = 85;
 
-            executeOrderWithArrow(fromId, toId, start, end, distance * speedFactor, countryCode, divType);
+            let gameSpeed = 1; // 1 = 100%, 0.75 = 75%, 0.4 = 40%
+
+executeOrderWithArrow(
+    fromId,
+    toId,
+    start,
+    end,
+    distance * speedFactor / gameSpeed,
+    countryCode,
+    divType
+);
         }
 
         function executeOrderWithArrow(fromId, toId, start, end, duration, countryCode, divType) {

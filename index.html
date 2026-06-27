@@ -1649,13 +1649,27 @@ function spawnDivisionVisual(id, countryCode, type) {
     else if (type === 'heavy_tank') mHp = 350;
     else if (type === 'modern_tank') mHp = 500;
 
-    provinceData[id].hasDivision = true;
-    provinceData[id].divisionHp = mHp;
-    provinceData[id].divisionOwner = countryCode;
-    provinceData[id].divisionType = type;
-    provinceData[id].domDivisionRef = divEl;
+// ---------- СТАРА СИСТЕМА ----------
+provinceData[id].hasDivision = true;
+provinceData[id].divisionHp = mHp;
+provinceData[id].divisionOwner = countryCode;
+provinceData[id].divisionType = type;
+provinceData[id].domDivisionRef = divEl;
 
-    updateEnemyIconVisibility();
+// ---------- НОВА СИСТЕМА ----------
+provinceData[id].divisions.push({
+
+    id: Date.now() + Math.random(),
+
+    type: type,
+
+    hp: mHp,
+
+    owner: countryCode
+
+});
+
+updateEnemyIconVisibility();
 }
         function createFactoryVisual(svgElement, id, type, countIndex) {
             const center = getProvinceCenter(id); const factory = document.createElement('div');

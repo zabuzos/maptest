@@ -1226,10 +1226,30 @@ speed100Btn.onclick = () => {
                         let hasOilDeposit = (index % 6 === 0 && detectedCountry !== 'NEUTRAL'); 
 
                         provinceData[element.id] = {
-                            country: detectedCountry, civFactories: 0, milFactories: 0, oilWells: 0, bunkers: 0,
-                            hasOilDeposit: hasOilDeposit, hasDivision: false, isMoving: false, 
-                            divisionHp: 0, divisionOwner: null, divisionType: null, elementRef: element, domDivisionRef: null
-                        };
+
+    country: detectedCountry,
+
+    civFactories: 0,
+    milFactories: 0,
+    oilWells: 0,
+    bunkers: 0,
+
+    hasOilDeposit: hasOilDeposit,
+
+    // ---------- СТАРА СИСТЕМА ----------
+    hasDivision: false,
+    divisionHp: 0,
+    divisionOwner: null,
+    divisionType: null,
+
+    // ---------- НОВА СИСТЕМА ----------
+    divisions: [],
+
+    isMoving: false,
+
+    elementRef: element,
+    domDivisionRef: null
+};
                         element.style.fill = countryColors[detectedCountry] || '#2e2e35';
                         if (hasOilDeposit) createOilVisualMark(element, element.id);
                     });

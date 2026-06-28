@@ -528,6 +528,7 @@ const secs = truceTime % 60;
         });
 
         const provinceData = {}; 
+        divisionCount: 0,
 
         // --- БАЗА ДАНИХ НАЦІОНАЛЬНИХ ФОКУСІВ ---
      const focusTrees = {
@@ -1525,6 +1526,7 @@ divEl.innerHTML = `
     provinceData[id].domDivisionRef = divEl;
 
     updateEnemyIconVisibility();
+    provinceData[id].divisionCount++;
 }
 
         function createFactoryVisual(svgElement, id, type, countIndex) {

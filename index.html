@@ -462,6 +462,8 @@
         let buildingPrice = 50;
         let hideEnemyIcons = false;
         let truceTime = 150;
+        // Активні бої
+let activeBattles = [];
        
 let gameTruceActive = true;
         const mins = Math.floor(truceTime / 60);
@@ -1384,12 +1386,18 @@ if (
     targetProv.divisionOwner !== countryCode
 ) {
 
-    console.log("Battle started:", fromId, "->", toId);
+    activeBattles.push({
+    attackerProvince: fromId,
+    defenderProvince: toId,
+    attackerCountry: countryCode,
+    defenderCountry: targetProv.divisionOwner,
+    started: Date.now()
+});
 
-    // Поки що просто виходимо.
-    // На наступному етапі тут буде справжній бій.
-    cancelSelection();
-    return;
+console.log(activeBattles);
+
+cancelSelection();
+return;
 }
 executeOrderWithArrow(
     fromId,

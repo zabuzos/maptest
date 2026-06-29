@@ -1377,7 +1377,20 @@ speed100Btn.onclick = () => {
             } else if (divType === 'assault') speedFactor = 85;
 
           
+// Якщо у цільовій провінції є ворожа дивізія,
+// поки що не рухаємося.
+if (
+    targetProv.hasDivision &&
+    targetProv.divisionOwner !== countryCode
+) {
 
+    console.log("Battle started:", fromId, "->", toId);
+
+    // Поки що просто виходимо.
+    // На наступному етапі тут буде справжній бій.
+    cancelSelection();
+    return;
+}
 executeOrderWithArrow(
     fromId,
     toId,

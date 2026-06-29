@@ -166,6 +166,22 @@
 }
         .division-indicator.selected { border-bottom-color: #ffff00; filter: drop-shadow(0 0 4px #ffff00); }
         .division-indicator.ai-unit { border-bottom-color: #ef4444; filter: drop-shadow(0 0 2px #ef4444); }
+        .division-count{
+    position:absolute;
+    left:50%;
+    top:15px;
+
+    transform:translateX(-50%);
+
+    font-size:9px;
+    font-weight:bold;
+
+    color:white;
+
+    text-shadow:
+        1px 1px 2px black,
+       -1px -1px 2px black;
+}
         
        
 
@@ -235,6 +251,7 @@
             flex: 1; padding: 10px; border: none; border-radius: 4px; font-weight: bold;
             cursor: pointer; font-size: 12px; transition: opacity 0.2s;
         }
+   
         .event-btn.yes { background: #22c55e; color: black; }
         .event-btn.no { background: #ef4444; color: white; }
         .event-btn:hover { opacity: 0.9; }
@@ -1171,10 +1188,25 @@ speed100Btn.onclick = () => {
                         let hasOilDeposit = (index % 6 === 0 && detectedCountry !== 'NEUTRAL'); 
 
                         provinceData[element.id] = {
-                            country: detectedCountry, civFactories: 0, milFactories: 0, oilWells: 0, bunkers: 0,
-                            hasOilDeposit: hasOilDeposit, hasDivision: false, isMoving: false, 
-                            divisionHp: 0, divisionOwner: null, divisionType: null, elementRef: element, domDivisionRef: null
-                        };
+    country: detectedCountry,
+    civFactories: 0,
+    milFactories: 0,
+    oilWells: 0,
+    bunkers: 0,
+    hasOilDeposit: hasOilDeposit,
+
+    hasDivision: false,
+    isMoving: false,
+
+    divisionHp: 0,
+    divisionOwner: null,
+    divisionType: null,
+
+    elementRef: element,
+    domDivisionRef: null,
+
+    divisionCount: 0
+};
                         element.style.fill = countryColors[detectedCountry] || '#2e2e35';
                         if (hasOilDeposit) createOilVisualMark(element, element.id);
                     });
@@ -1527,7 +1559,14 @@ divEl.innerHTML = `
     provinceData[id].domDivisionRef = divEl;
 
     updateEnemyIconVisibility();
-    provinceData[id].divisionCount++;
+provinceData[id].divisionCount++;
+
+const count = provinceData[id].divisionCount;
+
+divEl.innerHTML = `
+<img src="icons/${type}.png" class="division-icon">
+<div class="division-count">${count}</div>
+`;
 }
 
         function createFactoryVisual(svgElement, id, type, countIndex) {
